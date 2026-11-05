@@ -25,17 +25,18 @@ Academic prototype: Next.js 16 App Router + TypeScript, Supabase Postgres/Auth, 
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes and pull requests to `main`: `npm ci`, lint, `test:run`, then `build`. CI has no secrets and no database, so unit tests must not require a live DB or real Supabase project.
+`.github/workflows/ci.yml` runs on pushes and pull requests to `main`: `npm ci`, lint, `test:run`, then `build`. CI has no secrets or database, so it injects placeholder Supabase/DB env values; unit tests must not require a live DB or real Supabase project.
 
 ## Architecture
 
-- One app, one database. `src/modules/<module>/` is the unit: `components/ actions/ services/ repositories/ schemas/ types/ index.ts`.
-- `src/app/` holds routes only; pages load data through module services.
-- Actions are `"use server"`: get the signed-in user, check the role, parse input with Zod, call one service, revalidate. Never touch the database directly.
-- Services own business rules and wrap each business event in one `db.transaction`. Repositories are Drizzle queries only and always receive `tx`.
+Read `CLAUDE.md` for the full layer contract. The non-obvious invariants:
+
+- `src/modules/<module>/` is the unit; `src/app/` holds routes only and loads data through module services.
 - Modules import each other only through `index.ts`, and only services. Dependency order, lowest first: core, inventory, requisition, purchasing, delivery.
 - Tables live in `src/db/schema/`, not in modules. Only `inventory/services/stock.service.ts` may change stock balances.
-- Services and repositories start with `import "server-only"`; client components import their own module by direct path, not through `index.ts`.
+- Services own business rules and wrap each event in one `db.transaction`; repositories are Drizzle queries only and always receive `tx`. Both start with `import "server-only"`.
+- Actions are `"use server"`: authenticate, check role, parse with Zod, call one service, revalidate. Never touch the database directly.
+- Client components import their own module by direct path, not through `index.ts`.
 - File names are kebab-case `<name>.<layer>.ts`, for example `purchase-order.service.ts`.
 - `users` stores the Supabase auth ID as a plain unique UUID. Never add a foreign key to `auth.users`; the local test database has no Supabase auth schema.
 - Connect through the Supabase transaction pooler on port 6543 with postgres.js `prepare: false`.
