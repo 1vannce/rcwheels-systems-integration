@@ -2,6 +2,8 @@
 
 A browser-based academic prototype for RCWheels Corporation (PC 316 Systems Integration and Architecture 1, Group 5). It connects Requisition, Inventory, Purchasing, and Delivery for the main location through one central database, so staff can follow a request from submission to acceptance with its quantities and history in one place. The full plan is in [docs/PLAN.md](docs/PLAN.md).
 
+> **Project architecture:** [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) explains every folder in plain language, with comments, a request walkthrough, and a "where to find things" table.
+
 Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (PostgreSQL, Auth, Storage), Drizzle ORM with postgres.js, Zod, Vitest, and Vercel.
 
 ## Setup
@@ -43,6 +45,8 @@ Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (P
 Docker is not installed on the team's computers, so `supabase start` does not work. Use the hosted Supabase project.
 
 ## Structure
+
+For a folder-by-folder explanation with comments, see [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
 
 ```
 src/
