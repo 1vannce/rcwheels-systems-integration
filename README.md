@@ -44,6 +44,8 @@ Docker is not installed on the team's computers, so `supabase start` does not wo
 
 ## Structure
 
+For a folder-by-folder explanation with comments, see [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
+
 ```
 src/
   app/              routes only; pages import from modules
