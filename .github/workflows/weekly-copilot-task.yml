@@ -1,0 +1,41 @@
+name: Weekly Copilot task
+
+# Opens one issue a week from .github/copilot-weekly-task.md and assigns it to
+# the Copilot coding agent. Needs a COPILOT_ASSIGN_TOKEN repo secret (a personal
+# access token that can write issues and pull requests); the default
+# GITHUB_TOKEN cannot assign Copilot.
+
+on:
+  schedule:
+    - cron: "0 1 * * 1" # Mondays 01:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assign:
+    name: Create and assign issue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ secrets.COPILOT_ASSIGN_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if last week's task is still open
+        id: open
+        run: |
+          count=$(gh issue list --label weekly-copilot --state open --json number --jq length)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Create issue assigned to Copilot
+        if: steps.open.outputs.count == '0'
+        run: |
+          gh label create weekly-copilot --description "Weekly task for Copilot agent" --force
+          gh issue create \
+            --title "Weekly Copilot task ($(date -u +%F))" \
+            --body-file .github/copilot-weekly-task.md \
+            --label weekly-copilot \
+            --assignee "@copilot"
