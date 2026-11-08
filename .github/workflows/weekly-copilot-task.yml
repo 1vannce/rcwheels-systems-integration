@@ -24,6 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Require COPILOT_ASSIGN_TOKEN
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::COPILOT_ASSIGN_TOKEN repo secret is not set"
+            exit 1
+          fi
+
       - name: Skip if last week's task is still open
         id: open
         run: |
