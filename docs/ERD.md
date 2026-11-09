@@ -11,8 +11,9 @@ Source: the "ERD" section of the team's FigJam board (SIA - flowchart, node `163
 | 1 | `users`: removed `username` and `password_hash`; added `auth_user_id` (uuid, unique, no FK to `auth.users`) and `email`; added `approver_id` (self FK) | Supabase Auth owns credentials (PLAN section 4). Requests route to an assigned approver (PLAN section 7) |
 | 2 | `items`: added `average_cost` | Moving weighted average cost (decision 4) |
 | 3 | `stock_balances`: added `is_incomplete`; unique on (`item_id`, `condition`) | Incomplete-balance warning. One balance row per item and condition, and rows are locked on reserve and dispatch (rule 10) |
-| 4 | `stock_movements`: added `movement_type` and `unit_cost` | Distinguishes sales deductions, return inspections and supplier returns, which have no source line. `unit_cost` supports the value reversal |
+| 4 | `stock_movements`: added `movement_type`, `unit_cost` and `reverses_movement_id` (self FK) | Distinguishes sales deductions, return inspections and supplier returns, which have no source line. `unit_cost` supports the value reversal. A sales reversal links to the movement it reverses, because history is append-only |
 | 5 | New `purchase_order_revisions`; `purchase_orders.revision_reason` replaced by `current_version` | Approved PO versions and earlier commitments must be kept (rule 2). Holds the Accounting yes/no budget decision with a reason (decision 7) |
+| 6 | `acknowledgement_receipts`: `signed_by_name` replaced by `signed_by` (FK to `users`) | Mechanics have their own accounts and sign their own ARs; the system stores the signed-in user and timestamp (decisions 2 and 3) |
 
 Left as the FigJam ERD has it, on purpose:
 
@@ -41,6 +42,7 @@ erDiagram
   USERS |o--o{ STOCK_ADJUSTMENTS : approved_by
   STOCK_BALANCES ||--o{ STOCK_MOVEMENTS : posts
   STOCK_ADJUSTMENTS |o--o{ STOCK_MOVEMENTS : source
+  STOCK_MOVEMENTS |o--o| STOCK_MOVEMENTS : reverses
   SUPPLIER_RECEIPT_LINES |o--o{ STOCK_MOVEMENTS : source
   DISPATCH_LINES |o--o{ STOCK_MOVEMENTS : source
   RETURN_LINES |o--o{ STOCK_MOVEMENTS : source
@@ -73,6 +75,7 @@ erDiagram
   REQUISITION_LINES ||--o{ DISPATCH_LINES : issued
   DISPATCHES ||--o| ACKNOWLEDGEMENT_RECEIPTS : acknowledged_by
   USERS ||--o{ ACKNOWLEDGEMENT_RECEIPTS : prepared_by
+  USERS |o--o{ ACKNOWLEDGEMENT_RECEIPTS : signed_by
   DISPATCH_LINES ||--o{ INTERNAL_DISCREPANCIES : disputes
   USERS ||--o{ INTERNAL_DISCREPANCIES : reported_by
   USERS |o--o{ INTERNAL_DISCREPANCIES : resolved_by
@@ -174,6 +177,7 @@ erDiagram
     int dispatch_line_id FK "optional"
     int return_line_id FK "optional"
     int adjustment_id FK "optional"
+    int reverses_movement_id FK "optional, self, UK"
     decimal quantity_delta "signed"
     decimal unit_cost "optional"
     string event_key UK "prevents double posting"
@@ -290,7 +294,7 @@ erDiagram
     int dispatch_id FK "UK"
     int prepared_by FK
     datetime prepared_at
-    string signed_by_name "blank until accepted"
+    int signed_by FK "blank until accepted"
     datetime signed_at "blank until accepted"
   }
   INTERNAL_DISCREPANCIES {
