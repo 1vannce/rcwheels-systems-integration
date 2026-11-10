@@ -4,9 +4,11 @@
 import "dotenv/config";
 
 import { createClient } from "@supabase/supabase-js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+
+import type { Tx } from "@/db";
 
 import * as schema from "./schema";
 
@@ -48,6 +50,159 @@ const seedSuppliers = [
   { supplierName: "Visayas Wheel Supply", contactPerson: "Victor Chiu", contactDetails: "victor@visayaswheel.test", address: "Cebu City, Cebu" },
   { supplierName: "Mactan Auto Parts", contactPerson: "Irene Dela Cruz", contactDetails: "irene@mactanparts.test", address: "Lapu-Lapu City, Cebu" },
 ];
+
+async function seedItemAvailabilityExample(tx: Tx, userIds: Map<string, number>) {
+  const sampleItemCode = "TIRE-1757013";
+  const sampleRequesterId = userIds.get("requester@rcwheels.test");
+  const sampleApproverId = userIds.get("approver@rcwheels.test");
+
+  if (!sampleRequesterId || !sampleApproverId) {
+    throw new Error("The sample request needs the seeded requester and approver.");
+  }
+
+  const [sampleItem] = await tx
+    .select({ itemId: schema.items.itemId })
+    .from(schema.items)
+    .where(eq(schema.items.itemCode, sampleItemCode));
+
+  if (!sampleItem) {
+    throw new Error(`Could not find the seed item ${sampleItemCode}.`);
+  }
+
+  const [usableBalance] = await tx
+    .select({
+      stockBalanceId: schema.stockBalances.stockBalanceId,
+    })
+    .from(schema.stockBalances)
+    .where(
+      and(
+        eq(schema.stockBalances.itemId, sampleItem.itemId),
+        eq(schema.stockBalances.condition, "usable"),
+      ),
+    )
+    .for("update");
+
+  if (!usableBalance) {
+    throw new Error(`Could not find the seed balance for ${sampleItemCode}.`);
+  }
+
+  // Give the sample reservation enough stock on a fresh seed. The movement
+  // key makes this opening balance a one-time, auditable seed event.
+  const openingBalanceEventKey = `opening_balance:seed:${sampleItemCode}`;
+  const [openingBalanceMovement] = await tx
+    .insert(schema.stockMovements)
+    .values({
+      stockBalanceId: usableBalance.stockBalanceId,
+      movementType: "opening_balance",
+      quantityDelta: "8",
+      eventKey: openingBalanceEventKey,
+    })
+    .onConflictDoNothing()
+    .returning({ movementId: schema.stockMovements.movementId });
+
+  if (openingBalanceMovement) {
+    await tx
+      .update(schema.stockBalances)
+      .set({
+        quantityOnHand: sql`${schema.stockBalances.quantityOnHand} + 8::numeric`,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.stockBalances.stockBalanceId, usableBalance.stockBalanceId));
+  }
+
+  const samplePurpose = "Seed example for inventory item availability";
+  const [existingSampleRequest] = await tx
+    .select({ requisitionId: schema.requisitions.requisitionId })
+    .from(schema.requisitions)
+    .where(
+      and(
+        eq(schema.requisitions.submittedBy, sampleRequesterId),
+        eq(schema.requisitions.purpose, samplePurpose),
+      ),
+    )
+    .limit(1);
+
+  let sampleRequisitionId = existingSampleRequest?.requisitionId;
+
+  if (!sampleRequisitionId) {
+    const [sampleRequest] = await tx
+      .insert(schema.requisitions)
+      .values({
+        submittedBy: sampleRequesterId,
+        requesterName: "Rosa Villareal",
+        purpose: samplePurpose,
+        status: "approved",
+      })
+      .returning({ requisitionId: schema.requisitions.requisitionId });
+
+    sampleRequisitionId = sampleRequest.requisitionId;
+    await tx.insert(schema.requisitionStatusHistory).values({
+      requisitionId: sampleRequisitionId,
+      changedBy: sampleApproverId,
+      fromStatus: null,
+      toStatus: "approved",
+      reason: "Seeded sample for inventory availability.",
+    });
+  }
+
+  const [existingSampleLine] = await tx
+    .select({ requisitionLineId: schema.requisitionLines.requisitionLineId })
+    .from(schema.requisitionLines)
+    .where(
+      and(
+        eq(schema.requisitionLines.requisitionId, sampleRequisitionId),
+        eq(schema.requisitionLines.itemId, sampleItem.itemId),
+      ),
+    )
+    .limit(1);
+
+  let sampleRequisitionLineId = existingSampleLine?.requisitionLineId;
+
+  if (!sampleRequisitionLineId) {
+    const [sampleLine] = await tx
+      .insert(schema.requisitionLines)
+      .values({
+        requisitionId: sampleRequisitionId,
+        itemId: sampleItem.itemId,
+        requestedQty: "2",
+        approvedQty: "2",
+      })
+      .returning({ requisitionLineId: schema.requisitionLines.requisitionLineId });
+
+    sampleRequisitionLineId = sampleLine.requisitionLineId;
+  }
+
+  const reservationEventKey = `reserve:seed-item-list:${sampleRequisitionLineId}`;
+  const [existingSeedReservation] = await tx
+    .select({ reservationId: schema.stockReservations.reservationId })
+    .from(schema.stockReservations)
+    .where(
+      and(
+        eq(schema.stockReservations.requisitionLineId, sampleRequisitionLineId),
+        eq(schema.stockReservations.status, "active"),
+      ),
+    )
+    .limit(1);
+  const [existingReservationEvent] = await tx
+    .select({ movementId: schema.stockMovements.movementId })
+    .from(schema.stockMovements)
+    .where(eq(schema.stockMovements.eventKey, reservationEventKey));
+
+  if (!existingSeedReservation && !existingReservationEvent) {
+    await tx.insert(schema.stockMovements).values({
+      stockBalanceId: usableBalance.stockBalanceId,
+      movementType: "reservation",
+      quantityDelta: "0",
+      eventKey: reservationEventKey,
+    });
+    await tx.insert(schema.stockReservations).values({
+      requisitionLineId: sampleRequisitionLineId,
+      stockBalanceId: usableBalance.stockBalanceId,
+      reservedQty: "2",
+      status: "active",
+    });
+  }
+}
 
 /**
  * Creates the Supabase Auth accounts that are missing and returns each seeded
@@ -179,6 +334,8 @@ async function main() {
         on conflict do nothing
       `);
 
+      await seedItemAvailabilityExample(tx, userIds);
+
       const existingSuppliers = await tx
         .select({ supplierName: schema.suppliers.supplierName })
         .from(schema.suppliers);
@@ -198,6 +355,7 @@ async function main() {
   console.log(
     `Seeded ${schema.appRoleEnum.enumValues.length} roles, ${seedUsers.length} users, ${seedItems.length} items, ${seedSuppliers.length} suppliers.`,
   );
+  console.log("Seeded an approved sample request with an active reservation for TIRE-1757013.");
   console.log(
     authIds
       ? "Supabase Auth accounts and the storage bucket are in place. Sign in with a seeded email and SEED_USER_PASSWORD."

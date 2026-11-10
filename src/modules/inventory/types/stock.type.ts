@@ -47,6 +47,14 @@ export type ItemStock = {
   isIncomplete: boolean;
 };
 
+export type ItemStockRecord = Omit<ItemStock, "reserved" | "available">;
+
+export type ItemStockReservation = {
+  itemId: number;
+  reservedQty: string;
+  status: "active" | "consumed" | "released";
+};
+
 export type StockMovement = {
   movementId: number;
   movementType: MovementType;

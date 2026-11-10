@@ -4,15 +4,23 @@ import { desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Tx } from "@/db";
-import { items, stockBalances, stockMovements } from "@/db/schema";
+import { items, stockBalances, stockMovements, stockReservations } from "@/db/schema";
 
-import type { ItemStock, SalesDeduction, StockMovement } from "../types/stock.type";
+import type {
+  ItemStockRecord,
+  ItemStockReservation,
+  SalesDeduction,
+  StockMovement,
+} from "../types/stock.type";
 
 /**
  * Every item with its stock figures, or one item when `itemId` is given.
  * Reserved, in transit, and available are worked out here, never stored.
  */
-export async function findItemsWithStock(tx: Tx, itemId?: number): Promise<ItemStock[]> {
+export async function findItemsWithStock(
+  tx: Tx,
+  itemId?: number,
+): Promise<ItemStockRecord[]> {
   const rows = await tx.execute<{
     item_id: number;
     item_code: string;
@@ -22,7 +30,6 @@ export async function findItemsWithStock(tx: Tx, itemId?: number): Promise<ItemS
     reorder_point: string;
     average_cost: string;
     usable: string;
-    reserved: string;
     in_transit: string;
     held: string;
     damaged: string;
@@ -35,12 +42,6 @@ export async function findItemsWithStock(tx: Tx, itemId?: number): Promise<ItemS
       coalesce(max(b.quantity_on_hand) filter (where b.condition = 'hold'), 0)::numeric(14, 3) as held,
       coalesce(max(b.quantity_on_hand) filter (where b.condition = 'damaged'), 0)::numeric(14, 3) as damaged,
       coalesce(bool_or(b.is_incomplete), false) as is_incomplete,
-      coalesce((
-        select sum(r.reserved_qty)
-        from stock_reservations r
-        join stock_balances rb on rb.stock_balance_id = r.stock_balance_id
-        where rb.item_id = i.item_id and r.status = 'active'
-      ), 0)::numeric(14, 3) as reserved,
       coalesce((
         select sum(dl.sent_qty - dl.accepted_qty - coalesce((
           select sum(rl.returned_qty) from return_lines rl
@@ -66,14 +67,29 @@ export async function findItemsWithStock(tx: Tx, itemId?: number): Promise<ItemS
     reorderPoint: row.reorder_point,
     averageCost: row.average_cost,
     usable: row.usable,
-    reserved: row.reserved,
-    // Filled in by the service: usable minus reserved.
-    available: row.usable,
     inTransit: row.in_transit,
     held: row.held,
     damaged: row.damaged,
     isIncomplete: row.is_incomplete,
   }));
+}
+
+export async function findStockReservations(
+  tx: Tx,
+  itemId?: number,
+): Promise<ItemStockReservation[]> {
+  return tx
+    .select({
+      itemId: stockBalances.itemId,
+      reservedQty: stockReservations.reservedQty,
+      status: stockReservations.status,
+    })
+    .from(stockReservations)
+    .innerJoin(
+      stockBalances,
+      eq(stockBalances.stockBalanceId, stockReservations.stockBalanceId),
+    )
+    .where(itemId === undefined ? sql`true` : eq(stockBalances.itemId, itemId));
 }
 
 export async function findItemByCode(tx: Tx, itemCode: string) {
