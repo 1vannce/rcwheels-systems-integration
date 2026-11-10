@@ -26,7 +26,7 @@ import { purchaseOrders } from "./purchasing";
 export const roles = pgTable("roles", {
   roleId: serial("role_id").primaryKey(),
   roleName: appRoleEnum("role_name").notNull().unique("roles_role_name_unique"),
-});
+}).enableRLS();
 
 export const users = pgTable(
   "users",
@@ -46,7 +46,7 @@ export const users = pgTable(
     index("users_role_id_idx").on(t.roleId),
     index("users_approver_id_idx").on(t.approverId),
   ],
-);
+).enableRLS();
 
 export const notifications = pgTable(
   "notifications",
@@ -69,7 +69,7 @@ export const notifications = pgTable(
     index("notifications_recipient_read_idx").on(t.recipientUserId, t.readAt),
     index("notifications_requisition_id_idx").on(t.requisitionId),
   ],
-);
+).enableRLS();
 
 export const documentAttachments = pgTable(
   "document_attachments",
@@ -122,7 +122,7 @@ export const documentAttachments = pgTable(
       t.internalDiscrepancyId,
     ),
   ],
-);
+).enableRLS();
 
 export const auditLog = pgTable(
   "audit_log",
@@ -143,4 +143,4 @@ export const auditLog = pgTable(
     index("audit_log_actor_user_id_idx").on(t.actorUserId),
     index("audit_log_occurred_at_idx").on(t.occurredAt),
   ],
-);
+).enableRLS();

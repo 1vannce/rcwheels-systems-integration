@@ -1,0 +1,3582 @@
+{
+  "id": "569a848f-4120-4357-b704-8047be1edf67",
+  "prevId": "90526d3c-201d-498b-a3c6-7b97ac330110",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.audit_log": {
+      "name": "audit_log",
+      "schema": "",
+      "columns": {
+        "audit_id": {
+          "name": "audit_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "change_details": {
+          "name": "change_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "audit_log_entity_idx": {
+          "name": "audit_log_entity_idx",
+          "columns": [
+            {
+              "expression": "entity_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_log_actor_user_id_idx": {
+          "name": "audit_log_actor_user_id_idx",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_log_occurred_at_idx": {
+          "name": "audit_log_occurred_at_idx",
+          "columns": [
+            {
+              "expression": "occurred_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "audit_log_actor_user_id_users_user_id_fk": {
+          "name": "audit_log_actor_user_id_users_user_id_fk",
+          "tableFrom": "audit_log",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.document_attachments": {
+      "name": "document_attachments",
+      "schema": "",
+      "columns": {
+        "attachment_id": {
+          "name": "attachment_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "uploaded_by": {
+          "name": "uploaded_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purchase_order_id": {
+          "name": "purchase_order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supplier_receipt_id": {
+          "name": "supplier_receipt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supplier_discrepancy_id": {
+          "name": "supplier_discrepancy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acknowledgement_receipt_id": {
+          "name": "acknowledgement_receipt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "internal_discrepancy_id": {
+          "name": "internal_discrepancy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_uri": {
+          "name": "file_uri",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_type": {
+          "name": "document_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uploaded_at": {
+          "name": "uploaded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "document_attachments_purchase_order_idx": {
+          "name": "document_attachments_purchase_order_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_attachments_supplier_receipt_idx": {
+          "name": "document_attachments_supplier_receipt_idx",
+          "columns": [
+            {
+              "expression": "supplier_receipt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_attachments_supplier_discrepancy_idx": {
+          "name": "document_attachments_supplier_discrepancy_idx",
+          "columns": [
+            {
+              "expression": "supplier_discrepancy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_attachments_acknowledgement_receipt_idx": {
+          "name": "document_attachments_acknowledgement_receipt_idx",
+          "columns": [
+            {
+              "expression": "acknowledgement_receipt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "document_attachments_internal_discrepancy_idx": {
+          "name": "document_attachments_internal_discrepancy_idx",
+          "columns": [
+            {
+              "expression": "internal_discrepancy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "document_attachments_uploaded_by_users_user_id_fk": {
+          "name": "document_attachments_uploaded_by_users_user_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "uploaded_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_attachments_purchase_order_id_purchase_orders_purchase_order_id_fk": {
+          "name": "document_attachments_purchase_order_id_purchase_orders_purchase_order_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "purchase_orders",
+          "columnsFrom": [
+            "purchase_order_id"
+          ],
+          "columnsTo": [
+            "purchase_order_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_attachments_supplier_receipt_id_supplier_receipts_supplier_receipt_id_fk": {
+          "name": "document_attachments_supplier_receipt_id_supplier_receipts_supplier_receipt_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "supplier_receipts",
+          "columnsFrom": [
+            "supplier_receipt_id"
+          ],
+          "columnsTo": [
+            "supplier_receipt_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_attachments_supplier_discrepancy_id_supplier_discrepancies_supplier_discrepancy_id_fk": {
+          "name": "document_attachments_supplier_discrepancy_id_supplier_discrepancies_supplier_discrepancy_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "supplier_discrepancies",
+          "columnsFrom": [
+            "supplier_discrepancy_id"
+          ],
+          "columnsTo": [
+            "supplier_discrepancy_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_attachments_acknowledgement_receipt_id_acknowledgement_receipts_acknowledgement_receipt_id_fk": {
+          "name": "document_attachments_acknowledgement_receipt_id_acknowledgement_receipts_acknowledgement_receipt_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "acknowledgement_receipts",
+          "columnsFrom": [
+            "acknowledgement_receipt_id"
+          ],
+          "columnsTo": [
+            "acknowledgement_receipt_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_attachments_internal_discrepancy_id_internal_discrepancies_internal_discrepancy_id_fk": {
+          "name": "document_attachments_internal_discrepancy_id_internal_discrepancies_internal_discrepancy_id_fk",
+          "tableFrom": "document_attachments",
+          "tableTo": "internal_discrepancies",
+          "columnsFrom": [
+            "internal_discrepancy_id"
+          ],
+          "columnsTo": [
+            "internal_discrepancy_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "document_attachments_one_target": {
+          "name": "document_attachments_one_target",
+          "value": "(\n        case when \"document_attachments\".\"purchase_order_id\" is not null then 1 else 0 end +\n        case when \"document_attachments\".\"supplier_receipt_id\" is not null then 1 else 0 end +\n        case when \"document_attachments\".\"supplier_discrepancy_id\" is not null then 1 else 0 end +\n        case when \"document_attachments\".\"acknowledgement_receipt_id\" is not null then 1 else 0 end +\n        case when \"document_attachments\".\"internal_discrepancy_id\" is not null then 1 else 0 end\n      ) = 1"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "notification_id": {
+          "name": "notification_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "recipient_user_id": {
+          "name": "recipient_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requisition_id": {
+          "name": "requisition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "notification_type": {
+          "name": "notification_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "notifications_recipient_read_idx": {
+          "name": "notifications_recipient_read_idx",
+          "columns": [
+            {
+              "expression": "recipient_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "read_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_requisition_id_idx": {
+          "name": "notifications_requisition_id_idx",
+          "columns": [
+            {
+              "expression": "requisition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "notifications_recipient_user_id_users_user_id_fk": {
+          "name": "notifications_recipient_user_id_users_user_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "recipient_user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "notifications_requisition_id_requisitions_requisition_id_fk": {
+          "name": "notifications_requisition_id_requisitions_requisition_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "requisitions",
+          "columnsFrom": [
+            "requisition_id"
+          ],
+          "columnsTo": [
+            "requisition_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.roles": {
+      "name": "roles",
+      "schema": "",
+      "columns": {
+        "role_id": {
+          "name": "role_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "role_name": {
+          "name": "role_name",
+          "type": "app_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "roles_role_name_unique": {
+          "name": "roles_role_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "role_name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "auth_user_id": {
+          "name": "auth_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approver_id": {
+          "name": "approver_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {
+        "users_role_id_idx": {
+          "name": "users_role_id_idx",
+          "columns": [
+            {
+              "expression": "role_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "users_approver_id_idx": {
+          "name": "users_approver_id_idx",
+          "columns": [
+            {
+              "expression": "approver_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "users_role_id_roles_role_id_fk": {
+          "name": "users_role_id_roles_role_id_fk",
+          "tableFrom": "users",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "role_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "users_approver_id_users_user_id_fk": {
+          "name": "users_approver_id_users_user_id_fk",
+          "tableFrom": "users",
+          "tableTo": "users",
+          "columnsFrom": [
+            "approver_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_auth_user_id_unique": {
+          "name": "users_auth_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "auth_user_id"
+          ]
+        },
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.items": {
+      "name": "items",
+      "schema": "",
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "item_code": {
+          "name": "item_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_name": {
+          "name": "item_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "specification": {
+          "name": "specification",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reorder_point": {
+          "name": "reorder_point",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "average_cost": {
+          "name": "average_cost",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "items_item_code_unique": {
+          "name": "items_item_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "item_code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.stock_adjustments": {
+      "name": "stock_adjustments",
+      "schema": "",
+      "columns": {
+        "adjustment_id": {
+          "name": "adjustment_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "stock_balance_id": {
+          "name": "stock_balance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counted_by": {
+          "name": "counted_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recorded_qty": {
+          "name": "recorded_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "counted_qty": {
+          "name": "counted_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "adjustment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "counted_at": {
+          "name": "counted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stock_adjustments_stock_balance_idx": {
+          "name": "stock_adjustments_stock_balance_idx",
+          "columns": [
+            {
+              "expression": "stock_balance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stock_adjustments_status_idx": {
+          "name": "stock_adjustments_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stock_adjustments_stock_balance_id_stock_balances_stock_balance_id_fk": {
+          "name": "stock_adjustments_stock_balance_id_stock_balances_stock_balance_id_fk",
+          "tableFrom": "stock_adjustments",
+          "tableTo": "stock_balances",
+          "columnsFrom": [
+            "stock_balance_id"
+          ],
+          "columnsTo": [
+            "stock_balance_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_adjustments_counted_by_users_user_id_fk": {
+          "name": "stock_adjustments_counted_by_users_user_id_fk",
+          "tableFrom": "stock_adjustments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "counted_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_adjustments_approved_by_users_user_id_fk": {
+          "name": "stock_adjustments_approved_by_users_user_id_fk",
+          "tableFrom": "stock_adjustments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.stock_balances": {
+      "name": "stock_balances",
+      "schema": "",
+      "columns": {
+        "stock_balance_id": {
+          "name": "stock_balance_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "condition": {
+          "name": "condition",
+          "type": "stock_condition",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity_on_hand": {
+          "name": "quantity_on_hand",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "is_incomplete": {
+          "name": "is_incomplete",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stock_balances_item_condition_unique": {
+          "name": "stock_balances_item_condition_unique",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "condition",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stock_balances_item_id_items_item_id_fk": {
+          "name": "stock_balances_item_id_items_item_id_fk",
+          "tableFrom": "stock_balances",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "item_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.stock_movements": {
+      "name": "stock_movements",
+      "schema": "",
+      "columns": {
+        "movement_id": {
+          "name": "movement_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "stock_balance_id": {
+          "name": "stock_balance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "movement_type": {
+          "name": "movement_type",
+          "type": "stock_movement_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supplier_receipt_line_id": {
+          "name": "supplier_receipt_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dispatch_line_id": {
+          "name": "dispatch_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_line_id": {
+          "name": "return_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "adjustment_id": {
+          "name": "adjustment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reverses_movement_id": {
+          "name": "reverses_movement_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity_delta": {
+          "name": "quantity_delta",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_cost": {
+          "name": "unit_cost",
+          "type": "numeric(12, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_key": {
+          "name": "event_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "posted_at": {
+          "name": "posted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stock_movements_stock_balance_idx": {
+          "name": "stock_movements_stock_balance_idx",
+          "columns": [
+            {
+              "expression": "stock_balance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stock_movements_movement_type_idx": {
+          "name": "stock_movements_movement_type_idx",
+          "columns": [
+            {
+              "expression": "movement_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stock_movements_reverses_movement_unique": {
+          "name": "stock_movements_reverses_movement_unique",
+          "columns": [
+            {
+              "expression": "reverses_movement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stock_movements_stock_balance_id_stock_balances_stock_balance_id_fk": {
+          "name": "stock_movements_stock_balance_id_stock_balances_stock_balance_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "stock_balances",
+          "columnsFrom": [
+            "stock_balance_id"
+          ],
+          "columnsTo": [
+            "stock_balance_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_movements_supplier_receipt_line_id_supplier_receipt_lines_supplier_receipt_line_id_fk": {
+          "name": "stock_movements_supplier_receipt_line_id_supplier_receipt_lines_supplier_receipt_line_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "supplier_receipt_lines",
+          "columnsFrom": [
+            "supplier_receipt_line_id"
+          ],
+          "columnsTo": [
+            "supplier_receipt_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_movements_dispatch_line_id_dispatch_lines_dispatch_line_id_fk": {
+          "name": "stock_movements_dispatch_line_id_dispatch_lines_dispatch_line_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "dispatch_lines",
+          "columnsFrom": [
+            "dispatch_line_id"
+          ],
+          "columnsTo": [
+            "dispatch_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_movements_return_line_id_return_lines_return_line_id_fk": {
+          "name": "stock_movements_return_line_id_return_lines_return_line_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "return_lines",
+          "columnsFrom": [
+            "return_line_id"
+          ],
+          "columnsTo": [
+            "return_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_movements_adjustment_id_stock_adjustments_adjustment_id_fk": {
+          "name": "stock_movements_adjustment_id_stock_adjustments_adjustment_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "stock_adjustments",
+          "columnsFrom": [
+            "adjustment_id"
+          ],
+          "columnsTo": [
+            "adjustment_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_movements_reverses_movement_id_stock_movements_movement_id_fk": {
+          "name": "stock_movements_reverses_movement_id_stock_movements_movement_id_fk",
+          "tableFrom": "stock_movements",
+          "tableTo": "stock_movements",
+          "columnsFrom": [
+            "reverses_movement_id"
+          ],
+          "columnsTo": [
+            "movement_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "stock_movements_event_key_unique": {
+          "name": "stock_movements_event_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.stock_reservations": {
+      "name": "stock_reservations",
+      "schema": "",
+      "columns": {
+        "reservation_id": {
+          "name": "reservation_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "requisition_line_id": {
+          "name": "requisition_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stock_balance_id": {
+          "name": "stock_balance_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserved_qty": {
+          "name": "reserved_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "reservation_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "reserved_at": {
+          "name": "reserved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "stock_reservations_requisition_line_idx": {
+          "name": "stock_reservations_requisition_line_idx",
+          "columns": [
+            {
+              "expression": "requisition_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stock_reservations_stock_balance_idx": {
+          "name": "stock_reservations_stock_balance_idx",
+          "columns": [
+            {
+              "expression": "stock_balance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "stock_reservations_status_idx": {
+          "name": "stock_reservations_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "stock_reservations_requisition_line_id_requisition_lines_requisition_line_id_fk": {
+          "name": "stock_reservations_requisition_line_id_requisition_lines_requisition_line_id_fk",
+          "tableFrom": "stock_reservations",
+          "tableTo": "requisition_lines",
+          "columnsFrom": [
+            "requisition_line_id"
+          ],
+          "columnsTo": [
+            "requisition_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stock_reservations_stock_balance_id_stock_balances_stock_balance_id_fk": {
+          "name": "stock_reservations_stock_balance_id_stock_balances_stock_balance_id_fk",
+          "tableFrom": "stock_reservations",
+          "tableTo": "stock_balances",
+          "columnsFrom": [
+            "stock_balance_id"
+          ],
+          "columnsTo": [
+            "stock_balance_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.acknowledgement_receipts": {
+      "name": "acknowledgement_receipts",
+      "schema": "",
+      "columns": {
+        "acknowledgement_receipt_id": {
+          "name": "acknowledgement_receipt_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dispatch_id": {
+          "name": "dispatch_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prepared_by": {
+          "name": "prepared_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prepared_at": {
+          "name": "prepared_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "signed_by": {
+          "name": "signed_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "signed_at": {
+          "name": "signed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "acknowledgement_receipts_signed_by_idx": {
+          "name": "acknowledgement_receipts_signed_by_idx",
+          "columns": [
+            {
+              "expression": "signed_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "acknowledgement_receipts_dispatch_id_dispatches_dispatch_id_fk": {
+          "name": "acknowledgement_receipts_dispatch_id_dispatches_dispatch_id_fk",
+          "tableFrom": "acknowledgement_receipts",
+          "tableTo": "dispatches",
+          "columnsFrom": [
+            "dispatch_id"
+          ],
+          "columnsTo": [
+            "dispatch_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acknowledgement_receipts_prepared_by_users_user_id_fk": {
+          "name": "acknowledgement_receipts_prepared_by_users_user_id_fk",
+          "tableFrom": "acknowledgement_receipts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "prepared_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "acknowledgement_receipts_signed_by_users_user_id_fk": {
+          "name": "acknowledgement_receipts_signed_by_users_user_id_fk",
+          "tableFrom": "acknowledgement_receipts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "signed_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "acknowledgement_receipts_dispatch_unique": {
+          "name": "acknowledgement_receipts_dispatch_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "dispatch_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.dispatch_lines": {
+      "name": "dispatch_lines",
+      "schema": "",
+      "columns": {
+        "dispatch_line_id": {
+          "name": "dispatch_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dispatch_id": {
+          "name": "dispatch_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requisition_line_id": {
+          "name": "requisition_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sent_qty": {
+          "name": "sent_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accepted_qty": {
+          "name": "accepted_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {
+        "dispatch_lines_dispatch_idx": {
+          "name": "dispatch_lines_dispatch_idx",
+          "columns": [
+            {
+              "expression": "dispatch_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dispatch_lines_requisition_line_idx": {
+          "name": "dispatch_lines_requisition_line_idx",
+          "columns": [
+            {
+              "expression": "requisition_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dispatch_lines_dispatch_id_dispatches_dispatch_id_fk": {
+          "name": "dispatch_lines_dispatch_id_dispatches_dispatch_id_fk",
+          "tableFrom": "dispatch_lines",
+          "tableTo": "dispatches",
+          "columnsFrom": [
+            "dispatch_id"
+          ],
+          "columnsTo": [
+            "dispatch_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dispatch_lines_requisition_line_id_requisition_lines_requisition_line_id_fk": {
+          "name": "dispatch_lines_requisition_line_id_requisition_lines_requisition_line_id_fk",
+          "tableFrom": "dispatch_lines",
+          "tableTo": "requisition_lines",
+          "columnsFrom": [
+            "requisition_line_id"
+          ],
+          "columnsTo": [
+            "requisition_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.dispatches": {
+      "name": "dispatches",
+      "schema": "",
+      "columns": {
+        "dispatch_id": {
+          "name": "dispatch_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "requisition_id": {
+          "name": "requisition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dispatched_by": {
+          "name": "dispatched_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_personnel": {
+          "name": "delivery_personnel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dispatched_at": {
+          "name": "dispatched_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'dispatched'"
+        }
+      },
+      "indexes": {
+        "dispatches_requisition_idx": {
+          "name": "dispatches_requisition_idx",
+          "columns": [
+            {
+              "expression": "requisition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "dispatches_status_idx": {
+          "name": "dispatches_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dispatches_requisition_id_requisitions_requisition_id_fk": {
+          "name": "dispatches_requisition_id_requisitions_requisition_id_fk",
+          "tableFrom": "dispatches",
+          "tableTo": "requisitions",
+          "columnsFrom": [
+            "requisition_id"
+          ],
+          "columnsTo": [
+            "requisition_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "dispatches_dispatched_by_users_user_id_fk": {
+          "name": "dispatches_dispatched_by_users_user_id_fk",
+          "tableFrom": "dispatches",
+          "tableTo": "users",
+          "columnsFrom": [
+            "dispatched_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.requisition_lines": {
+      "name": "requisition_lines",
+      "schema": "",
+      "columns": {
+        "requisition_line_id": {
+          "name": "requisition_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "requisition_id": {
+          "name": "requisition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_qty": {
+          "name": "requested_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_qty": {
+          "name": "approved_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "cancelled_qty": {
+          "name": "cancelled_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {
+        "requisition_lines_requisition_idx": {
+          "name": "requisition_lines_requisition_idx",
+          "columns": [
+            {
+              "expression": "requisition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requisition_lines_item_idx": {
+          "name": "requisition_lines_item_idx",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "requisition_lines_requisition_id_requisitions_requisition_id_fk": {
+          "name": "requisition_lines_requisition_id_requisitions_requisition_id_fk",
+          "tableFrom": "requisition_lines",
+          "tableTo": "requisitions",
+          "columnsFrom": [
+            "requisition_id"
+          ],
+          "columnsTo": [
+            "requisition_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "requisition_lines_item_id_items_item_id_fk": {
+          "name": "requisition_lines_item_id_items_item_id_fk",
+          "tableFrom": "requisition_lines",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "item_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.requisition_status_history": {
+      "name": "requisition_status_history",
+      "schema": "",
+      "columns": {
+        "history_id": {
+          "name": "history_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "requisition_id": {
+          "name": "requisition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "changed_by": {
+          "name": "changed_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "from_status": {
+          "name": "from_status",
+          "type": "requisition_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "to_status": {
+          "name": "to_status",
+          "type": "requisition_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "changed_at": {
+          "name": "changed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "requisition_status_history_requisition_idx": {
+          "name": "requisition_status_history_requisition_idx",
+          "columns": [
+            {
+              "expression": "requisition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requisition_status_history_changed_at_idx": {
+          "name": "requisition_status_history_changed_at_idx",
+          "columns": [
+            {
+              "expression": "changed_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "requisition_status_history_requisition_id_requisitions_requisition_id_fk": {
+          "name": "requisition_status_history_requisition_id_requisitions_requisition_id_fk",
+          "tableFrom": "requisition_status_history",
+          "tableTo": "requisitions",
+          "columnsFrom": [
+            "requisition_id"
+          ],
+          "columnsTo": [
+            "requisition_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "requisition_status_history_changed_by_users_user_id_fk": {
+          "name": "requisition_status_history_changed_by_users_user_id_fk",
+          "tableFrom": "requisition_status_history",
+          "tableTo": "users",
+          "columnsFrom": [
+            "changed_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.requisitions": {
+      "name": "requisitions",
+      "schema": "",
+      "columns": {
+        "requisition_id": {
+          "name": "requisition_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "submitted_by": {
+          "name": "submitted_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requester_name": {
+          "name": "requester_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "is_urgent": {
+          "name": "is_urgent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "requisition_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_approval'"
+        }
+      },
+      "indexes": {
+        "requisitions_submitted_by_idx": {
+          "name": "requisitions_submitted_by_idx",
+          "columns": [
+            {
+              "expression": "submitted_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "requisitions_status_idx": {
+          "name": "requisitions_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "requisitions_submitted_by_users_user_id_fk": {
+          "name": "requisitions_submitted_by_users_user_id_fk",
+          "tableFrom": "requisitions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "submitted_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.purchase_order_lines": {
+      "name": "purchase_order_lines",
+      "schema": "",
+      "columns": {
+        "purchase_order_line_id": {
+          "name": "purchase_order_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "purchase_order_id": {
+          "name": "purchase_order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purchase_requisition_line_id": {
+          "name": "purchase_requisition_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordered_qty": {
+          "name": "ordered_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unit_price": {
+          "name": "unit_price",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cancelled_qty": {
+          "name": "cancelled_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        }
+      },
+      "indexes": {
+        "purchase_order_lines_purchase_order_idx": {
+          "name": "purchase_order_lines_purchase_order_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_order_lines_purchase_requisition_line_idx": {
+          "name": "purchase_order_lines_purchase_requisition_line_idx",
+          "columns": [
+            {
+              "expression": "purchase_requisition_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "purchase_order_lines_purchase_order_id_purchase_orders_purchase_order_id_fk": {
+          "name": "purchase_order_lines_purchase_order_id_purchase_orders_purchase_order_id_fk",
+          "tableFrom": "purchase_order_lines",
+          "tableTo": "purchase_orders",
+          "columnsFrom": [
+            "purchase_order_id"
+          ],
+          "columnsTo": [
+            "purchase_order_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_order_lines_purchase_requisition_line_id_purchase_requisition_lines_purchase_requisition_line_id_fk": {
+          "name": "purchase_order_lines_purchase_requisition_line_id_purchase_requisition_lines_purchase_requisition_line_id_fk",
+          "tableFrom": "purchase_order_lines",
+          "tableTo": "purchase_requisition_lines",
+          "columnsFrom": [
+            "purchase_requisition_line_id"
+          ],
+          "columnsTo": [
+            "purchase_requisition_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.purchase_order_revisions": {
+      "name": "purchase_order_revisions",
+      "schema": "",
+      "columns": {
+        "revision_id": {
+          "name": "revision_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "purchase_order_id": {
+          "name": "purchase_order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version_no": {
+          "name": "version_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "changed_by": {
+          "name": "changed_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reviewed_by": {
+          "name": "reviewed_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "budget_ok": {
+          "name": "budget_ok",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "review_reason": {
+          "name": "review_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "snapshot": {
+          "name": "snapshot",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "purchase_order_revisions_order_version_unique": {
+          "name": "purchase_order_revisions_order_version_unique",
+          "columns": [
+            {
+              "expression": "purchase_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "version_no",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_order_revisions_purchase_order_idx": {
+          "name": "purchase_order_revisions_purchase_order_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "purchase_order_revisions_purchase_order_id_purchase_orders_purchase_order_id_fk": {
+          "name": "purchase_order_revisions_purchase_order_id_purchase_orders_purchase_order_id_fk",
+          "tableFrom": "purchase_order_revisions",
+          "tableTo": "purchase_orders",
+          "columnsFrom": [
+            "purchase_order_id"
+          ],
+          "columnsTo": [
+            "purchase_order_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_order_revisions_changed_by_users_user_id_fk": {
+          "name": "purchase_order_revisions_changed_by_users_user_id_fk",
+          "tableFrom": "purchase_order_revisions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "changed_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_order_revisions_reviewed_by_users_user_id_fk": {
+          "name": "purchase_order_revisions_reviewed_by_users_user_id_fk",
+          "tableFrom": "purchase_order_revisions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reviewed_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.purchase_orders": {
+      "name": "purchase_orders",
+      "schema": "",
+      "columns": {
+        "purchase_order_id": {
+          "name": "purchase_order_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "supplier_id": {
+          "name": "supplier_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prepared_by": {
+          "name": "prepared_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordered_at": {
+          "name": "ordered_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "purchase_order_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_approval'"
+        },
+        "current_version": {
+          "name": "current_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "delivery_terms": {
+          "name": "delivery_terms",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supplier_confirmed_at": {
+          "name": "supplier_confirmed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "purchase_orders_supplier_idx": {
+          "name": "purchase_orders_supplier_idx",
+          "columns": [
+            {
+              "expression": "supplier_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_orders_prepared_by_idx": {
+          "name": "purchase_orders_prepared_by_idx",
+          "columns": [
+            {
+              "expression": "prepared_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_orders_status_idx": {
+          "name": "purchase_orders_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "purchase_orders_supplier_id_suppliers_supplier_id_fk": {
+          "name": "purchase_orders_supplier_id_suppliers_supplier_id_fk",
+          "tableFrom": "purchase_orders",
+          "tableTo": "suppliers",
+          "columnsFrom": [
+            "supplier_id"
+          ],
+          "columnsTo": [
+            "supplier_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_orders_prepared_by_users_user_id_fk": {
+          "name": "purchase_orders_prepared_by_users_user_id_fk",
+          "tableFrom": "purchase_orders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "prepared_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_orders_approved_by_users_user_id_fk": {
+          "name": "purchase_orders_approved_by_users_user_id_fk",
+          "tableFrom": "purchase_orders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.purchase_requisition_lines": {
+      "name": "purchase_requisition_lines",
+      "schema": "",
+      "columns": {
+        "purchase_requisition_line_id": {
+          "name": "purchase_requisition_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "purchase_requisition_id": {
+          "name": "purchase_requisition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requisition_line_id": {
+          "name": "requisition_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_qty": {
+          "name": "requested_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "purchase_requisition_lines_purchase_requisition_idx": {
+          "name": "purchase_requisition_lines_purchase_requisition_idx",
+          "columns": [
+            {
+              "expression": "purchase_requisition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_requisition_lines_requisition_line_idx": {
+          "name": "purchase_requisition_lines_requisition_line_idx",
+          "columns": [
+            {
+              "expression": "requisition_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_requisition_lines_item_idx": {
+          "name": "purchase_requisition_lines_item_idx",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "purchase_requisition_lines_purchase_requisition_id_purchase_requisitions_purchase_requisition_id_fk": {
+          "name": "purchase_requisition_lines_purchase_requisition_id_purchase_requisitions_purchase_requisition_id_fk",
+          "tableFrom": "purchase_requisition_lines",
+          "tableTo": "purchase_requisitions",
+          "columnsFrom": [
+            "purchase_requisition_id"
+          ],
+          "columnsTo": [
+            "purchase_requisition_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_requisition_lines_requisition_line_id_requisition_lines_requisition_line_id_fk": {
+          "name": "purchase_requisition_lines_requisition_line_id_requisition_lines_requisition_line_id_fk",
+          "tableFrom": "purchase_requisition_lines",
+          "tableTo": "requisition_lines",
+          "columnsFrom": [
+            "requisition_line_id"
+          ],
+          "columnsTo": [
+            "requisition_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "purchase_requisition_lines_item_id_items_item_id_fk": {
+          "name": "purchase_requisition_lines_item_id_items_item_id_fk",
+          "tableFrom": "purchase_requisition_lines",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "item_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.purchase_requisitions": {
+      "name": "purchase_requisitions",
+      "schema": "",
+      "columns": {
+        "purchase_requisition_id": {
+          "name": "purchase_requisition_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "request_reason": {
+          "name": "request_reason",
+          "type": "purchase_requisition_reason",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "purchase_requisition_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        }
+      },
+      "indexes": {
+        "purchase_requisitions_requested_by_idx": {
+          "name": "purchase_requisitions_requested_by_idx",
+          "columns": [
+            {
+              "expression": "requested_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_requisitions_status_idx": {
+          "name": "purchase_requisitions_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "purchase_requisitions_requested_by_users_user_id_fk": {
+          "name": "purchase_requisitions_requested_by_users_user_id_fk",
+          "tableFrom": "purchase_requisitions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "requested_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.suppliers": {
+      "name": "suppliers",
+      "schema": "",
+      "columns": {
+        "supplier_id": {
+          "name": "supplier_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "supplier_name": {
+          "name": "supplier_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contact_person": {
+          "name": "contact_person",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_details": {
+          "name": "contact_details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.internal_discrepancies": {
+      "name": "internal_discrepancies",
+      "schema": "",
+      "columns": {
+        "internal_discrepancy_id": {
+          "name": "internal_discrepancy_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "dispatch_line_id": {
+          "name": "dispatch_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reported_by": {
+          "name": "reported_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolved_by": {
+          "name": "resolved_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "affected_qty": {
+          "name": "affected_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "problem": {
+          "name": "problem",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolution_action": {
+          "name": "resolution_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "internal_discrepancy_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_resolution'"
+        },
+        "reported_at": {
+          "name": "reported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "internal_discrepancies_dispatch_line_idx": {
+          "name": "internal_discrepancies_dispatch_line_idx",
+          "columns": [
+            {
+              "expression": "dispatch_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "internal_discrepancies_status_idx": {
+          "name": "internal_discrepancies_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "internal_discrepancies_dispatch_line_id_dispatch_lines_dispatch_line_id_fk": {
+          "name": "internal_discrepancies_dispatch_line_id_dispatch_lines_dispatch_line_id_fk",
+          "tableFrom": "internal_discrepancies",
+          "tableTo": "dispatch_lines",
+          "columnsFrom": [
+            "dispatch_line_id"
+          ],
+          "columnsTo": [
+            "dispatch_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "internal_discrepancies_reported_by_users_user_id_fk": {
+          "name": "internal_discrepancies_reported_by_users_user_id_fk",
+          "tableFrom": "internal_discrepancies",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reported_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "internal_discrepancies_resolved_by_users_user_id_fk": {
+          "name": "internal_discrepancies_resolved_by_users_user_id_fk",
+          "tableFrom": "internal_discrepancies",
+          "tableTo": "users",
+          "columnsFrom": [
+            "resolved_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.return_lines": {
+      "name": "return_lines",
+      "schema": "",
+      "columns": {
+        "return_line_id": {
+          "name": "return_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "return_id": {
+          "name": "return_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dispatch_line_id": {
+          "name": "dispatch_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "returned_qty": {
+          "name": "returned_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "condition": {
+          "name": "condition",
+          "type": "stock_condition",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "inspected_at": {
+          "name": "inspected_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "return_lines_return_idx": {
+          "name": "return_lines_return_idx",
+          "columns": [
+            {
+              "expression": "return_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "return_lines_dispatch_line_idx": {
+          "name": "return_lines_dispatch_line_idx",
+          "columns": [
+            {
+              "expression": "dispatch_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "return_lines_return_id_returns_return_id_fk": {
+          "name": "return_lines_return_id_returns_return_id_fk",
+          "tableFrom": "return_lines",
+          "tableTo": "returns",
+          "columnsFrom": [
+            "return_id"
+          ],
+          "columnsTo": [
+            "return_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "return_lines_dispatch_line_id_dispatch_lines_dispatch_line_id_fk": {
+          "name": "return_lines_dispatch_line_id_dispatch_lines_dispatch_line_id_fk",
+          "tableFrom": "return_lines",
+          "tableTo": "dispatch_lines",
+          "columnsFrom": [
+            "dispatch_line_id"
+          ],
+          "columnsTo": [
+            "dispatch_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.returns": {
+      "name": "returns",
+      "schema": "",
+      "columns": {
+        "return_id": {
+          "name": "return_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "internal_discrepancy_id": {
+          "name": "internal_discrepancy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_by": {
+          "name": "received_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "returned_at": {
+          "name": "returned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending_inspection'"
+        }
+      },
+      "indexes": {
+        "returns_internal_discrepancy_idx": {
+          "name": "returns_internal_discrepancy_idx",
+          "columns": [
+            {
+              "expression": "internal_discrepancy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "returns_status_idx": {
+          "name": "returns_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "returns_internal_discrepancy_id_internal_discrepancies_internal_discrepancy_id_fk": {
+          "name": "returns_internal_discrepancy_id_internal_discrepancies_internal_discrepancy_id_fk",
+          "tableFrom": "returns",
+          "tableTo": "internal_discrepancies",
+          "columnsFrom": [
+            "internal_discrepancy_id"
+          ],
+          "columnsTo": [
+            "internal_discrepancy_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "returns_received_by_users_user_id_fk": {
+          "name": "returns_received_by_users_user_id_fk",
+          "tableFrom": "returns",
+          "tableTo": "users",
+          "columnsFrom": [
+            "received_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.supplier_commitments": {
+      "name": "supplier_commitments",
+      "schema": "",
+      "columns": {
+        "commitment_id": {
+          "name": "commitment_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "supplier_discrepancy_id": {
+          "name": "supplier_discrepancy_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agreed_action": {
+          "name": "agreed_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "committed_qty": {
+          "name": "committed_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_delivery_date": {
+          "name": "expected_delivery_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "supplier_commitments_discrepancy_idx": {
+          "name": "supplier_commitments_discrepancy_idx",
+          "columns": [
+            {
+              "expression": "supplier_discrepancy_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "supplier_commitments_supplier_discrepancy_id_supplier_discrepancies_supplier_discrepancy_id_fk": {
+          "name": "supplier_commitments_supplier_discrepancy_id_supplier_discrepancies_supplier_discrepancy_id_fk",
+          "tableFrom": "supplier_commitments",
+          "tableTo": "supplier_discrepancies",
+          "columnsFrom": [
+            "supplier_discrepancy_id"
+          ],
+          "columnsTo": [
+            "supplier_discrepancy_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.supplier_discrepancies": {
+      "name": "supplier_discrepancies",
+      "schema": "",
+      "columns": {
+        "supplier_discrepancy_id": {
+          "name": "supplier_discrepancy_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "purchase_order_line_id": {
+          "name": "purchase_order_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supplier_receipt_line_id": {
+          "name": "supplier_receipt_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reported_by": {
+          "name": "reported_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "problem": {
+          "name": "problem",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "affected_qty": {
+          "name": "affected_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resolution_action": {
+          "name": "resolution_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "supplier_discrepancy_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "reported_at": {
+          "name": "reported_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "supplier_discrepancies_purchase_order_line_idx": {
+          "name": "supplier_discrepancies_purchase_order_line_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "supplier_discrepancies_receipt_line_idx": {
+          "name": "supplier_discrepancies_receipt_line_idx",
+          "columns": [
+            {
+              "expression": "supplier_receipt_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "supplier_discrepancies_status_idx": {
+          "name": "supplier_discrepancies_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "supplier_discrepancies_purchase_order_line_id_purchase_order_lines_purchase_order_line_id_fk": {
+          "name": "supplier_discrepancies_purchase_order_line_id_purchase_order_lines_purchase_order_line_id_fk",
+          "tableFrom": "supplier_discrepancies",
+          "tableTo": "purchase_order_lines",
+          "columnsFrom": [
+            "purchase_order_line_id"
+          ],
+          "columnsTo": [
+            "purchase_order_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_discrepancies_supplier_receipt_line_id_supplier_receipt_lines_supplier_receipt_line_id_fk": {
+          "name": "supplier_discrepancies_supplier_receipt_line_id_supplier_receipt_lines_supplier_receipt_line_id_fk",
+          "tableFrom": "supplier_discrepancies",
+          "tableTo": "supplier_receipt_lines",
+          "columnsFrom": [
+            "supplier_receipt_line_id"
+          ],
+          "columnsTo": [
+            "supplier_receipt_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_discrepancies_reported_by_users_user_id_fk": {
+          "name": "supplier_discrepancies_reported_by_users_user_id_fk",
+          "tableFrom": "supplier_discrepancies",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reported_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.supplier_receipt_lines": {
+      "name": "supplier_receipt_lines",
+      "schema": "",
+      "columns": {
+        "supplier_receipt_line_id": {
+          "name": "supplier_receipt_line_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "supplier_receipt_id": {
+          "name": "supplier_receipt_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purchase_order_line_id": {
+          "name": "purchase_order_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivered_qty": {
+          "name": "delivered_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "accepted_qty": {
+          "name": "accepted_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "rejected_qty": {
+          "name": "rejected_qty",
+          "type": "numeric(14, 3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
+        "inspection_notes": {
+          "name": "inspection_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "supplier_receipt_lines_supplier_receipt_idx": {
+          "name": "supplier_receipt_lines_supplier_receipt_idx",
+          "columns": [
+            {
+              "expression": "supplier_receipt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "supplier_receipt_lines_purchase_order_line_idx": {
+          "name": "supplier_receipt_lines_purchase_order_line_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_line_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "supplier_receipt_lines_supplier_receipt_id_supplier_receipts_supplier_receipt_id_fk": {
+          "name": "supplier_receipt_lines_supplier_receipt_id_supplier_receipts_supplier_receipt_id_fk",
+          "tableFrom": "supplier_receipt_lines",
+          "tableTo": "supplier_receipts",
+          "columnsFrom": [
+            "supplier_receipt_id"
+          ],
+          "columnsTo": [
+            "supplier_receipt_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_receipt_lines_purchase_order_line_id_purchase_order_lines_purchase_order_line_id_fk": {
+          "name": "supplier_receipt_lines_purchase_order_line_id_purchase_order_lines_purchase_order_line_id_fk",
+          "tableFrom": "supplier_receipt_lines",
+          "tableTo": "purchase_order_lines",
+          "columnsFrom": [
+            "purchase_order_line_id"
+          ],
+          "columnsTo": [
+            "purchase_order_line_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.supplier_receipts": {
+      "name": "supplier_receipts",
+      "schema": "",
+      "columns": {
+        "supplier_receipt_id": {
+          "name": "supplier_receipt_id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "purchase_order_id": {
+          "name": "purchase_order_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_by": {
+          "name": "received_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_receipt_no": {
+          "name": "delivery_receipt_no",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invoice_no": {
+          "name": "invoice_no",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "signed_at": {
+          "name": "signed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "supplier_receipts_purchase_order_idx": {
+          "name": "supplier_receipts_purchase_order_idx",
+          "columns": [
+            {
+              "expression": "purchase_order_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "supplier_receipts_received_by_idx": {
+          "name": "supplier_receipts_received_by_idx",
+          "columns": [
+            {
+              "expression": "received_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "supplier_receipts_purchase_order_id_purchase_orders_purchase_order_id_fk": {
+          "name": "supplier_receipts_purchase_order_id_purchase_orders_purchase_order_id_fk",
+          "tableFrom": "supplier_receipts",
+          "tableTo": "purchase_orders",
+          "columnsFrom": [
+            "purchase_order_id"
+          ],
+          "columnsTo": [
+            "purchase_order_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_receipts_received_by_users_user_id_fk": {
+          "name": "supplier_receipts_received_by_users_user_id_fk",
+          "tableFrom": "supplier_receipts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "received_by"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    }
+  },
+  "enums": {
+    "public.adjustment_status": {
+      "name": "adjustment_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "approved",
+        "rejected"
+      ]
+    },
+    "public.app_role": {
+      "name": "app_role",
+      "schema": "public",
+      "values": [
+        "requester",
+        "requisition_approver",
+        "inventory_custodian",
+        "inventory_manager",
+        "purchasing_staff",
+        "accounting_associate",
+        "delivery_operations",
+        "system_administrator"
+      ]
+    },
+    "public.internal_discrepancy_status": {
+      "name": "internal_discrepancy_status",
+      "schema": "public",
+      "values": [
+        "pending_resolution",
+        "replacement_approved",
+        "cancelled"
+      ]
+    },
+    "public.stock_movement_type": {
+      "name": "stock_movement_type",
+      "schema": "public",
+      "values": [
+        "supplier_receipt",
+        "dispatch",
+        "acceptance",
+        "return",
+        "return_inspection",
+        "sales_deduction",
+        "sales_reversal",
+        "adjustment",
+        "supplier_return",
+        "opening_balance"
+      ]
+    },
+    "public.purchase_order_status": {
+      "name": "purchase_order_status",
+      "schema": "public",
+      "values": [
+        "pending_approval",
+        "for_revision",
+        "approved",
+        "placed",
+        "partially_received",
+        "closed",
+        "cancelled"
+      ]
+    },
+    "public.purchase_requisition_reason": {
+      "name": "purchase_requisition_reason",
+      "schema": "public",
+      "values": [
+        "shortage",
+        "reorder"
+      ]
+    },
+    "public.purchase_requisition_status": {
+      "name": "purchase_requisition_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "covered",
+        "cancelled"
+      ]
+    },
+    "public.requisition_status": {
+      "name": "requisition_status",
+      "schema": "public",
+      "values": [
+        "pending_approval",
+        "rejected",
+        "approved",
+        "awaiting_stock",
+        "for_delivery",
+        "out_for_delivery",
+        "pending_resolution",
+        "fulfilled",
+        "cancelled"
+      ]
+    },
+    "public.reservation_status": {
+      "name": "reservation_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "consumed",
+        "released"
+      ]
+    },
+    "public.stock_condition": {
+      "name": "stock_condition",
+      "schema": "public",
+      "values": [
+        "usable",
+        "damaged",
+        "hold"
+      ]
+    },
+    "public.supplier_discrepancy_status": {
+      "name": "supplier_discrepancy_status",
+      "schema": "public",
+      "values": [
+        "open",
+        "agreed",
+        "resolved"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

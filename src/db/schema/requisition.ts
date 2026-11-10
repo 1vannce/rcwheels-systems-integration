@@ -36,7 +36,7 @@ export const requisitions = pgTable(
     index("requisitions_submitted_by_idx").on(t.submittedBy),
     index("requisitions_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const requisitionLines = pgTable(
   "requisition_lines",
@@ -60,7 +60,7 @@ export const requisitionLines = pgTable(
     index("requisition_lines_requisition_idx").on(t.requisitionId),
     index("requisition_lines_item_idx").on(t.itemId),
   ],
-);
+).enableRLS();
 
 export const requisitionStatusHistory = pgTable(
   "requisition_status_history",
@@ -84,7 +84,7 @@ export const requisitionStatusHistory = pgTable(
     index("requisition_status_history_requisition_idx").on(t.requisitionId),
     index("requisition_status_history_changed_at_idx").on(t.changedAt),
   ],
-);
+).enableRLS();
 
 export const dispatches = pgTable(
   "dispatches",
@@ -106,7 +106,7 @@ export const dispatches = pgTable(
     index("dispatches_requisition_idx").on(t.requisitionId),
     index("dispatches_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const dispatchLines = pgTable(
   "dispatch_lines",
@@ -127,7 +127,7 @@ export const dispatchLines = pgTable(
     index("dispatch_lines_dispatch_idx").on(t.dispatchId),
     index("dispatch_lines_requisition_line_idx").on(t.requisitionLineId),
   ],
-);
+).enableRLS();
 
 export const acknowledgementReceipts = pgTable(
   "acknowledgement_receipts",
@@ -148,4 +148,4 @@ export const acknowledgementReceipts = pgTable(
     signedAt: timestamp("signed_at", { withTimezone: true }),
   },
   (t) => [index("acknowledgement_receipts_signed_by_idx").on(t.signedBy)],
-);
+).enableRLS();
