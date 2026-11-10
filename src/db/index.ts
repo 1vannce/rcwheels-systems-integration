@@ -1,6 +1,7 @@
 import "server-only";
 
-import { drizzle } from "drizzle-orm/postgres-js";
+import type { PgDatabase } from "drizzle-orm/pg-core";
+import { drizzle, type PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema";
@@ -15,3 +16,7 @@ if (!connectionString) {
 const client = postgres(connectionString, { prepare: false });
 
 export const db = drizzle({ client, schema });
+
+// The root client or an open transaction. Repositories take this so they can
+// join the caller's transaction.
+export type Tx = PgDatabase<PostgresJsQueryResultHKT, typeof schema>;
