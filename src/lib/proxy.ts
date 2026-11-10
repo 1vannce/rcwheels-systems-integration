@@ -1,8 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Refreshes the Supabase session cookie. Phase 1 wires this into src/proxy.ts
-// and adds the redirect to the login page.
+// Reachable without a session.
+const PUBLIC_PATHS = ["/login", "/no-access", "/api/health"];
+
+// Refreshes the Supabase session cookie and sends signed-out visitors to the
+// login page. This is only a first, optimistic check: every page and server
+// action checks the user and role again on the server.
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -36,7 +40,23 @@ export async function updateSession(request: NextRequest) {
   // Do not run code between createServerClient and
   // supabase.auth.getClaims(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+
+  if (!data?.claims && !PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
+    const loginUrl = request.nextUrl.clone();
+
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+
+    const redirectResponse = NextResponse.redirect(loginUrl);
+
+    // Keep any refreshed session cookies on the redirect.
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => redirectResponse.cookies.set(cookie));
+
+    return redirectResponse;
+  }
 
   // IMPORTANT: Return the supabaseResponse object as it is. If you create a new
   // response, copy its cookies over, or the browser and server sessions go out

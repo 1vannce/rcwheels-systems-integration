@@ -42,7 +42,7 @@ export const supplierReceipts = pgTable(
     index("supplier_receipts_purchase_order_idx").on(t.purchaseOrderId),
     index("supplier_receipts_received_by_idx").on(t.receivedBy),
   ],
-);
+).enableRLS();
 
 export const supplierReceiptLines = pgTable(
   "supplier_receipt_lines",
@@ -69,7 +69,7 @@ export const supplierReceiptLines = pgTable(
       t.purchaseOrderLineId,
     ),
   ],
-);
+).enableRLS();
 
 export const supplierDiscrepancies = pgTable(
   "supplier_discrepancies",
@@ -103,7 +103,7 @@ export const supplierDiscrepancies = pgTable(
     index("supplier_discrepancies_receipt_line_idx").on(t.supplierReceiptLineId),
     index("supplier_discrepancies_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const supplierCommitments = pgTable(
   "supplier_commitments",
@@ -128,7 +128,7 @@ export const supplierCommitments = pgTable(
   (t) => [
     index("supplier_commitments_discrepancy_idx").on(t.supplierDiscrepancyId),
   ],
-);
+).enableRLS();
 
 export const internalDiscrepancies = pgTable(
   "internal_discrepancies",
@@ -158,7 +158,7 @@ export const internalDiscrepancies = pgTable(
     index("internal_discrepancies_dispatch_line_idx").on(t.dispatchLineId),
     index("internal_discrepancies_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const returns = pgTable(
   "returns",
@@ -179,7 +179,7 @@ export const returns = pgTable(
     index("returns_internal_discrepancy_idx").on(t.internalDiscrepancyId),
     index("returns_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const returnLines = pgTable(
   "return_lines",
@@ -202,4 +202,4 @@ export const returnLines = pgTable(
     index("return_lines_return_idx").on(t.returnId),
     index("return_lines_dispatch_line_idx").on(t.dispatchLineId),
   ],
-);
+).enableRLS();

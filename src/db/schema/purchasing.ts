@@ -28,7 +28,7 @@ export const suppliers = pgTable("suppliers", {
   contactPerson: text("contact_person"),
   contactDetails: text("contact_details"),
   address: text("address"),
-});
+}).enableRLS();
 
 export const purchaseRequisitions = pgTable(
   "purchase_requisitions",
@@ -47,7 +47,7 @@ export const purchaseRequisitions = pgTable(
     index("purchase_requisitions_requested_by_idx").on(t.requestedBy),
     index("purchase_requisitions_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const purchaseRequisitionLines = pgTable(
   "purchase_requisition_lines",
@@ -74,7 +74,7 @@ export const purchaseRequisitionLines = pgTable(
     ),
     index("purchase_requisition_lines_item_idx").on(t.itemId),
   ],
-);
+).enableRLS();
 
 export const purchaseOrders = pgTable(
   "purchase_orders",
@@ -100,7 +100,7 @@ export const purchaseOrders = pgTable(
     index("purchase_orders_prepared_by_idx").on(t.preparedBy),
     index("purchase_orders_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const purchaseOrderLines = pgTable(
   "purchase_order_lines",
@@ -124,7 +124,7 @@ export const purchaseOrderLines = pgTable(
       t.purchaseRequisitionLineId,
     ),
   ],
-);
+).enableRLS();
 
 export const purchaseOrderRevisions = pgTable(
   "purchase_order_revisions",
@@ -154,4 +154,4 @@ export const purchaseOrderRevisions = pgTable(
     ),
     index("purchase_order_revisions_purchase_order_idx").on(t.purchaseOrderId),
   ],
-);
+).enableRLS();

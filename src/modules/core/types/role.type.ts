@@ -42,3 +42,14 @@ export const appScreens = [
 ] as const;
 
 export type AppScreen = (typeof appScreens)[number];
+
+export const roleLabels: Record<AppRole, string> = {
+  requester: "Requester",
+  requisition_approver: "Requisition Approver",
+  inventory_custodian: "Inventory Custodian",
+  inventory_manager: "Inventory Control Manager",
+  purchasing_staff: "Purchasing Staff",
+  accounting_associate: "Accounting Associate",
+  delivery_operations: "Delivery / Operations",
+  system_administrator: "System Administrator",
+};

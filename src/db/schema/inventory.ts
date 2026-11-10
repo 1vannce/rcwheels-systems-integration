@@ -35,7 +35,7 @@ export const items = pgTable("items", {
   averageCost: numeric("average_cost", { precision: 12, scale: 4 })
     .notNull()
     .default("0"),
-});
+}).enableRLS();
 
 export const stockBalances = pgTable(
   "stock_balances",
@@ -56,7 +56,7 @@ export const stockBalances = pgTable(
   (t) => [
     uniqueIndex("stock_balances_item_condition_unique").on(t.itemId, t.condition),
   ],
-);
+).enableRLS();
 
 export const stockReservations = pgTable(
   "stock_reservations",
@@ -79,7 +79,7 @@ export const stockReservations = pgTable(
     index("stock_reservations_stock_balance_idx").on(t.stockBalanceId),
     index("stock_reservations_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const stockAdjustments = pgTable(
   "stock_adjustments",
@@ -104,7 +104,7 @@ export const stockAdjustments = pgTable(
     index("stock_adjustments_stock_balance_idx").on(t.stockBalanceId),
     index("stock_adjustments_status_idx").on(t.status),
   ],
-);
+).enableRLS();
 
 export const stockMovements = pgTable(
   "stock_movements",
@@ -147,4 +147,4 @@ export const stockMovements = pgTable(
       t.reversesMovementId,
     ),
   ],
-);
+).enableRLS();
