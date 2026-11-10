@@ -24,6 +24,7 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
     "inventory-issue-queue",
     "inventory-ar-preparation",
     "inventory-dispatch",
+    "inventory-adjustments",
     "inventory-sales-deductions",
     "inventory-low-stock-review",
     "delivery-receipt-inspection",

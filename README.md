@@ -41,16 +41,16 @@ Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (P
    npm run dev
    ```
 
-| Script | Does |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run test` / `npm run test:run` | Vitest in watch mode / once |
-| `npm run db:generate` | Generate a migration from `src/db/schema/` into `drizzle/` |
-| `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
-| `npm run db:seed` | Insert the seed data and create the Supabase Auth accounts |
-| `npm run db:studio` | Open Drizzle Studio |
+| Script                              | Does                                                       |
+| ----------------------------------- | ---------------------------------------------------------- |
+| `npm run dev`                       | Start the development server                               |
+| `npm run build`                     | Production build                                           |
+| `npm run lint`                      | ESLint                                                     |
+| `npm run test` / `npm run test:run` | Vitest in watch mode / once                                |
+| `npm run db:generate`               | Generate a migration from `src/db/schema/` into `drizzle/` |
+| `npm run db:migrate`                | Apply migrations to `DATABASE_URL`                         |
+| `npm run db:seed`                   | Insert the seed data and create the Supabase Auth accounts |
+| `npm run db:studio`                 | Open Drizzle Studio                                        |
 
 Docker is not installed on the team's computers, so `supabase start` does not work. Use the hosted Supabase project.
 
@@ -69,16 +69,16 @@ src/
 drizzle/            generated migrations
 ```
 
-| Layer | Does | Does not |
-| --- | --- | --- |
-| `app/` page | Loads data through a service, renders module components | Hold business logic |
-| `components/` | UI, forms, tables | Import repositories or the db client |
-| `actions/` | `"use server"`: gets the user, checks the role, parses input with Zod, calls one service, revalidates | Touch the database directly |
-| `services/` | Business rules and status changes, one `db.transaction` per business event | Trust a user ID, role, or stock figure from the browser |
-| `repositories/` | Drizzle queries only; every function takes `tx` | Contain rules or call other modules |
-| `schemas/` | Zod schemas for forms and action input | Define database tables |
-| `types/` | Shared TypeScript types | |
-| `index.ts` | Public API: services and types | Re-export components or repositories |
+| Layer           | Does                                                                                                  | Does not                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `app/` page     | Loads data through a service, renders module components                                               | Hold business logic                                     |
+| `components/`   | UI, forms, tables                                                                                     | Import repositories or the db client                    |
+| `actions/`      | `"use server"`: gets the user, checks the role, parses input with Zod, calls one service, revalidates | Touch the database directly                             |
+| `services/`     | Business rules and status changes, one `db.transaction` per business event                            | Trust a user ID, role, or stock figure from the browser |
+| `repositories/` | Drizzle queries only; every function takes `tx`                                                       | Contain rules or call other modules                     |
+| `schemas/`      | Zod schemas for forms and action input                                                                | Define database tables                                  |
+| `types/`        | Shared TypeScript types                                                                               |                                                         |
+| `index.ts`      | Public API: services and types                                                                        | Re-export components or repositories                    |
 
 Rules:
 

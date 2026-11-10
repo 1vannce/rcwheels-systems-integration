@@ -13,7 +13,13 @@ type ScreenRoute = {
 };
 
 // Screens whose pages exist. The rest open a placeholder until their phase.
-const builtScreens: readonly AppScreen[] = ["dashboard", "notifications"];
+const builtScreens: readonly AppScreen[] = [
+  "dashboard",
+  "notifications",
+  "inventory-item-list",
+  "inventory-adjustments",
+  "inventory-sales-deductions",
+];
 
 const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {
   dashboard: { label: "Dashboard", href: "/dashboard", group: "Shared" },

@@ -33,7 +33,8 @@ export const adjustmentStatusEnum = pgEnum("adjustment_status", [
 ]);
 
 // One value per stock event in PLAN.md section 7, plus the opening balance used
-// when a stock count is recorded.
+// when a stock count is recorded. Reservations and releases change no on-hand
+// quantity; their zero-quantity rows carry the event key that stops a repeat.
 export const movementTypeEnum = pgEnum("stock_movement_type", [
   "supplier_receipt",
   "dispatch",
@@ -45,6 +46,8 @@ export const movementTypeEnum = pgEnum("stock_movement_type", [
   "adjustment",
   "supplier_return",
   "opening_balance",
+  "reservation",
+  "reservation_release",
 ]);
 
 export const requisitionStatusEnum = pgEnum("requisition_status", [
