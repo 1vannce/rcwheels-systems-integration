@@ -26,7 +26,16 @@ Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (P
 
    Drizzle commands read `.env`, so copy the same `DATABASE_URL` there when you run them. Never commit either file.
 
-3. Run the app at http://localhost:3000:
+3. Create the tables and the seed data (roles, fictional users, items, suppliers). Both commands read `.env` and can be run again safely:
+
+   ```powershell
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+   The seed creates one account per role plus two mechanics and a second approver, all at `@rcwheels.test` (for example `custodian@rcwheels.test`), with `SEED_USER_PASSWORD` as the password. The full list is in `src/db/seed.ts`.
+
+4. Run the app at http://localhost:3000:
 
    ```powershell
    npm run dev
@@ -40,6 +49,7 @@ Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (P
 | `npm run test` / `npm run test:run` | Vitest in watch mode / once |
 | `npm run db:generate` | Generate a migration from `src/db/schema/` into `drizzle/` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
+| `npm run db:seed` | Insert the seed data and create the Supabase Auth accounts |
 | `npm run db:studio` | Open Drizzle Studio |
 
 Docker is not installed on the team's computers, so `supabase start` does not work. Use the hosted Supabase project.
