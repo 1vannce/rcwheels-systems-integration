@@ -1,9 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Home() {
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <h1 className="text-2xl font-semibold">
-        RCWheels Business Management System (prototype)
-      </h1>
-    </main>
-  );
+  redirect("/dashboard");
 }
