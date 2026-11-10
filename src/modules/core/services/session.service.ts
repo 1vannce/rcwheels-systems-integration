@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { cache } from "react";
 
 import { db } from "@/db";
@@ -29,6 +30,9 @@ export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
 
 const getAuthUserId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
+  // getClaims reads the clock to check token expiry. cookies() alone still
+  // resolves in a runtime prefetch, so wait for a real request first.
+  await connection();
   const { data } = await supabase.auth.getClaims();
 
   return data?.claims.sub ?? null;
