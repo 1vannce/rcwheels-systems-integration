@@ -2,7 +2,13 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { auditLog, dispatchLines, stockAdjustments, stockBalances } from "@/db/schema";
+import {
+  auditLog,
+  dispatchLines,
+  stockAdjustments,
+  stockBalances,
+  stockMovements,
+} from "@/db/schema";
 import { runBusinessEvent, type AppRole, type AppUser } from "@/modules/core";
 import {
   closeDatabase,
@@ -438,6 +444,39 @@ describeWithDatabase("stock service", () => {
       db.transaction((tx) => deductSales(tx, { ...sale, salesRef: "SI-1002" })),
     ).rejects.toThrow("Only 1 available.");
     expect(await onHand(itemId)).toBe("8.000");
+  });
+
+  it("sales deduction: the database unique constraint rejects a duplicate event key", async () => {
+    const itemId = await createItem("TST-1", "10");
+    const sale = {
+      itemId,
+      quantity: "1",
+      salesRef: "SI-UNIQUE-1",
+      saleDate: "2026-11-10",
+      entryDate: "2026-11-10",
+    };
+    const { movementId } = await db.transaction((tx) => deductSales(tx, sale));
+    const [postedMovement] = await db
+      .select({ stockBalanceId: stockMovements.stockBalanceId })
+      .from(stockMovements)
+      .where(eq(stockMovements.movementId, movementId));
+
+    await expect(
+      db.insert(stockMovements).values({
+        stockBalanceId: postedMovement.stockBalanceId,
+        movementType: "sales_deduction",
+        quantityDelta: "-1",
+        eventKey: `sales:${sale.salesRef}:${itemId}`,
+      }),
+    ).rejects.toMatchObject({
+      cause: {
+        code: "23505",
+        constraint_name: "stock_movements_event_key_unique",
+      },
+    });
+
+    expect(await onHand(itemId)).toBe("9.000");
+    expect(await movements()).toHaveLength(1);
   });
 
   it("sales deduction: a late entry flags the balance incomplete", async () => {

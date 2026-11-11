@@ -29,10 +29,11 @@ export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
 });
 
 const getAuthUserId = cache(async (): Promise<string | null> => {
-  const supabase = await createClient();
-  // getClaims reads the clock to check token expiry. cookies() alone still
-  // resolves in a runtime prefetch, so wait for a real request first.
+  // The Supabase client reads the clock as soon as it is created, and
+  // getClaims checks token expiry. cookies() alone still resolves in a runtime
+  // prefetch, so wait for a real request before creating the client.
   await connection();
+  const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
 
   return data?.claims.sub ?? null;

@@ -12,35 +12,74 @@ import {
   findItemByCode,
   findItemsWithStock,
   findMovementsByItem,
+  findStockReservations,
   insertItem,
   updateItemReorderPoint,
 } from "../repositories/item.repository";
-import type { ItemStock, StockMovement } from "../types/stock.type";
-import { subtractQuantities } from "./quantity.service";
+import type {
+  ItemStock,
+  ItemStockRecord,
+  ItemStockReservation,
+  StockMovement,
+} from "../types/stock.type";
+import { addQuantities, subtractQuantities } from "./quantity.service";
 import { openItemBalances } from "./stock.service";
 
 const MOVEMENT_LIST_LIMIT = 200;
+const ZERO = "0.000";
 
-// Available = usable on hand minus active reservations.
-function withAvailable(item: ItemStock): ItemStock {
-  return { ...item, available: subtractQuantities(item.usable, item.reserved) };
+export function calculateItemAvailability(
+  usableOnHand: string,
+  reservations: readonly Pick<ItemStockReservation, "reservedQty" | "status">[],
+): { reserved: string; available: string } {
+  const reserved = reservations.reduce(
+    (total, reservation) =>
+      reservation.status === "active"
+        ? addQuantities(total, reservation.reservedQty)
+        : total,
+    ZERO,
+  );
+
+  return { reserved, available: subtractQuantities(usableOnHand, reserved) };
+}
+
+async function listItemsWithAvailability(tx: typeof db, itemId?: number): Promise<ItemStock[]> {
+  const [items, reservations] = await Promise.all([
+    findItemsWithStock(tx, itemId),
+    findStockReservations(tx, itemId),
+  ]);
+  const reservationsByItem = new Map<number, ItemStockReservation[]>();
+
+  for (const reservation of reservations) {
+    const itemReservations = reservationsByItem.get(reservation.itemId) ?? [];
+    itemReservations.push(reservation);
+    reservationsByItem.set(reservation.itemId, itemReservations);
+  }
+
+  return items.map((item: ItemStockRecord) => ({
+    ...item,
+    ...calculateItemAvailability(
+      item.usable,
+      reservationsByItem.get(item.itemId) ?? [],
+    ),
+  }));
 }
 
 export async function listItemsWithStock(): Promise<ItemStock[]> {
-  return (await findItemsWithStock(db)).map(withAvailable);
+  return listItemsWithAvailability(db);
 }
 
 export async function getItemStockDetail(
   itemId: number,
 ): Promise<{ item: ItemStock; movements: StockMovement[] } | null> {
-  const [item] = await findItemsWithStock(db, itemId);
+  const [item] = await listItemsWithAvailability(db, itemId);
 
   if (!item) {
     return null;
   }
 
   return {
-    item: withAvailable(item),
+    item,
     movements: await findMovementsByItem(db, itemId, MOVEMENT_LIST_LIMIT),
   };
 }

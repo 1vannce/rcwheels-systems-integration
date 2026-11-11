@@ -1,28 +1,35 @@
 import type { Metadata } from "next";
 
 import { requireScreen } from "@/modules/core";
-import { getRequisitionFormData } from "@/modules/requisition";
+import { listItemsWithStock, todayInManila } from "@/modules/inventory";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 
 export const metadata: Metadata = { title: "New requisition | RCWheels" };
 
 export default async function NewRequisitionPage() {
-  const user = await requireScreen("requisition-new-rf");
-  const formData = await getRequisitionFormData();
+  await requireScreen("requisition-new-rf");
+
+  const items = await listItemsWithStock();
+  const minimumDeliveryDate = todayInManila();
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">New requisition</h1>
         <p className="text-sm text-muted-foreground">
-          Choose the items, quantities, and delivery details for this request.
+          Your request goes to your assigned approver. Stock is reserved only after approval.
         </p>
       </div>
       <RequisitionForm
-        items={formData.items}
-        requesterName={user.fullName}
-        minimumDeliveryDate={formData.minimumDeliveryDate}
+        minimumDeliveryDate={minimumDeliveryDate}
+        items={items.map(({ itemId, itemCode, itemName, unit, available }) => ({
+          itemId,
+          itemCode,
+          itemName,
+          unit,
+          available,
+        }))}
       />
-    </div>
+    </>
   );
 }

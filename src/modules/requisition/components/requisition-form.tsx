@@ -8,166 +8,238 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
-import { createRequisitionAction } from "../actions/requisition.actions";
-import type { RequisitionItemOption } from "../types/requisition.type";
+import { resubmitRequisitionAction } from "../actions/action.resubmit-requisition";
+import { submitRequisitionAction } from "../actions/action.submit-requisition";
 
+const selectClass =
+  "h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+const textareaClass =
+  "min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+
+/** One item the requester may choose, with the quantity still available. */
+export type RequisitionFormItem = {
+  itemId: number;
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  available: string;
+};
+
+/** Values a resubmit pre-fills from the rejected request. */
+export type RequisitionFormInitial = {
+  requesterName?: string;
+  purpose?: string;
+  deliveryDate?: string;
+  deliveryLocation?: string;
+  isUrgent?: boolean;
+  lines?: { itemId: number; requestedQty: string }[];
+};
+
+/** One editable line. `key` is stable so React keeps each row's inputs. */
+type LineRow = {
+  key: number;
+  itemId: string;
+  requestedQty: string;
+};
+
+const firstLine = (itemId: string): LineRow => ({ key: 0, itemId, requestedQty: "1" });
+
+/**
+ * Requisition form, used both to create and to correct a request.
+ *
+ * Lines are kept in React state and posted as JSON in a hidden field, because
+ * the form can grow or shrink. The action re-validates that JSON with the
+ * Create or Resubmit DTO; nothing here is trusted by the server.
+ */
 export function RequisitionForm({
   items,
-  requesterName,
   minimumDeliveryDate,
+  mode = "submit",
+  initial,
+  requisitionId,
+  submitLabel = "Submit for approval",
 }: {
-  items: RequisitionItemOption[];
-  requesterName: string;
+  items: RequisitionFormItem[];
   minimumDeliveryDate: string;
+  /** "submit" posts a new request; "resubmit" corrects a rejected one. */
+  mode?: "submit" | "resubmit";
+  /** Pre-filled values for a resubmit. */
+  initial?: RequisitionFormInitial;
+  /** The request being corrected, when `mode` is "resubmit". */
+  requisitionId?: number;
+  submitLabel?: string;
 }) {
-  const [result, formAction] = useActionState(createRequisitionAction, null);
-  const [lineIds, setLineIds] = useState([0]);
-  const [nextLineId, setNextLineId] = useState(1);
+  const action = mode === "resubmit" ? resubmitRequisitionAction : submitRequisitionAction;
+  const [result, formAction] = useActionState(action, null);
 
-  function addLine() {
-    setLineIds((current) => [...current, nextLineId]);
-    setNextLineId((current) => current + 1);
+  const [lines, setLines] = useState<LineRow[]>(() => {
+    if (initial?.lines?.length) {
+      return initial.lines.map((line, index) => ({
+        key: index,
+        itemId: String(line.itemId),
+        requestedQty: line.requestedQty,
+      }));
+    }
+
+    return [firstLine(String(items[0]?.itemId ?? ""))];
+  });
+  const [nextKey, setNextKey] = useState(initial?.lines?.length ?? 1);
+
+  const payload = lines
+    .filter((line) => line.itemId !== "")
+    .map((line) => ({ itemId: Number(line.itemId), requestedQty: line.requestedQty }));
+
+  function updateLine(key: number, changes: Partial<Omit<LineRow, "key">>) {
+    setLines((current) =>
+      current.map((line) => (line.key === key ? { ...line, ...changes } : line)),
+    );
   }
 
-  function removeLine(lineId: number) {
-    setLineIds((current) => current.filter((candidate) => candidate !== lineId));
+  function addLine() {
+    setLines((current) => [...current, { ...firstLine(String(items[0]?.itemId ?? "")), key: nextKey }]);
+    setNextKey((key) => key + 1);
+  }
+
+  function removeLine(key: number) {
+    setLines((current) =>
+      current.length === 1 ? current : current.filter((line) => line.key !== key),
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <p className="rounded-lg border p-4 text-sm text-muted-foreground">
+        No items exist yet. Ask the Inventory Custodian to add items before requesting stock.
+      </p>
+    );
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6 rounded-lg border p-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-medium">New requisition</h2>
-        <p className="text-sm text-muted-foreground">
-          Submit for yourself or enter the mechanic this request is for.
-        </p>
-      </div>
+    <form action={formAction} className="flex flex-col gap-4 rounded-lg border p-4">
+      {mode === "resubmit" && <input type="hidden" name="requisitionId" value={requisitionId} />}
+      {/* The action parses this with the Create or Resubmit DTO. */}
+      <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="requesterName">Requested for</Label>
+          <Label htmlFor="requesterName">For (optional)</Label>
           <Input
             id="requesterName"
             name="requesterName"
-            defaultValue={requesterName}
             maxLength={120}
-            required
+            defaultValue={initial?.requesterName ?? ""}
+            placeholder="Leave blank when the request is for you"
           />
         </div>
+        <div className="flex items-end pb-1.5">
+          <Label htmlFor="isUrgent" className="flex items-center gap-2 font-normal">
+            <input
+              id="isUrgent"
+              name="isUrgent"
+              type="checkbox"
+              defaultChecked={initial?.isUrgent ?? false}
+              className="size-4 rounded border-input"
+            />
+            Mark as urgent
+          </Label>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="purpose">Purpose</Label>
+        <textarea
+          id="purpose"
+          name="purpose"
+          required
+          rows={2}
+          maxLength={300}
+          defaultValue={initial?.purpose ?? ""}
+          className={textareaClass}
+          placeholder="What the items are for"
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="deliveryDate">Needed by</Label>
+          <Label htmlFor="deliveryDate">Delivery date</Label>
           <Input
             id="deliveryDate"
             name="deliveryDate"
             type="date"
             min={minimumDeliveryDate}
             required
+            defaultValue={initial?.deliveryDate ?? minimumDeliveryDate}
           />
         </div>
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor="deliveryLocation">Delivery location</Label>
           <Input
             id="deliveryLocation"
             name="deliveryLocation"
             maxLength={200}
-            placeholder="Workshop, bay, or other location"
             required
-          />
-        </div>
-        <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="purpose">Reason for request</Label>
-          <textarea
-            id="purpose"
-            name="purpose"
-            className="min-h-24 rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            maxLength={1000}
-            required
+            defaultValue={initial?.deliveryLocation ?? ""}
+            placeholder="Where the items should be delivered"
           />
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input name="isUrgent" type="checkbox" className="size-4 accent-primary" />
-        Mark this request as urgent
-      </label>
-
-      <section className="flex flex-col gap-3" aria-labelledby="request-items-heading">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 id="request-items-heading" className="font-medium">
-              Items requested
-            </h3>
-            <p className="text-sm text-muted-foreground">Add one or more item lines.</p>
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-sm font-medium">Items</legend>
+        {lines.map((line, index) => (
+          <div key={line.key} className="grid items-end gap-2 sm:grid-cols-[1fr_9rem_auto]">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`item-${line.key}`} className={index === 0 ? undefined : "sr-only"}>
+                Item
+              </Label>
+              <select
+                id={`item-${line.key}`}
+                value={line.itemId}
+                onChange={(event) => updateLine(line.key, { itemId: event.target.value })}
+                required
+                className={selectClass}
+              >
+                {items.map((item) => (
+                  <option key={item.itemId} value={item.itemId}>
+                    {item.itemCode} · {item.itemName} ({item.available} {item.unit} available)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`qty-${line.key}`} className={index === 0 ? undefined : "sr-only"}>
+                Quantity
+              </Label>
+              <Input
+                id={`qty-${line.key}`}
+                value={line.requestedQty}
+                onChange={(event) => updateLine(line.key, { requestedQty: event.target.value })}
+                inputMode="decimal"
+                required
+              />
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => removeLine(line.key)}
+              disabled={lines.length === 1}
+            >
+              Remove
+            </Button>
           </div>
-          <Button type="button" variant="outline" onClick={addLine}>
-            Add item
+        ))}
+        <div>
+          <Button type="button" variant="outline" size="sm" onClick={addLine}>
+            Add line
           </Button>
         </div>
-
-        {items.length === 0 ? (
-          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-            No items are available yet. Contact the inventory team before submitting a request.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {lineIds.map((lineId, index) => (
-              <div
-                key={lineId}
-                className="grid gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-end"
-              >
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`itemId_${lineId}`}>Item {index + 1}</Label>
-                  <select
-                    id={`itemId_${lineId}`}
-                    name={`itemId_${lineId}`}
-                    className="h-8 w-full min-w-0 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    required
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Choose an item
-                    </option>
-                    {items.map((item) => (
-                      <option key={item.itemId} value={item.itemId}>
-                        {item.itemCode} — {item.itemName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor={`quantity_${lineId}`}>Quantity</Label>
-                  <Input
-                    id={`quantity_${lineId}`}
-                    name={`quantity_${lineId}`}
-                    type="number"
-                    inputMode="decimal"
-                    min="0.001"
-                    step="0.001"
-                    required
-                  />
-                </div>
-                {lineIds.length > 1 ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => removeLine(lineId)}
-                    aria-label={`Remove item ${index + 1}`}
-                  >
-                    Remove
-                  </Button>
-                ) : (
-                  <span aria-hidden="true" />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      </fieldset>
 
       <FormMessage result={result} />
       <div>
-        <SubmitButton {...(items.length === 0 ? { disabled: true } : {})}>
-          Submit request
-        </SubmitButton>
+        <SubmitButton>{submitLabel}</SubmitButton>
       </div>
     </form>
   );

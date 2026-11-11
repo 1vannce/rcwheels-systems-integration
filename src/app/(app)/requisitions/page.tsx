@@ -1,24 +1,30 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { requireScreen } from "@/modules/core";
-import { listMyRequisitions } from "@/modules/requisition";
+import { listMyRequestsService as listMyRequests } from "@/modules/requisition";
 import { RequisitionTable } from "@/modules/requisition/components/requisition-table";
 
 export const metadata: Metadata = { title: "My requests | RCWheels" };
 
-export default async function MyRequisitionsPage() {
+export default async function MyRequestsPage() {
   const user = await requireScreen("requisition-my-requests");
-  const requisitions = await listMyRequisitions(user);
+  const requisitions = await listMyRequests(user);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">My requests</h1>
-        <p className="text-sm text-muted-foreground">
-          Track the status, requested items, and delivery details for your requisitions.
-        </p>
+    <>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold">My requests</h1>
+          <p className="text-sm text-muted-foreground">
+            Requests you submitted, urgent first and then newest first.
+          </p>
+        </div>
+        <Link href="/requisitions/new" className="text-sm underline underline-offset-4">
+          New requisition
+        </Link>
       </div>
       <RequisitionTable requisitions={requisitions} />
-    </div>
+    </>
   );
 }

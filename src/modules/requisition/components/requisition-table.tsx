@@ -1,67 +1,67 @@
-import type { MyRequisition } from "../types/requisition.type";
+import Link from "next/link";
 
-const submittedAtFormat = new Intl.DateTimeFormat("en-PH", {
+import type { RequisitionListItemDto } from "../types/requisition.dto";
+import { RequisitionStatusBadge } from "./requisition-status-badge";
+
+const dateFormat = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
   timeStyle: "short",
   timeZone: "Asia/Manila",
 });
+const deliveryDateFormat = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+  timeZone: "UTC",
+});
 
-function statusLabel(status: MyRequisition["status"]): string {
-  return status.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
+/**
+ * The signed-in user's request list. Each row links to the detail screen; the
+ * list itself carries only overview figures.
+ */
 export function RequisitionTable({
   requisitions,
 }: {
-  requisitions: MyRequisition[];
+  requisitions: RequisitionListItemDto[];
 }) {
   if (requisitions.length === 0) {
-    return (
-      <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-        You have not submitted any requests yet.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">You have not submitted any requests yet.</p>;
   }
 
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full min-w-[760px] text-left text-sm">
-        <caption className="sr-only">Your requisition requests</caption>
-        <thead className="bg-muted/50 text-muted-foreground">
+      <table className="w-full text-sm">
+        <thead className="bg-muted text-left">
           <tr>
-            <th scope="col" className="px-4 py-3 font-medium">Request</th>
-            <th scope="col" className="px-4 py-3 font-medium">Requested for</th>
-            <th scope="col" className="px-4 py-3 font-medium">Status</th>
-            <th scope="col" className="px-4 py-3 font-medium">Delivery</th>
-            <th scope="col" className="px-4 py-3 font-medium">Urgency</th>
-            <th scope="col" className="px-4 py-3 font-medium">Items</th>
+            <th className="p-2 font-medium">Request</th>
+            <th className="p-2 font-medium">Submitted</th>
+            <th className="p-2 font-medium">For</th>
+            <th className="p-2 font-medium">Delivery</th>
+            <th className="p-2 text-right font-medium">Items</th>
+            <th className="p-2 font-medium">Status</th>
           </tr>
         </thead>
         <tbody className="divide-y">
           {requisitions.map((requisition) => (
-            <tr key={requisition.requisitionId} className="align-top">
-              <td className="px-4 py-3">
-                <p className="font-medium">RF-{requisition.requisitionId}</p>
-                <p className="mt-1 max-w-56 text-muted-foreground">{requisition.purpose}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Submitted {submittedAtFormat.format(requisition.submittedAt)}
-                </p>
+            <tr key={requisition.requisitionId}>
+              <td className="p-2">
+                <Link
+                  href={`/requisitions/${requisition.requisitionId}`}
+                  className="underline underline-offset-4"
+                >
+                  #{requisition.requisitionId}
+                </Link>
+                {requisition.isUrgent && (
+                  <span className="ml-2 text-xs font-medium text-destructive">Urgent</span>
+                )}
               </td>
-              <td className="px-4 py-3">{requisition.requesterName}</td>
-              <td className="px-4 py-3 capitalize">{statusLabel(requisition.status)}</td>
-              <td className="px-4 py-3">
-                <p>{requisition.deliveryDate}</p>
-                <p className="mt-1 text-muted-foreground">{requisition.deliveryLocation}</p>
+              <td className="p-2">{dateFormat.format(requisition.submittedAt)}</td>
+              <td className="p-2">{requisition.requesterName}</td>
+              <td className="p-2">
+                <div>{deliveryDateFormat.format(new Date(`${requisition.deliveryDate}T00:00:00Z`))}</div>
+                <div className="text-xs text-muted-foreground">{requisition.deliveryLocation}</div>
               </td>
-              <td className="px-4 py-3">{requisition.isUrgent ? "Urgent" : "Normal"}</td>
-              <td className="px-4 py-3">
-                <ul className="flex flex-col gap-1">
-                  {requisition.lines.map((line) => (
-                    <li key={line.requisitionLineId}>
-                      {line.itemCode} · {line.requestedQty} {line.unit}
-                    </li>
-                  ))}
-                </ul>
+              <td className="p-2 text-right tabular-nums">{requisition.lineCount}</td>
+              <td className="p-2">
+                <RequisitionStatusBadge status={requisition.status} />
               </td>
             </tr>
           ))}
