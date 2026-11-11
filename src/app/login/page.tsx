@@ -1,21 +1,43 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
+import Image from "next/image"
 
-import { LoginForm } from "@/modules/core/components/login-form";
+import magsWallpeper from "@/assets/magswallpaper.jpg"
+import ubecmagsLogo from "@/assets/ubecmags.jpg"
+import { LoginForm } from "@/components/login-form"
 
-export const metadata: Metadata = { title: "Sign in | RCWheels" };
+export const metadata: Metadata = { title: "Sign in | RCWheels" }
 
 export default function LoginPage() {
   return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold">RCWheels</h1>
-          <p className="text-sm text-muted-foreground">
-            Sign in with the account your administrator gave you.
-          </p>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      <div className="flex flex-col gap-4 p-6 md:p-10">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <a href="#" className="flex items-center gap-2 font-medium">
+            <div className="flex size-12 items-center justify-center overflow-hidden bg-primary">
+              <Image
+                src={ubecmagsLogo}
+                alt="RCWheels logo"
+                className="size-full object-cover"
+              />
+            </div>
+            UbecMags
+          </a>
         </div>
-        <LoginForm />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-xs">
+            <LoginForm />
+          </div>
+        </div>
       </div>
-    </main>
-  );
+      <div className="relative hidden bg-muted lg:block">
+        <Image
+          src={magsWallpeper}
+          alt="RCWheels"
+          fill
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="object-cover dark:brightness-[0.2] dark:grayscale"
+        />
+      </div>
+    </div>
+  )
 }
