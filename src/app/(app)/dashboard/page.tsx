@@ -9,6 +9,10 @@ import {
 
 export const metadata: Metadata = { title: "Dashboard | RCWheels" };
 
+// The dashboard reads the signed-in user at request time, so navigating here
+// waits for that data instead of showing an instant shell.
+export const instant = false;
+
 export default async function DashboardPage() {
   const user = await requireScreen("dashboard");
   const unreadCount = await countUnreadNotifications(user);
