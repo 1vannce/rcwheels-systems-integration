@@ -1,14 +1,28 @@
+"use client";
+
 import Link from "next/link";
-import { Bell, LogOut } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { BellIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { AppSidebar } from "@/components/app-sidebar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
-import { signOutAction } from "../actions/auth.actions";
 import type { NavigationGroup } from "../types/navigation.type";
-import type { AppUser } from "../types/user.type";
 import { roleLabels } from "../types/role.type";
-import { MobileNav } from "./mobile-nav";
-import { NavLinks } from "./nav-links";
+import type { AppUser } from "../types/user.type";
 
 export function AppShell({
   user,
@@ -21,49 +35,68 @@ export function AppShell({
   unreadCount: number;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const hrefs = navigation.flatMap((group) =>
+    group.items.map((item) => item.href),
+  );
+  // A detail page highlights its list, unless it has its own link.
+  const current = navigation
+    .flatMap((group) => group.items)
+    .find(
+      (item) =>
+        pathname === item.href ||
+        (pathname.startsWith(`${item.href}/`) && !hrefs.includes(pathname)),
+    );
+
   return (
-    <div className="min-h-screen md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
-      <aside className="hidden border-r p-4 md:flex md:flex-col md:gap-6">
-        <Link href="/dashboard" className="px-2 text-lg font-semibold">
-          RCWheels
-        </Link>
-        <NavLinks groups={navigation} />
-      </aside>
-      <div className="flex min-w-0 flex-col">
-        <header className="flex min-h-16 items-center gap-3 border-b px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2 md:hidden">
-            <MobileNav groups={navigation} />
-            <Link href="/dashboard" className="font-semibold">
-              RCWheels
-            </Link>
+    <SidebarProvider>
+      <AppSidebar
+        user={user}
+        roleLabel={roleLabels[user.role]}
+        navigation={navigation}
+        unreadCount={unreadCount}
+      />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+          <div className="flex min-w-0 items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-vertical:h-4 data-vertical:self-auto"
+            />
+            <Breadcrumb className="min-w-0">
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink render={<Link href="/dashboard" />}>
+                    RCWheels
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{current?.label ?? "Dashboard"}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
-            <div className="hidden min-w-0 text-right sm:block">
-              <p className="truncate text-sm font-medium">{user.fullName}</p>
-              <p className="truncate text-xs text-muted-foreground">{roleLabels[user.role]}</p>
-            </div>
-            {unreadCount > 0 && (
+          {unreadCount > 0 && (
+            <div className="ml-auto flex items-center gap-2 px-4">
               <Link
                 href="/notifications"
-                aria-label={`${unreadCount} unread ${unreadCount === 1 ? "notification" : "notifications"}`}
+                aria-label={`${unreadCount} unread ${
+                  unreadCount === 1 ? "notification" : "notifications"
+                }`}
                 className="relative inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted"
               >
-                <Bell aria-hidden="true" className="size-4" />
+                <BellIcon aria-hidden="true" className="size-4" />
                 <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 text-primary-foreground">
                   {unreadCount}
                 </span>
               </Link>
-            )}
-            <form action={signOutAction}>
-              <Button type="submit" variant="outline" size="sm" aria-label="Sign out">
-                <LogOut aria-hidden="true" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </form>
-          </div>
+            </div>
+          )}
         </header>
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
-      </div>
-    </div>
+        <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
