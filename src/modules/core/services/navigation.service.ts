@@ -16,6 +16,8 @@ type ScreenRoute = {
 const builtScreens: readonly AppScreen[] = [
   "dashboard",
   "notifications",
+  "requisition-new-rf",
+  "requisition-my-requests",
   "inventory-item-list",
   "inventory-adjustments",
   "inventory-sales-deductions",

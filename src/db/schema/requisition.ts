@@ -2,6 +2,7 @@
 
 import {
   boolean,
+  date,
   index,
   integer,
   numeric,
@@ -30,6 +31,8 @@ export const requisitions = pgTable(
       .defaultNow(),
     isUrgent: boolean("is_urgent").notNull().default(false),
     purpose: text("purpose").notNull(),
+    deliveryDate: date("delivery_date", { mode: "string" }).notNull(),
+    deliveryLocation: text("delivery_location").notNull(),
     status: requisitionStatusEnum("status").notNull().default("pending_approval"),
   },
   (t) => [
