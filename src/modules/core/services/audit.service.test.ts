@@ -1,76 +1,105 @@
-import { afterAll, beforeEach, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { db } from "@/db";
-import { auditLog, notifications } from "@/db/schema";
-import {
-  closeDatabase,
-  createUsersForEveryRole,
-  describeWithDatabase,
-  resetDatabase,
-} from "@/test/db";
+import type { Tx } from "@/db";
 
 import { BlockedActionError } from "../types/error.type";
-import type { AppRole } from "../types/role.type";
-import type { AppUser } from "../types/user.type";
-import { recordAudit, runBusinessEvent } from "./audit.service";
-import { notifyUsers } from "./notification.service";
 
-describeWithDatabase("audit service", () => {
-  let users: Record<AppRole, AppUser>;
+// Unit tests: the database and repository are mocked, so this file never
+// opens a connection. Transaction rollback is simulated by letting the
+// callback throw, exactly as postgres.js would.
+const database = vi.hoisted(() => {
+  const transaction = vi.fn();
 
-  beforeEach(async () => {
-    await resetDatabase();
-    users = await createUsersForEveryRole();
-  });
+  return {
+    transaction,
+    db: { transaction },
+  };
+});
 
-  afterAll(closeDatabase);
+const auditRepository = vi.hoisted(() => ({
+  insertAuditEntry: vi.fn(),
+}));
 
-  it("commits the audit entry together with the event", async () => {
-    const actor = users.inventory_custodian;
+vi.mock("@/db", () => ({ db: database.db }));
+vi.mock("../repositories/audit.repository", () => auditRepository);
 
-    await runBusinessEvent(actor.userId, async (tx) => {
-      await notifyUsers(tx, [users.inventory_manager.userId], {
-        type: "test",
-        message: "Count recorded",
-      });
-      await recordAudit(tx, {
-        actorUserId: actor.userId,
-        entityType: "items",
-        entityId: 7,
-        action: "item.create",
-        details: { itemCode: "TST-001" },
-      });
+import { recordAudit, recordBlockedAction, runBusinessEvent } from "./audit.service";
+
+const tx = {} as Tx;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+
+  database.transaction.mockImplementation(
+    async (callback: (transaction: Tx) => Promise<unknown>) => callback(tx),
+  );
+});
+
+describe("recordAudit", () => {
+  it("forwards the entry and serializes object details", async () => {
+    await recordAudit(tx, {
+      actorUserId: 3,
+      entityType: "items",
+      entityId: 7,
+      action: "item.create",
+      details: { itemCode: "TST-001" },
     });
 
-    const entries = await db.select().from(auditLog);
-
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({
-      actorUserId: actor.userId,
+    expect(auditRepository.insertAuditEntry).toHaveBeenCalledTimes(1);
+    expect(auditRepository.insertAuditEntry).toHaveBeenCalledWith(tx, {
+      actorUserId: 3,
       entityType: "items",
       entityId: 7,
       action: "item.create",
       changeDetails: JSON.stringify({ itemCode: "TST-001" }),
     });
-    expect(await db.select().from(notifications)).toHaveLength(1);
   });
 
-  it("keeps the blocked-action entry when the event rolls back", async () => {
-    const actor = users.inventory_custodian;
+  it("passes string details through and stores missing details as null", async () => {
+    await recordAudit(tx, {
+      actorUserId: 3,
+      entityType: "items",
+      entityId: 7,
+      action: "item.update",
+      details: "reorder point changed",
+    });
 
+    expect(auditRepository.insertAuditEntry).toHaveBeenLastCalledWith(tx, {
+      actorUserId: 3,
+      entityType: "items",
+      entityId: 7,
+      action: "item.update",
+      changeDetails: "reorder point changed",
+    });
+
+    await recordAudit(tx, {
+      actorUserId: null,
+      entityType: "users",
+      entityId: 0,
+      action: "login",
+    });
+
+    expect(auditRepository.insertAuditEntry).toHaveBeenLastCalledWith(tx, {
+      actorUserId: null,
+      entityType: "users",
+      entityId: 0,
+      action: "login",
+      changeDetails: null,
+    });
+  });
+});
+
+describe("runBusinessEvent", () => {
+  it("runs the event in one transaction and returns its value", async () => {
+    const result = await runBusinessEvent(5, async () => "committed");
+
+    expect(result).toBe("committed");
+    expect(database.transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("writes the blocked entry outside the transaction and rethrows", async () => {
     await expect(
-      runBusinessEvent(actor.userId, async (tx) => {
-        await notifyUsers(tx, [users.inventory_manager.userId], {
-          type: "test",
-          message: "Should be rolled back",
-        });
-        await recordAudit(tx, {
-          actorUserId: actor.userId,
-          entityType: "items",
-          entityId: 7,
-          action: "item.create",
-        });
-
+      runBusinessEvent(4, async () => {
         throw new BlockedActionError("Not enough stock.", {
           entityType: "items",
           entityId: 7,
@@ -80,38 +109,43 @@ describeWithDatabase("audit service", () => {
       }),
     ).rejects.toThrow("Not enough stock.");
 
-    // Nothing from inside the transaction survives.
-    expect(await db.select().from(notifications)).toHaveLength(0);
-
-    const entries = await db.select().from(auditLog);
-
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({
-      actorUserId: actor.userId,
+    expect(auditRepository.insertAuditEntry).toHaveBeenCalledTimes(1);
+    expect(auditRepository.insertAuditEntry).toHaveBeenCalledWith(database.db, {
+      actorUserId: 4,
       entityType: "items",
       entityId: 7,
       action: "blocked:stock.reserve",
-    });
-    expect(JSON.parse(entries[0].changeDetails!)).toEqual({
-      reason: "Not enough stock.",
-      requested: "5",
+      changeDetails: JSON.stringify({ reason: "Not enough stock.", requested: "5" }),
     });
   });
 
-  it("writes no audit entry for an unexpected failure", async () => {
+  it("writes nothing for an unexpected failure", async () => {
     await expect(
-      runBusinessEvent(users.inventory_custodian.userId, async (tx) => {
-        await recordAudit(tx, {
-          actorUserId: null,
-          entityType: "items",
-          entityId: 1,
-          action: "item.create",
-        });
-
+      runBusinessEvent(5, async () => {
         throw new Error("connection lost");
       }),
     ).rejects.toThrow("connection lost");
 
-    expect(await db.select().from(auditLog)).toHaveLength(0);
+    expect(auditRepository.insertAuditEntry).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordBlockedAction", () => {
+  it("prefixes the action and merges the reason into the details", async () => {
+    await recordBlockedAction({
+      actorUserId: null,
+      entityType: "users",
+      entityId: 0,
+      action: "login",
+      details: { email: "someone@rcwheels.test" },
+    });
+
+    expect(auditRepository.insertAuditEntry).toHaveBeenCalledWith(database.db, {
+      actorUserId: null,
+      entityType: "users",
+      entityId: 0,
+      action: "blocked:login",
+      changeDetails: JSON.stringify({ email: "someone@rcwheels.test" }),
+    });
   });
 });

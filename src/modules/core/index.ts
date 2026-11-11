@@ -19,6 +19,8 @@ export { findScreenByPath, getNavigationForRole } from "./services/navigation.se
 export {
   countUnreadNotifications,
   listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
   notifyRoles,
   notifyUsers,
 } from "./services/notification.service";
