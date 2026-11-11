@@ -5,18 +5,18 @@ the implementation and its phase exit criterion are verified.
 
 ## Phase 0 - Prepare
 
-- [ ] Assign phase owners
-- [ ] Agree on the code structure and git workflow
-- [ ] Confirm the repository, Supabase project, and Vercel project
-- [ ] Verify the empty app runs locally and on Vercel
+- [x] Assign phase owners
+- [x] Agree on the code structure and git workflow
+- [x] Confirm the repository, Supabase project, and Vercel project
+- [x] Verify the empty app runs locally and on Vercel
 
 ## Phase 1 - Foundation
 
-- [ ] Complete schema and migrations
-- [ ] Complete login and role handling
-- [ ] Complete the app layout and role-based screens
-- [ ] Add audit log, notifications, and document attachments
-- [ ] Add fictional seed data
+- [x] Complete schema and migrations
+- [x] Complete login and role handling
+- [x] Complete the app layout and role-based screens
+- [x] Add audit log, notifications, and document attachments
+- [x] Add fictional seed data
 - [ ] Verify each seeded role can log in and see only its own screens
 
 Unfinished issues:
@@ -24,20 +24,14 @@ Unfinished issues:
 - [ ] #7 - [Add seed script with fictional data](https://github.com/1vannce/rcwheels-systems-integration/issues/7)
 - [ ] #8 - [Login page and role-based redirect](https://github.com/1vannce/rcwheels-systems-integration/issues/8)
 - [ ] #9 - [Audit log and notification services](https://github.com/1vannce/rcwheels-systems-integration/issues/9)
-- [ ] #13 - [Layout shell and role-based navigation](https://github.com/1vannce/rcwheels-systems-integration/issues/13)
 
 ## Phase 2 - Inventory core
 
-- [ ] Implement items and stock balances
-- [ ] Implement stock events as domain functions
-- [ ] Implement approved adjustments and sales deductions
-- [ ] Add the incomplete-balance flag and physical-verification guard
+- [x] Implement items and stock balances
+- [x] Implement stock events as domain functions
+- [x] Implement approved adjustments and sales deductions
+- [x] Add the incomplete-balance flag and physical-verification guard
 - [ ] Pass unit tests for every stock event, including duplicate and simultaneous posting
-
-Unfinished issues:
-
-- [ ] #11 - [Item list screen](https://github.com/1vannce/rcwheels-systems-integration/issues/11)
-- [ ] #12 - [Stock service skeleton with sales deduction event](https://github.com/1vannce/rcwheels-systems-integration/issues/12)
 
 ## Phase 3 - Requisition and issue
 
@@ -102,6 +96,7 @@ Unfinished issues:
 
 ## Tracking notes
 
+- Progress updated 2026-11-11: foundation implementation and inventory-core implementation are present on `main`; phase exit criteria still need verification.
 - Keep this checklist synchronized with issue and pull request status.
 - Do not mark a phase complete until its PLAN.md exit criterion is verified.
 - Closed issues are intentionally omitted from the unfinished-work lists.
