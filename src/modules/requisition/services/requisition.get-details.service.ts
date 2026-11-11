@@ -1,0 +1,38 @@
+import "server-only";
+
+import { db } from "@/db";
+import { AppUser } from "@/modules/core";
+import {
+    findRequisitionById,
+    findRequisitionHistory,
+    findRequisitionLines,
+} from "../repositories/requisition.repository";
+import type { RequisitionDetailDto } from "../types/requisition.dto";
+import { canViewRequisitionUtil as canViewRequisition } from "./utils/requisition.can-view-requisition.util";
+
+/**
+ * One request with its lines and append-only history.
+ *
+ * Returns null when the request does not exist or the signed-in user may not
+ * see it, so the page can answer "not found" without revealing that another
+ * person's request exists.
+ */
+export async function getRequisitionDetailService(
+  actor: AppUser,
+  requisitionId: number,
+): Promise<RequisitionDetailDto | null> {
+  const requisition = await findRequisitionById(db, requisitionId);
+
+  // Check if the requisition exists and 
+  // if the actor has permission to view it
+  if (!requisition || !canViewRequisition(actor, requisition)) {
+    return null;
+  }
+
+  const [lines, history] = await Promise.all([
+    findRequisitionLines(db, requisitionId),
+    findRequisitionHistory(db, requisitionId),
+  ]);
+
+  return { requisition, lines, history };
+}

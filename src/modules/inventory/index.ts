@@ -11,7 +11,7 @@ export {
   listItemsWithStock,
   updateReorderPoint,
 } from "./services/item.service";
-export { formatQuantity } from "./services/quantity.service";
+export { compareQuantities, formatQuantity } from "./services/quantity.service";
 export {
   listSalesDeductions,
   recordSalesDeduction,
