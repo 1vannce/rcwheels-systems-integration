@@ -7,10 +7,10 @@ import type { RequisitionDto } from "../../types/requisition.dto";
  * Record-level access: the submitter, the submitter's assigned approver, the
  * inventory roles that process the request, and the system administrator.
  */
-export async function canViewRequisitionUtil(
+export function canViewRequisitionUtil(
     actor: AppUser, 
     requisition: RequisitionDto
-): Promise<boolean> {
+): boolean {
   return (
     actor.userId === requisition.submittedBy ||
     actor.userId === requisition.approverId ||
