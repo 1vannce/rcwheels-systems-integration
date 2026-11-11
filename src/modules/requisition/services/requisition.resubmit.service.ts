@@ -5,6 +5,7 @@ import {
   runBusinessEvent,
   recordAudit
 } from "@/modules/core";
+import { todayInManila } from "@/modules/inventory";
 import {
   deleteRequisitionLines,
   insertRequisitionLines,
@@ -31,6 +32,12 @@ export async function resubmitRequisitionService(
   dto: ResubmitRequisitionDto,
 ): Promise<void> {
   await runBusinessEvent(actor.userId, async (tx) => {
+    if (dto.deliveryDate < todayInManila()) {
+      throw await blocked("Delivery date cannot be in the past.", "requisition.resubmit", {
+        deliveryDate: dto.deliveryDate,
+      });
+    }
+
     const locked = await lockRequisition(tx, dto.requisitionId);
 
     if (!locked) {
@@ -55,6 +62,8 @@ export async function resubmitRequisitionService(
       requesterName,
       isUrgent: dto.isUrgent,
       purpose: dto.purpose,
+      deliveryDate: dto.deliveryDate,
+      deliveryLocation: dto.deliveryLocation,
     });
 
     // Replace the corrected lines. A rejected request has never been approved,
@@ -85,6 +94,8 @@ export async function resubmitRequisitionService(
         lineCount: dto.lines.length,
         isUrgent: dto.isUrgent,
         requesterName,
+        deliveryDate: dto.deliveryDate,
+        deliveryLocation: dto.deliveryLocation,
       },
     });
 

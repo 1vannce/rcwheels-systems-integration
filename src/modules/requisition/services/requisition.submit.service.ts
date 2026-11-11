@@ -1,6 +1,7 @@
 import "server-only";
 
 import { recordAudit, runBusinessEvent, type AppUser } from "@/modules/core";
+import { todayInManila } from "@/modules/inventory";
 
 import {
   insertRequisition,
@@ -8,6 +9,7 @@ import {
   insertRequisitionStatusHistory,
 } from "../repositories/requisition.repository";
 import type { CreateRequisitionDto } from "../schemas/requisition.dto";
+import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
 import { assertItemsExistUtil as assertItemsExist } from "./utils/requisition.assert-item-exists.util";
 import { notifyApproverUtil as notifyApprover } from "./utils/requisition.notify-approver.util";
 
@@ -26,6 +28,12 @@ export async function submitRequisitionService(
   dto: CreateRequisitionDto,
 ): Promise<{ requisitionId: number }> {
   return runBusinessEvent(actor.userId, async (tx) => {
+    if (dto.deliveryDate < todayInManila()) {
+      throw await blocked("Delivery date cannot be in the past.", "requisition.submit", {
+        deliveryDate: dto.deliveryDate,
+      });
+    }
+
     await assertItemsExist(tx, dto.lines);
     const requesterName = dto.requesterName || actor.fullName;
 
@@ -34,6 +42,8 @@ export async function submitRequisitionService(
       requesterName,
       isUrgent: dto.isUrgent,
       purpose: dto.purpose,
+      deliveryDate: dto.deliveryDate,
+      deliveryLocation: dto.deliveryLocation,
       status: "pending_approval",
     });
 
@@ -63,6 +73,8 @@ export async function submitRequisitionService(
         lineCount: dto.lines.length,
         isUrgent: dto.isUrgent,
         requesterName,
+        deliveryDate: dto.deliveryDate,
+        deliveryLocation: dto.deliveryLocation,
       },
     });
 

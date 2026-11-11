@@ -47,7 +47,13 @@ export async function createRequisitionLine(
 ): Promise<{ requisitionId: number; requisitionLineId: number }> {
   const [requisition] = await db
     .insert(requisitions)
-    .values({ submittedBy: userId, requesterName: "Test Requester", purpose: "Test" })
+    .values({
+      submittedBy: userId,
+      requesterName: "Test Requester",
+      purpose: "Test",
+      deliveryDate: "2026-11-11",
+      deliveryLocation: "Test workshop",
+    })
     .returning();
   const [line] = await db
     .insert(requisitionLines)

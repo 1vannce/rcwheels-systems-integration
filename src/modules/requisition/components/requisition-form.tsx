@@ -30,6 +30,8 @@ export type RequisitionFormItem = {
 export type RequisitionFormInitial = {
   requesterName?: string;
   purpose?: string;
+  deliveryDate?: string;
+  deliveryLocation?: string;
   isUrgent?: boolean;
   lines?: { itemId: number; requestedQty: string }[];
 };
@@ -52,12 +54,14 @@ const firstLine = (itemId: string): LineRow => ({ key: 0, itemId, requestedQty: 
  */
 export function RequisitionForm({
   items,
+  minimumDeliveryDate,
   mode = "submit",
   initial,
   requisitionId,
   submitLabel = "Submit for approval",
 }: {
   items: RequisitionFormItem[];
+  minimumDeliveryDate: string;
   /** "submit" posts a new request; "resubmit" corrects a rejected one. */
   mode?: "submit" | "resubmit";
   /** Pre-filled values for a resubmit. */
@@ -154,6 +158,31 @@ export function RequisitionForm({
           className={textareaClass}
           placeholder="What the items are for"
         />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="deliveryDate">Delivery date</Label>
+          <Input
+            id="deliveryDate"
+            name="deliveryDate"
+            type="date"
+            min={minimumDeliveryDate}
+            required
+            defaultValue={initial?.deliveryDate ?? minimumDeliveryDate}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="deliveryLocation">Delivery location</Label>
+          <Input
+            id="deliveryLocation"
+            name="deliveryLocation"
+            maxLength={200}
+            required
+            defaultValue={initial?.deliveryLocation ?? ""}
+            placeholder="Where the items should be delivered"
+          />
+        </div>
       </div>
 
       <fieldset className="flex flex-col gap-3">

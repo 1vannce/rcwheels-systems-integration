@@ -39,6 +39,8 @@ export type RequisitionDto = {
   submittedAt: Date;
   isUrgent: boolean;
   purpose: string;
+  deliveryDate: string;
+  deliveryLocation: string;
   status: RequisitionStatus;
 };
 

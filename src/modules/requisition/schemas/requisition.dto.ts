@@ -75,6 +75,12 @@ export const CreateRequisitionDto = z.object({
     .max(120, "Use at most 120 characters for the requester's name.")
     .optional(),
   purpose: z.string().trim().min(3, "Say what the items are for.").max(300),
+  deliveryDate: z.iso.date("Enter a valid delivery date."),
+  deliveryLocation: z
+    .string()
+    .trim()
+    .min(1, "Enter a delivery location.")
+    .max(200, "Use at most 200 characters for the delivery location."),
   isUrgent: checkbox,
   lines: requisitionLines,
 });

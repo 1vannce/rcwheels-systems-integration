@@ -26,6 +26,8 @@ export async function resubmitRequisitionAction(
       requisitionId,
       requesterName: textField(formData, "requesterName"),
       purpose: textField(formData, "purpose"),
+      deliveryDate: textField(formData, "deliveryDate"),
+      deliveryLocation: textField(formData, "deliveryLocation"),
       isUrgent: formData.get("isUrgent") ?? undefined,
       lines: readLines(formData),
     });

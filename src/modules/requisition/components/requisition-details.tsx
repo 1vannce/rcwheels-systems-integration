@@ -10,6 +10,10 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
   timeStyle: "short",
   timeZone: "Asia/Manila",
 });
+const deliveryDateFormat = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+  timeZone: "UTC",
+});
 
 /**
  * One request with its header, lines, and append-only status history.
@@ -54,6 +58,16 @@ export function RequisitionDetails({
         <div className="flex flex-col gap-0.5">
           <dt className="text-muted-foreground">For</dt>
           <dd>{requisition.requesterName}</dd>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <dt className="text-muted-foreground">Delivery date</dt>
+          <dd>
+            {deliveryDateFormat.format(new Date(`${requisition.deliveryDate}T00:00:00Z`))}
+          </dd>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <dt className="text-muted-foreground">Delivery location</dt>
+          <dd>{requisition.deliveryLocation}</dd>
         </div>
         <div className="flex flex-col gap-0.5 sm:col-span-2">
           <dt className="text-muted-foreground">Purpose</dt>

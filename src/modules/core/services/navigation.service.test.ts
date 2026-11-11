@@ -46,4 +46,17 @@ describe("navigation service", () => {
     });
     expect(findScreenByPath("/unknown")).toBeNull();
   });
+
+  it("marks the new requester pages as available", () => {
+    const requesterLinks = getNavigationForRole("requester").flatMap(
+      (group) => group.items,
+    );
+
+    expect(requesterLinks.find((item) => item.href === "/requisitions/new")?.isBuilt).toBe(
+      true,
+    );
+    expect(requesterLinks.find((item) => item.href === "/requisitions")?.isBuilt).toBe(
+      true,
+    );
+  });
 });

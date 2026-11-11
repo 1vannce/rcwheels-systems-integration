@@ -15,6 +15,9 @@ import * as schema from "./schema";
 type RoleName = (typeof schema.appRoleEnum.enumValues)[number];
 
 const ATTACHMENT_BUCKET = "documents";
+const seedDeliveryDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Manila",
+}).format(new Date());
 
 // All people, companies, and products below are made up.
 const seedUsers: {
@@ -131,6 +134,8 @@ async function seedItemAvailabilityExample(tx: Tx, userIds: Map<string, number>)
         submittedBy: sampleRequesterId,
         requesterName: "Rosa Villareal",
         purpose: samplePurpose,
+        deliveryDate: seedDeliveryDate,
+        deliveryLocation: "RCWheels main workshop",
         status: "approved",
       })
       .returning({ requisitionId: schema.requisitions.requisitionId });

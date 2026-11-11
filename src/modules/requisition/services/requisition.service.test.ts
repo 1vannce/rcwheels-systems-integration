@@ -12,6 +12,7 @@ import {
   users,
 } from "@/db/schema";
 import { BlockedActionError, type AppRole, type AppUser } from "@/modules/core";
+import { todayInManila } from "@/modules/inventory";
 import {
   closeDatabase,
   createUsersForEveryRole,
@@ -46,6 +47,8 @@ describeWithDatabase("requisition service", () => {
   async function submit(quantity = "10", purpose = "Test request") {
     return submitRequisition(people.requester, {
       purpose,
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Test workshop",
       isUrgent: false,
       lines: [{ itemId, requestedQty: quantity }],
     });
@@ -96,6 +99,8 @@ describeWithDatabase("requisition service", () => {
     expect(header).toMatchObject({
       status: "pending_approval",
       requesterName: people.requester.fullName,
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Test workshop",
     });
     expect(lines).toHaveLength(1);
     expect(lines[0].requestedQty).toBe("5.000");
@@ -104,6 +109,21 @@ describeWithDatabase("requisition service", () => {
     expect(alerts).toHaveLength(1);
     expect(alerts[0].recipientUserId).toBe(people.requisition_approver.userId);
     expect(audits.some((row) => row.action === "requisition.submit")).toBe(true);
+  });
+
+  it("rejects a delivery date in the past", async () => {
+    const yesterday = new Date(`${todayInManila()}T00:00:00Z`);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+
+    await expect(
+      submitRequisition(people.requester, {
+        purpose: "Past date",
+        deliveryDate: yesterday.toISOString().slice(0, 10),
+        deliveryLocation: "Test workshop",
+        isUrgent: false,
+        lines: [{ itemId, requestedQty: "1" }],
+      }),
+    ).rejects.toThrow("Delivery date cannot be in the past.");
   });
 
   it("approves less than the requested quantity (BR-RQ-05)", async () => {
@@ -167,6 +187,8 @@ describeWithDatabase("requisition service", () => {
     await resubmitRequisition(people.requester, {
       requisitionId,
       purpose: "Corrected",
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Corrected workshop",
       isUrgent: true,
       lines: [{ itemId, requestedQty: "8" }],
     });
@@ -180,7 +202,13 @@ describeWithDatabase("requisition service", () => {
       .from(requisitionStatusHistory)
       .where(eq(requisitionStatusHistory.requisitionId, requisitionId));
 
-    expect(header).toMatchObject({ status: "pending_approval", purpose: "Corrected", isUrgent: true });
+    expect(header).toMatchObject({
+      status: "pending_approval",
+      purpose: "Corrected",
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Corrected workshop",
+      isUrgent: true,
+    });
     expect(history.map((row) => row.toStatus)).toEqual([
       "pending_approval",
       "rejected",

@@ -8,6 +8,10 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
   timeStyle: "short",
   timeZone: "Asia/Manila",
 });
+const deliveryDateFormat = new Intl.DateTimeFormat("en-PH", {
+  dateStyle: "medium",
+  timeZone: "UTC",
+});
 
 /**
  * The signed-in user's request list. Each row links to the detail screen; the
@@ -30,6 +34,7 @@ export function RequisitionTable({
             <th className="p-2 font-medium">Request</th>
             <th className="p-2 font-medium">Submitted</th>
             <th className="p-2 font-medium">For</th>
+            <th className="p-2 font-medium">Delivery</th>
             <th className="p-2 text-right font-medium">Items</th>
             <th className="p-2 font-medium">Status</th>
           </tr>
@@ -50,6 +55,10 @@ export function RequisitionTable({
               </td>
               <td className="p-2">{dateFormat.format(requisition.submittedAt)}</td>
               <td className="p-2">{requisition.requesterName}</td>
+              <td className="p-2">
+                <div>{deliveryDateFormat.format(new Date(`${requisition.deliveryDate}T00:00:00Z`))}</div>
+                <div className="text-xs text-muted-foreground">{requisition.deliveryLocation}</div>
+              </td>
               <td className="p-2 text-right tabular-nums">{requisition.lineCount}</td>
               <td className="p-2">
                 <RequisitionStatusBadge status={requisition.status} />

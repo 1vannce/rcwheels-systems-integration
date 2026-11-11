@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireUser } from "@/modules/core";
-import { compareQuantities, listItemsWithStock } from "@/modules/inventory";
+import { compareQuantities, listItemsWithStock, todayInManila } from "@/modules/inventory";
 import { getRequisitionDetailService as getRequisitionDetail } from "@/modules/requisition";
 import { ApprovalDecision } from "@/modules/requisition/components/approval-decision";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
@@ -121,6 +121,7 @@ export default async function RequisitionDetailPage({
       {canResubmit && items && (
         <RequisitionForm
           mode="resubmit"
+          minimumDeliveryDate={todayInManila()}
           requisitionId={detail.requisition.requisitionId}
           submitLabel="Resubmit for approval"
           items={items.map(({ itemId, itemCode, itemName, unit, available }) => ({
@@ -133,6 +134,8 @@ export default async function RequisitionDetailPage({
           initial={{
             requesterName: detail.requisition.requesterName,
             purpose: detail.requisition.purpose,
+            deliveryDate: detail.requisition.deliveryDate,
+            deliveryLocation: detail.requisition.deliveryLocation,
             isUrgent: detail.requisition.isUrgent,
             lines: detail.lines.map((line) => ({
               itemId: line.itemId,

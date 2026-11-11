@@ -39,6 +39,8 @@ export type NewRequisition = {
   requesterName: string;
   isUrgent: boolean;
   purpose: string;
+  deliveryDate: string;
+  deliveryLocation: string;
   status: RequisitionStatus;
 };
 
@@ -182,6 +184,8 @@ const requisitionColumns = {
   submittedAt: requisitions.submittedAt,
   isUrgent: requisitions.isUrgent,
   purpose: requisitions.purpose,
+  deliveryDate: requisitions.deliveryDate,
+  deliveryLocation: requisitions.deliveryLocation,
   status: requisitions.status,
 };
 
@@ -342,7 +346,13 @@ export async function updateRequisitionLineApprovedQty(
 export async function updateRequisitionHeader(
   tx: Tx,
   requisitionId: number,
-  changes: { requesterName: string; isUrgent: boolean; purpose: string },
+  changes: {
+    requesterName: string;
+    isUrgent: boolean;
+    purpose: string;
+    deliveryDate: string;
+    deliveryLocation: string;
+  },
 ): Promise<void> {
   await tx
     .update(requisitions)

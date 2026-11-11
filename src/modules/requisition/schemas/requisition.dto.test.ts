@@ -9,12 +9,15 @@ import {
   ResubmitRequisitionDto,
 } from "./requisition.dto";
 
+const delivery = { deliveryDate: "2099-04-15", deliveryLocation: "Workshop bay 2" };
+
 // These tests need no database, so they run in CI. They lock in the
 // user-facing messages and the input rules the actions rely on (BR-RQ-02/05).
 
 describe("CreateRequisitionDto", () => {
   it("coerces the item id and reads urgency from a checkbox", () => {
     const parsed = CreateRequisitionDto.parse({
+      ...delivery,
       purpose: "Replace tires",
       isUrgent: "on",
       lines: [{ itemId: "3", requestedQty: "2.5" }],
@@ -26,6 +29,7 @@ describe("CreateRequisitionDto", () => {
 
   it("leaves a blank requester name empty so the service uses the submitter", () => {
     const parsed = CreateRequisitionDto.parse({
+      ...delivery,
       purpose: "For a mechanic",
       requesterName: "   ",
       lines: [{ itemId: 1, requestedQty: "1" }],
@@ -35,13 +39,18 @@ describe("CreateRequisitionDto", () => {
   });
 
   it("requires at least one line", () => {
-    const result = CreateRequisitionDto.safeParse({ purpose: "Nothing", lines: [] });
+    const result = CreateRequisitionDto.safeParse({
+      ...delivery,
+      purpose: "Nothing",
+      lines: [],
+    });
 
     expect(result.success ? null : result.error.issues[0].message).toBe("Add at least one item.");
   });
 
   it("refuses the same item twice", () => {
     const result = CreateRequisitionDto.safeParse({
+      ...delivery,
       purpose: "Duplicate",
       lines: [
         { itemId: 1, requestedQty: "1" },
@@ -54,6 +63,7 @@ describe("CreateRequisitionDto", () => {
 
   it("refuses a zero quantity", () => {
     const result = CreateRequisitionDto.safeParse({
+      ...delivery,
       purpose: "Zero",
       lines: [{ itemId: 1, requestedQty: "0" }],
     });
@@ -65,6 +75,7 @@ describe("CreateRequisitionDto", () => {
 
   it("refuses more than three decimal places", () => {
     const result = CreateRequisitionDto.safeParse({
+      ...delivery,
       purpose: "Precise",
       lines: [{ itemId: 1, requestedQty: "1.2345" }],
     });
@@ -72,6 +83,18 @@ describe("CreateRequisitionDto", () => {
     expect(result.success ? null : result.error.issues[0].message).toBe(
       "Enter a number with up to 3 decimal places.",
     );
+  });
+
+  it("requires a valid delivery date and a non-empty location", () => {
+    const result = CreateRequisitionDto.safeParse({
+      ...delivery,
+      deliveryDate: "2099-02-30",
+      deliveryLocation: "   ",
+      purpose: "Replace tires",
+      lines: [{ itemId: 1, requestedQty: "1" }],
+    });
+
+    expect(result.success).toBe(false);
   });
 });
 
@@ -107,6 +130,7 @@ describe("ResubmitRequisitionDto", () => {
   it("needs the request id and the corrected lines", () => {
     expect(
       ResubmitRequisitionDto.safeParse({
+        ...delivery,
         requisitionId: "4",
         purpose: "Fixed",
         lines: [{ itemId: 1, requestedQty: "1" }],
@@ -115,6 +139,7 @@ describe("ResubmitRequisitionDto", () => {
 
     expect(
       ResubmitRequisitionDto.safeParse({
+        ...delivery,
         purpose: "Fixed",
         lines: [{ itemId: 1, requestedQty: "1" }],
       }).success,
