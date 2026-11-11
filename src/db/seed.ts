@@ -39,20 +39,88 @@ const seedUsers: {
   { email: "admin@rcwheels.test", fullName: "Grace Tan", role: "system_administrator" },
 ];
 
-const seedItems = [
-  { itemCode: "TIRE-1757013", itemName: "Passenger tire 175/70 R13", specification: "Tubeless radial", unit: "pc", reorderPoint: "8" },
-  { itemCode: "TIRE-1956515", itemName: "Passenger tire 195/65 R15", specification: "Tubeless radial", unit: "pc", reorderPoint: "8" },
-  { itemCode: "RIM-15ALLOY", itemName: "Alloy rim 15 inch", specification: "4 x 100 bolt pattern", unit: "pc", reorderPoint: "4" },
-  { itemCode: "VALVE-TR413", itemName: "Tire valve TR413", specification: "Rubber snap-in", unit: "pc", reorderPoint: "50" },
-  { itemCode: "WEIGHT-10G", itemName: "Wheel balancing weight 10 g", specification: "Adhesive, steel", unit: "pc", reorderPoint: "100" },
-  { itemCode: "LUG-M12", itemName: "Lug nut M12 x 1.5", specification: "Chrome, conical seat", unit: "pc", reorderPoint: "40" },
+type SeedItem = {
+  itemCode: string;
+  itemName: string;
+  specification: string;
+  unit: string;
+  reorderPoint: string;
+  // Opening usable quantity. Posted once through an opening_balance movement.
+  openingQty: string;
+};
+
+const seedItems: SeedItem[] = [
+  { itemCode: "TIRE-1757013", itemName: "Passenger tire 175/70 R13", specification: "Tubeless radial", unit: "pc", reorderPoint: "8", openingQty: "8" },
+  { itemCode: "TIRE-1956515", itemName: "Passenger tire 195/65 R15", specification: "Tubeless radial", unit: "pc", reorderPoint: "8", openingQty: "14" },
+  { itemCode: "RIM-15ALLOY", itemName: "Alloy rim 15 inch", specification: "4 x 100 bolt pattern", unit: "pc", reorderPoint: "4", openingQty: "6" },
+  { itemCode: "VALVE-TR413", itemName: "Tire valve TR413", specification: "Rubber snap-in", unit: "pc", reorderPoint: "50", openingQty: "120" },
+  { itemCode: "WEIGHT-10G", itemName: "Wheel balancing weight 10 g", specification: "Adhesive, steel", unit: "pc", reorderPoint: "100", openingQty: "250" },
+  { itemCode: "LUG-M12", itemName: "Lug nut M12 x 1.5", specification: "Chrome, conical seat", unit: "pc", reorderPoint: "40", openingQty: "96" },
 ];
+
+function itemColumns({ itemCode, itemName, specification, unit, reorderPoint }: SeedItem) {
+  return { itemCode, itemName, specification, unit, reorderPoint };
+}
 
 const seedSuppliers = [
   { supplierName: "Sugbo Tire Trading", contactPerson: "Elena Ramos", contactDetails: "elena@sugbotire.test", address: "Mandaue City, Cebu" },
   { supplierName: "Visayas Wheel Supply", contactPerson: "Victor Chiu", contactDetails: "victor@visayaswheel.test", address: "Cebu City, Cebu" },
   { supplierName: "Mactan Auto Parts", contactPerson: "Irene Dela Cruz", contactDetails: "irene@mactanparts.test", address: "Lapu-Lapu City, Cebu" },
 ];
+
+/**
+ * Posts one opening_balance movement per seeded item and adds its quantity to
+ * the usable balance. The event key makes each opening balance a one-time,
+ * auditable seed event, so running the seed again changes no quantity.
+ */
+async function seedOpeningBalances(tx: Tx) {
+  for (const item of seedItems) {
+    const [usableBalance] = await tx
+      .select({ stockBalanceId: schema.stockBalances.stockBalanceId })
+      .from(schema.stockBalances)
+      .innerJoin(
+        schema.items,
+        eq(schema.items.itemId, schema.stockBalances.itemId),
+      )
+      .where(
+        and(
+          eq(schema.items.itemCode, item.itemCode),
+          eq(schema.stockBalances.condition, "usable"),
+        ),
+      );
+
+    if (!usableBalance) {
+      throw new Error(
+        `Could not find the usable balance for seed item ${item.itemCode}.`,
+      );
+    }
+
+    const [movement] = await tx
+      .insert(schema.stockMovements)
+      .values({
+        stockBalanceId: usableBalance.stockBalanceId,
+        movementType: "opening_balance",
+        quantityDelta: item.openingQty,
+        eventKey: `opening_balance:seed:${item.itemCode}`,
+      })
+      .onConflictDoNothing()
+      .returning({ movementId: schema.stockMovements.movementId });
+
+    if (!movement) {
+      continue;
+    }
+
+    await tx
+      .update(schema.stockBalances)
+      .set({
+        quantityOnHand: sql`${schema.stockBalances.quantityOnHand} + ${item.openingQty}::numeric`,
+        updatedAt: new Date(),
+      })
+      .where(
+        eq(schema.stockBalances.stockBalanceId, usableBalance.stockBalanceId),
+      );
+  }
+}
 
 async function seedItemAvailabilityExample(tx: Tx, userIds: Map<string, number>) {
   const sampleItemCode = "TIRE-1757013";
@@ -87,30 +155,6 @@ async function seedItemAvailabilityExample(tx: Tx, userIds: Map<string, number>)
 
   if (!usableBalance) {
     throw new Error(`Could not find the seed balance for ${sampleItemCode}.`);
-  }
-
-  // Give the sample reservation enough stock on a fresh seed. The movement
-  // key makes this opening balance a one-time, auditable seed event.
-  const openingBalanceEventKey = `opening_balance:seed:${sampleItemCode}`;
-  const [openingBalanceMovement] = await tx
-    .insert(schema.stockMovements)
-    .values({
-      stockBalanceId: usableBalance.stockBalanceId,
-      movementType: "opening_balance",
-      quantityDelta: "8",
-      eventKey: openingBalanceEventKey,
-    })
-    .onConflictDoNothing()
-    .returning({ movementId: schema.stockMovements.movementId });
-
-  if (openingBalanceMovement) {
-    await tx
-      .update(schema.stockBalances)
-      .set({
-        quantityOnHand: sql`${schema.stockBalances.quantityOnHand} + 8::numeric`,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.stockBalances.stockBalanceId, usableBalance.stockBalanceId));
   }
 
   const samplePurpose = "Seed example for inventory item availability";
@@ -329,7 +373,7 @@ async function main() {
         }
       }
 
-      await tx.insert(schema.items).values(seedItems).onConflictDoNothing();
+      await tx.insert(schema.items).values(seedItems.map(itemColumns)).onConflictDoNothing();
 
       // One balance row per item and condition, starting at zero.
       await tx.execute(sql`
@@ -338,6 +382,8 @@ async function main() {
         from items cross join unnest(enum_range(null::stock_condition)) as condition
         on conflict do nothing
       `);
+
+      await seedOpeningBalances(tx);
 
       await seedItemAvailabilityExample(tx, userIds);
 
@@ -358,7 +404,10 @@ async function main() {
   }
 
   console.log(
-    `Seeded ${schema.appRoleEnum.enumValues.length} roles, ${seedUsers.length} users, ${seedItems.length} items, ${seedSuppliers.length} suppliers.`,
+    `Seeded ${schema.appRoleEnum.enumValues.length} roles, ${seedUsers.length} users, ${seedItems.length} items with opening balances, ${seedSuppliers.length} suppliers.`,
+  );
+  console.log(
+    `Opening usable stock: ${seedItems.map((item) => `${item.itemCode}=${item.openingQty}`).join(", ")}.`,
   );
   console.log("Seeded an approved sample request with an active reservation for TIRE-1757013.");
   console.log(
