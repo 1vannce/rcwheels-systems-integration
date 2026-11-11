@@ -6,7 +6,13 @@ import { cn } from "cn";
 
 import type { NavigationGroup } from "../types/navigation.type";
 
-export function NavLinks({ groups }: { groups: NavigationGroup[] }) {
+export function NavLinks({
+  groups,
+  onNavigate,
+}: {
+  groups: NavigationGroup[];
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const hrefs = groups.flatMap((group) => group.items.map((item) => item.href));
 
@@ -28,6 +34,7 @@ export function NavLinks({ groups }: { groups: NavigationGroup[] }) {
                 key={item.screen}
                 href={item.href}
                 aria-current={isCurrent ? "page" : undefined}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center justify-between rounded-lg px-2 py-1.5 text-sm hover:bg-muted",
                   isCurrent && "bg-muted font-medium",
