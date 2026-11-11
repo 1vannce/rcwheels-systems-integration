@@ -41,7 +41,7 @@ export async function resubmitRequisitionAction(
     return actionFailure(error);
   }
 
-  revalidatePath("/requisitions");
+  revalidatePath("/requisitions/my-requests");
   revalidatePath(`/requisitions/${requisitionId}`);
 
   return { ok: true, message: "Request resubmitted for approval." };

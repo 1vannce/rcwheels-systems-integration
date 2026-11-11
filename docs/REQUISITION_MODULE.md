@@ -98,7 +98,7 @@ table holds).
 | Screen | Route | Role | Service |
 | --- | --- | --- | --- |
 | New requisition | `/requisitions/new` | requester | `submitRequisition` |
-| My requests | `/requisitions` | requester | `listMyRequests` |
+| My requests | `/requisitions/my-requests` | requester | `listMyRequests` |
 | Request detail | `/requisitions/[id]` | any signed-in (record access in service) | `getRequisitionDetail` |
 | Approval queue | `/requisitions/approvals` | requisition approver | `listPendingApprovals` |
 | Issue queue | `/inventory/issue-queue` | inventory custodian | `listApprovedForIssue` / `reserveRequisition` |
@@ -231,7 +231,8 @@ src/modules/requisition/
     └── dispatch-button.tsx
 
 src/app/(app)/
-├── requisitions/page.tsx
+├── requisitions/page.tsx              # redirects to /requisitions/my-requests
+├── requisitions/my-requests/page.tsx
 ├── requisitions/new/page.tsx
 ├── requisitions/approvals/page.tsx
 ├── requisitions/[requisitionId]/page.tsx

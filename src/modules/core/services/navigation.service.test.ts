@@ -18,7 +18,9 @@ describe("navigation service", () => {
   });
 
   it("hides whole modules from roles that have no screen in them", () => {
-    const requesterGroups = getNavigationForRole("requester").map((group) => group.title);
+    const requesterGroups = getNavigationForRole("requester").map(
+      (group) => group.title,
+    );
 
     expect(requesterGroups).toEqual(["Shared", "Requisition", "Delivery"]);
 
@@ -52,11 +54,12 @@ describe("navigation service", () => {
       (group) => group.items,
     );
 
-    expect(requesterLinks.find((item) => item.href === "/requisitions/new")?.isBuilt).toBe(
-      true,
-    );
-    expect(requesterLinks.find((item) => item.href === "/requisitions")?.isBuilt).toBe(
-      true,
-    );
+    expect(
+      requesterLinks.find((item) => item.href === "/requisitions/new")?.isBuilt,
+    ).toBe(true);
+    expect(
+      requesterLinks.find((item) => item.href === "/requisitions/my-requests")
+        ?.isBuilt,
+    ).toBe(true);
   });
 });

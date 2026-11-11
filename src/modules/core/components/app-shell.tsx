@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BellIcon } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { findActiveNavigationItem } from "@/components/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -36,17 +37,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hrefs = navigation.flatMap((group) =>
-    group.items.map((item) => item.href),
-  );
-  // A detail page highlights its list, unless it has its own link.
-  const current = navigation
-    .flatMap((group) => group.items)
-    .find(
-      (item) =>
-        pathname === item.href ||
-        (pathname.startsWith(`${item.href}/`) && !hrefs.includes(pathname)),
-    );
+  const current = findActiveNavigationItem(navigation, pathname);
 
   return (
     <SidebarProvider>
@@ -73,7 +64,9 @@ export function AppShell({
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{current?.label ?? "Dashboard"}</BreadcrumbPage>
+                  <BreadcrumbPage>
+                    {current?.label ?? "Dashboard"}
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

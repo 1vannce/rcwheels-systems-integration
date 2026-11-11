@@ -32,6 +32,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { findActiveNavigationItem } from "@/components/navigation";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -72,10 +73,7 @@ const screenIcons: Partial<Record<AppScreen, LucideIcon>> = {
 
 export function NavMain({ groups }: { groups: NavigationGroup[] }) {
   const pathname = usePathname();
-  // A detail page highlights its list, unless it has its own link.
-  const hrefs = groups.flatMap((group) =>
-    group.items.map((item) => item.href),
-  );
+  const activeItem = findActiveNavigationItem(groups, pathname);
 
   return (
     <>
@@ -84,10 +82,7 @@ export function NavMain({ groups }: { groups: NavigationGroup[] }) {
           <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
           <SidebarMenu>
             {group.items.map((item) => {
-              const isCurrent =
-                pathname === item.href ||
-                (pathname.startsWith(`${item.href}/`) &&
-                  !hrefs.includes(pathname));
+              const isCurrent = activeItem?.screen === item.screen;
               const Icon = screenIcons[item.screen] ?? CircleDotIcon;
 
               return (
