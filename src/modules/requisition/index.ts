@@ -20,6 +20,7 @@ export { submitRequisitionAction } from "./actions/action.submit-requisition";
  * Service Exports
  */
 export {
+  listActiveMechanicsService,
   listApprovedForIssueService,
   listMyRequestsService,
   listPendingApprovalsService,
@@ -49,6 +50,7 @@ export type {
   RequisitionDto,
   RequisitionLineDto,
   RequisitionListItemDto,
+  RequisitionMechanicOptionDto,
   RequisitionStatus,
   RequisitionStatusEntryDto,
 } from "./types/requisition.dto";

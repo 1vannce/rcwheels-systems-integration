@@ -24,6 +24,7 @@ export const requisitions = pgTable(
     submittedBy: integer("submitted_by")
       .notNull()
       .references(() => users.userId),
+    requestedForUserId: integer("requested_for_user_id").references(() => users.userId),
     // Kept for requests submitted on behalf of a mechanic.
     requesterName: text("requester_name").notNull(),
     submittedAt: timestamp("submitted_at", { withTimezone: true })
@@ -37,6 +38,7 @@ export const requisitions = pgTable(
   },
   (t) => [
     index("requisitions_submitted_by_idx").on(t.submittedBy),
+    index("requisitions_requested_for_user_id_idx").on(t.requestedForUserId),
     index("requisitions_status_idx").on(t.status),
   ],
 ).enableRLS();

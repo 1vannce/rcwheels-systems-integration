@@ -1,6 +1,11 @@
 import "server-only";
 
-import { recordAudit, runBusinessEvent, type AppUser } from "@/modules/core";
+import {
+  InvalidInputError,
+  recordAudit,
+  runBusinessEvent,
+  type AppUser,
+} from "@/modules/core";
 import { todayInManila } from "@/modules/inventory";
 
 import {
@@ -12,6 +17,7 @@ import type { CreateRequisitionDto } from "../schemas/requisition.dto";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
 import { assertItemsExistUtil as assertItemsExist } from "./utils/requisition.assert-item-exists.util";
 import { notifyApproverUtil as notifyApprover } from "./utils/requisition.notify-approver.util";
+import { resolveRequesterUtil } from "./utils/requisition.resolve-requester.util";
 
 /**
  * Submits a requisition for approval.
@@ -20,8 +26,8 @@ import { notifyApproverUtil as notifyApprover } from "./utils/requisition.notify
  * entry, the audit entry, and the approver's notification, so a request never
  * exists without its history or its alert (PLAN design rules).
  *
- * The signed-in user owns the record. `requesterName` only says who the items
- * are for (for example a mechanic), and defaults to the submitter's name.
+ * The signed-in user remains the submitter. A selected mechanic is resolved
+ * from an active account, and both identities are retained on the request.
  */
 export async function submitRequisitionService(
   actor: AppUser,
@@ -29,17 +35,23 @@ export async function submitRequisitionService(
 ): Promise<{ requisitionId: number }> {
   return runBusinessEvent(actor.userId, async (tx) => {
     if (dto.deliveryDate < todayInManila()) {
-      throw await blocked("Delivery date cannot be in the past.", "requisition.submit", {
-        deliveryDate: dto.deliveryDate,
-      });
+      throw new InvalidInputError("Delivery date cannot be in the past.");
     }
 
     await assertItemsExist(tx, dto.lines);
-    const requesterName = dto.requesterName || actor.fullName;
+    const requester = await resolveRequesterUtil(tx, actor, dto.requestedForUserId);
+
+    if (actor.approverId === null) {
+      throw blocked(
+        "Your account does not have an assigned approver.",
+        "requisition.submit",
+        { submitterId: actor.userId },
+      );
+    }
 
     const requisitionId = await insertRequisition(tx, {
       submittedBy: actor.userId,
-      requesterName,
+      ...requester,
       isUrgent: dto.isUrgent,
       purpose: dto.purpose,
       deliveryDate: dto.deliveryDate,
@@ -72,13 +84,13 @@ export async function submitRequisitionService(
       details: {
         lineCount: dto.lines.length,
         isUrgent: dto.isUrgent,
-        requesterName,
+        ...requester,
         deliveryDate: dto.deliveryDate,
         deliveryLocation: dto.deliveryLocation,
       },
     });
 
-    await notifyApprover(tx, actor, requisitionId, requesterName, dto.isUrgent);
+    await notifyApprover(tx, actor, requisitionId, requester.requesterName, dto.isUrgent);
 
     return { requisitionId };
   });

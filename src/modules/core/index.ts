@@ -32,7 +32,7 @@ export {
 export type { ActionResult } from "./types/action-result.type";
 export type { Attachment, AttachmentTarget } from "./types/attachment.type";
 export type { AuditEntry } from "./types/audit.type";
-export { BlockedActionError, ForbiddenError } from "./types/error.type";
+export { BlockedActionError, ForbiddenError, InvalidInputError } from "./types/error.type";
 export type { NavigationGroup, NavigationItem } from "./types/navigation.type";
 export type { AppNotification } from "./types/notification.type";
 export type { AppRole, AppScreen } from "./types/role.type";

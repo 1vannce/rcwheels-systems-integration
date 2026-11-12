@@ -112,10 +112,10 @@ flowchart TD
 
 | ID | Rule | Basis | Status |
 | --- | --- | --- | --- |
-| BR-RQ-01 | Only an authorized employee can create a Requisition Form (RF). A form can be submitted on behalf of a mechanic; the system keeps both the submitter and the requester name. | Proposal | Planned |
-| BR-RQ-02 | An RF needs at least one line. Each line needs an item from the item list and a quantity above zero (up to 3 decimal places). The purpose is required. | Proposal (required-field validation) | Planned |
-| BR-RQ-03 | A request can be marked urgent. Urgency moves it up the queues but does not skip approval, the stock check, or any later step. | Proposal; wording proposed | Planned |
-| BR-RQ-04 | A submitted RF starts as Pending Approval and goes to the requester's approver. | Decision 6 | Planned |
+| BR-RQ-01 | Only an authorized employee can create a Requisition Form (RF). A form can be submitted on behalf of an active mechanic account; the system keeps both the submitter and the requester. | Proposal | Built |
+| BR-RQ-02 | An RF needs at least one line. Each line needs an item from the item list and a quantity above zero (up to 3 decimal places). The purpose is required. | Proposal (required-field validation) | Built |
+| BR-RQ-03 | A request can be marked urgent. Urgency moves it up the queues but does not skip approval, the stock check, or any later step. | Proposal; wording proposed | Built |
+| BR-RQ-04 | A submitted RF starts as Pending Approval and goes to the requester's approver. | Decision 6 | Built |
 | BR-RQ-05 | The approver approves or rejects. A rejection needs a reason. The approver may approve less than the requested quantity; the approved quantity is stored separately from the requested quantity. | Proposal; reason and partial approval proposed | Planned |
 | BR-RQ-06 | A rejected RF can be corrected and resubmitted. The earlier decision stays in the status history and approval runs again. | Test scenario 11 | Planned |
 | BR-RQ-07 | An approved RF appears in the Inventory queue (connector A). Nothing is reserved until the Custodian verifies the stock. | Proposal | Planned |
@@ -126,7 +126,7 @@ flowchart TD
 | BR-RQ-12 | A supplier receipt alone never fulfills a requisition. | Plan rule 4 | Planned |
 | BR-RQ-13 | The requisition approver can cancel a remaining request balance. Cancelling a requisition does not cancel a PO. | Plan rule 6 | Planned |
 | BR-RQ-14 | A delivery rejection puts the request in Pending Resolution. It never changes an approved request to Rejected. | Plan rule 7 | Planned |
-| BR-RQ-15 | Every status change writes a status history row with who, when, from, to, and reason. | ERD | Planned |
+| BR-RQ-15 | Every status change writes a status history row with who, when, from, to, and reason. | ERD | Built |
 | BR-RQ-16 | Approving a requisition does not approve a purchase. | Plan rule 1 | Planned |
 
 ---

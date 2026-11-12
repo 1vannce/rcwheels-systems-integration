@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,9 +27,14 @@ export type RequisitionFormItem = {
   available: string;
 };
 
+export type RequisitionFormMechanic = {
+  userId: number;
+  fullName: string;
+};
+
 /** Values a resubmit pre-fills from the rejected request. */
 export type RequisitionFormInitial = {
-  requesterName?: string;
+  requestedForUserId?: number | null;
   purpose?: string;
   deliveryDate?: string;
   deliveryLocation?: string;
@@ -54,6 +60,7 @@ const firstLine = (itemId: string): LineRow => ({ key: 0, itemId, requestedQty: 
  */
 export function RequisitionForm({
   items,
+  mechanics,
   minimumDeliveryDate,
   mode = "submit",
   initial,
@@ -61,6 +68,7 @@ export function RequisitionForm({
   submitLabel = "Submit for approval",
 }: {
   items: RequisitionFormItem[];
+  mechanics: RequisitionFormMechanic[];
   minimumDeliveryDate: string;
   /** "submit" posts a new request; "resubmit" corrects a rejected one. */
   mode?: "submit" | "resubmit";
@@ -123,14 +131,20 @@ export function RequisitionForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="requesterName">For (optional)</Label>
-          <Input
-            id="requesterName"
-            name="requesterName"
-            maxLength={120}
-            defaultValue={initial?.requesterName ?? ""}
-            placeholder="Leave blank when the request is for you"
-          />
+          <Label htmlFor="requestedForUserId">For mechanic (optional)</Label>
+          <select
+            id="requestedForUserId"
+            name="requestedForUserId"
+            defaultValue={String(initial?.requestedForUserId ?? "")}
+            className={selectClass}
+          >
+            <option value="">This request is for me</option>
+            {mechanics.map((mechanic) => (
+              <option key={mechanic.userId} value={mechanic.userId}>
+                {mechanic.fullName}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex items-end pb-1.5">
           <Label htmlFor="isUrgent" className="flex items-center gap-2 font-normal">
@@ -238,9 +252,28 @@ export function RequisitionForm({
       </fieldset>
 
       <FormMessage result={result} />
-      <div>
-        <SubmitButton>{submitLabel}</SubmitButton>
-      </div>
+      {result?.ok ? (
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <Link
+            href="/requisitions"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            View in My requests →
+          </Link>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+          >
+            Create another request
+          </Button>
+        </div>
+      ) : (
+        <div>
+          <SubmitButton>{submitLabel}</SubmitButton>
+        </div>
+      )}
     </form>
   );
 }

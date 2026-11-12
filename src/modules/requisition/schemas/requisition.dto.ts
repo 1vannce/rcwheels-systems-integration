@@ -8,6 +8,10 @@ import { z } from "zod";
 
 /** A positive database primary key, coerced from form data strings. */
 const id = z.coerce.number().int().positive();
+const optionalId = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  id.optional(),
+);
 
 /** A numeric(14, 3) value: up to 11 integer digits and up to 3 decimals. */
 const quantity = z
@@ -65,15 +69,11 @@ const requisitionLines = z
   });
 
 /**
- * A new requisition. `requesterName` is optional and used when someone submits
- * for a mechanic; the service falls back to the signed-in user's name.
+ * A new requisition. An optional recipient must resolve to an active mechanic
+ * account in the service; browser-supplied names are never trusted.
  */
 export const CreateRequisitionDto = z.object({
-  requesterName: z
-    .string()
-    .trim()
-    .max(120, "Use at most 120 characters for the requester's name.")
-    .optional(),
+  requestedForUserId: optionalId,
   purpose: z.string().trim().min(3, "Say what the items are for.").max(300),
   deliveryDate: z.iso.date("Enter a valid delivery date."),
   deliveryLocation: z

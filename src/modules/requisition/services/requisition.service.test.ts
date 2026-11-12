@@ -9,10 +9,12 @@ import {
   requisitionLines,
   requisitions,
   requisitionStatusHistory,
+  roles,
   users,
 } from "@/db/schema";
 import { BlockedActionError, type AppRole, type AppUser } from "@/modules/core";
 import { todayInManila } from "@/modules/inventory";
+import { CreateRequisitionDto } from "../schemas/requisition.dto";
 import {
   closeDatabase,
   createUsersForEveryRole,
@@ -23,6 +25,8 @@ import { createItem, onHand } from "@/test/stock-fixtures";
 
 import { approveRequisitionService as approveRequisition } from "./requisition.approve.service";
 import { dispatchRequisitionService as dispatchRequisition } from "./requisition.dispatch.service";
+import { getRequisitionDetailService } from "./requisition.get-details.service";
+import { listActiveMechanicsService, listMyRequestsService } from "./requisition.lists.service";
 import { prepareAcknowledgementReceiptService as prepareAcknowledgementReceipt } from "./requisition.prep-AR.service";
 import { rejectRequisitionService as rejectRequisition } from "./requisition.reject.service";
 import { reserveRequisitionService as reserveRequisition } from "./requisition.reserve.service";
@@ -39,19 +43,60 @@ describeWithDatabase("requisition service", () => {
   beforeEach(async () => {
     await resetDatabase();
     people = await createUsersForEveryRole();
+    people.requester.approverId = people.requisition_approver.userId;
+    await db
+      .update(users)
+      .set({ approverId: people.requisition_approver.userId })
+      .where(eq(users.userId, people.requester.userId));
     itemId = await createItem("REQ-1", "100");
   });
 
   afterAll(closeDatabase);
 
-  async function submit(quantity = "10", purpose = "Test request") {
-    return submitRequisition(people.requester, {
+  async function submit(
+    quantity = "10",
+    purpose = "Test request",
+    actor = people.requester,
+    requestedForUserId?: number,
+  ) {
+    return submitRequisition(actor, {
+      ...(requestedForUserId === undefined ? {} : { requestedForUserId }),
       purpose,
       deliveryDate: todayInManila(),
       deliveryLocation: "Test workshop",
       isUrgent: false,
       lines: [{ itemId, requestedQty: quantity }],
     });
+  }
+
+  async function createRequester(
+    email: string,
+    fullName: string,
+    isMechanic = false,
+  ): Promise<AppUser> {
+    const [requesterRole] = await db
+      .select({ roleId: roles.roleId })
+      .from(roles)
+      .where(eq(roles.roleName, "requester"));
+    const [row] = await db
+      .insert(users)
+      .values({
+        authUserId: crypto.randomUUID(),
+        email,
+        fullName,
+        roleId: requesterRole.roleId,
+        approverId: people.requisition_approver.userId,
+        isMechanic,
+      })
+      .returning();
+
+    return {
+      userId: row.userId,
+      email: row.email,
+      fullName: row.fullName,
+      role: "requester",
+      approverId: row.approverId,
+    };
   }
 
   async function firstLine(requisitionId: number) {
@@ -111,6 +156,154 @@ describeWithDatabase("requisition service", () => {
     expect(audits.some((row) => row.action === "requisition.submit")).toBe(true);
   });
 
+  it("creates a multi-line urgent request for an active mechanic (BR-RQ-01/02/03/04/15)", async () => {
+    const mechanic = await createRequester("mechanic@rcwheels.test", "Test Mechanic", true);
+    const secondItemId = await createItem("REQ-2", "30");
+    const { requisitionId } = await submitRequisition(people.requester, {
+      requestedForUserId: mechanic.userId,
+      purpose: "Replace worn workshop tires",
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Workshop bay 2",
+      isUrgent: true,
+      lines: [
+        { itemId, requestedQty: "2" },
+        { itemId: secondItemId, requestedQty: "1.25" },
+      ],
+    });
+    const [header] = await db
+      .select()
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, requisitionId));
+    const lines = await db
+      .select()
+      .from(requisitionLines)
+      .where(eq(requisitionLines.requisitionId, requisitionId));
+
+    expect(header).toMatchObject({
+      submittedBy: people.requester.userId,
+      requestedForUserId: mechanic.userId,
+      requesterName: mechanic.fullName,
+      status: "pending_approval",
+      isUrgent: true,
+    });
+    expect(lines.map((line) => line.requestedQty)).toEqual(["2.000", "1.250"]);
+  });
+
+  it("rejects a requester without an assigned approver and audits the block (BR-RQ-04/AC-07)", async () => {
+    await db
+      .update(users)
+      .set({ approverId: null })
+      .where(eq(users.userId, people.requester.userId));
+
+    await expect(
+      submitRequisition({ ...people.requester, approverId: null }, {
+        purpose: "Needs an assigned approver",
+        deliveryDate: todayInManila(),
+        deliveryLocation: "Test workshop",
+        isUrgent: false,
+        lines: [{ itemId, requestedQty: "1" }],
+      }),
+    ).rejects.toThrow("Your account does not have an assigned approver.");
+
+    expect(await db.select().from(requisitions)).toHaveLength(0);
+    const audits = await db.select().from(auditLog);
+    expect(audits).toContainEqual(
+      expect.objectContaining({
+        actorUserId: people.requester.userId,
+        action: "blocked:requisition.submit",
+      }),
+    );
+  });
+
+  it("rejects an unlisted item without persisting or auditing (BR-RQ-02)", async () => {
+    await expect(
+      submitRequisition(people.requester, {
+        purpose: "Removed item",
+        deliveryDate: todayInManila(),
+        deliveryLocation: "Test workshop",
+        isUrgent: false,
+        lines: [{ itemId: itemId + 1000, requestedQty: "1" }],
+      }),
+    ).rejects.toThrow("One or more selected items no longer exist.");
+
+    expect(await db.select().from(requisitions)).toHaveLength(0);
+    expect(await db.select().from(requisitionLines)).toHaveLength(0);
+    expect(await db.select().from(requisitionStatusHistory)).toHaveLength(0);
+    expect(await db.select().from(auditLog)).toHaveLength(0);
+  });
+
+  it("rejects an unlisted recipient without persisting or auditing (BR-RQ-01)", async () => {
+    await expect(
+      submit("1", "Invalid recipient", people.requester, people.inventory_custodian.userId),
+    ).rejects.toThrow("Select an active mechanic from the list.");
+
+    expect(await db.select().from(requisitions)).toHaveLength(0);
+    expect(await db.select().from(requisitionLines)).toHaveLength(0);
+    expect(await db.select().from(requisitionStatusHistory)).toHaveLength(0);
+    expect(await db.select().from(auditLog)).toHaveLength(0);
+  });
+
+  it("ignores browser-supplied submitter, role, and status (BR-AC-03)", async () => {
+    const parsed = CreateRequisitionDto.parse({
+      requestedForUserId: "",
+      purpose: "Server-owned fields stay trusted",
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Test workshop",
+      isUrgent: false,
+      lines: [{ itemId, requestedQty: "1" }],
+      submittedBy: people.system_administrator.userId,
+      role: "system_administrator",
+      status: "approved",
+    });
+    const { requisitionId } = await submitRequisition(people.requester, parsed);
+    const [header] = await db
+      .select()
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, requisitionId));
+
+    expect(header.submittedBy).toBe(people.requester.userId);
+    expect(header.status).toBe("pending_approval");
+  });
+
+  it("lists requests submitted by or filed for the signed-in mechanic and audits hidden access (BR-AC-03)", async () => {
+    const mechanic = await createRequester("mechanic-view@rcwheels.test", "Test Mechanic", true);
+    const otherRequester = await createRequester("other-requester@rcwheels.test", "Other Requester");
+    const own = await submit("1", "My request");
+    const forMechanic = await submit("2", "For the mechanic", people.requester, mechanic.userId);
+    const others = await submit("3", "Another request", otherRequester);
+
+    const mechanicOptions = await listActiveMechanicsService();
+    const requesterRows = await listMyRequestsService(people.requester);
+    const mechanicRows = await listMyRequestsService(mechanic);
+    const otherRows = await listMyRequestsService(otherRequester);
+    const mechanicDetail = await getRequisitionDetailService(mechanic, forMechanic.requisitionId);
+    const hiddenDetail = await getRequisitionDetailService(otherRequester, forMechanic.requisitionId);
+    const accessAudits = await db
+      .select()
+      .from(auditLog)
+      .where(eq(auditLog.entityId, forMechanic.requisitionId));
+
+    expect(mechanicOptions).toContainEqual({ userId: mechanic.userId, fullName: mechanic.fullName });
+    expect(mechanicOptions).not.toContainEqual({
+      userId: otherRequester.userId,
+      fullName: otherRequester.fullName,
+    });
+    expect(requesterRows.map((row) => row.requisitionId).sort()).toEqual(
+      [own.requisitionId, forMechanic.requisitionId].sort(),
+    );
+    expect(mechanicRows.map((row) => row.requisitionId)).toEqual([forMechanic.requisitionId]);
+    expect(mechanicRows[0]).toMatchObject({ status: "pending_approval", lineCount: 1 });
+    expect(otherRows.map((row) => row.requisitionId)).toEqual([others.requisitionId]);
+    expect(mechanicDetail?.requisition.requestedForUserId).toBe(mechanic.userId);
+    expect(hiddenDetail).toBeNull();
+    expect(accessAudits).toContainEqual(
+      expect.objectContaining({
+        actorUserId: otherRequester.userId,
+        action: "blocked:requisition.view",
+      }),
+    );
+  });
+
   it("rejects a delivery date in the past", async () => {
     const yesterday = new Date(`${todayInManila()}T00:00:00Z`);
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
@@ -124,6 +317,11 @@ describeWithDatabase("requisition service", () => {
         lines: [{ itemId, requestedQty: "1" }],
       }),
     ).rejects.toThrow("Delivery date cannot be in the past.");
+
+    expect(await db.select().from(requisitions)).toHaveLength(0);
+    expect(await db.select().from(requisitionLines)).toHaveLength(0);
+    expect(await db.select().from(requisitionStatusHistory)).toHaveLength(0);
+    expect(await db.select().from(auditLog)).toHaveLength(0);
   });
 
   it("approves less than the requested quantity (BR-RQ-05)", async () => {

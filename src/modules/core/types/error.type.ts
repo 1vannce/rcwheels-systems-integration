@@ -14,6 +14,14 @@ export class BlockedActionError extends Error {
   }
 }
 
+/** Invalid server-side domain input that should be shown to the form without an audit. */
+export class InvalidInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidInputError";
+  }
+}
+
 /** Thrown when the signed-in user's role may not open a screen or run an action. */
 export class ForbiddenError extends Error {
   constructor(message = "Your role is not allowed to do this.") {

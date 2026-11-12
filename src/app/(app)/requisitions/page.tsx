@@ -17,7 +17,7 @@ export default async function MyRequestsPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">My requests</h1>
           <p className="text-sm text-muted-foreground">
-            Requests you submitted, urgent first and then newest first.
+            Requests you submitted or that were filed for your mechanic account, urgent first and then newest first.
           </p>
         </div>
         <Link href="/requisitions/new" className="text-sm underline underline-offset-4">

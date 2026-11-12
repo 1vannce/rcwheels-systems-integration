@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql, type SQL } from "drizzle-orm";
 
 import type { Tx } from "@/db";
 import {
@@ -36,6 +36,7 @@ import type {
 /** A requisition header ready to insert, after the service resolves its owner. */
 export type NewRequisition = {
   submittedBy: number;
+  requestedForUserId: number | null;
   requesterName: string;
   isUrgent: boolean;
   purpose: string;
@@ -178,6 +179,7 @@ const lineColumns = {
 const requisitionColumns = {
   requisitionId: requisitions.requisitionId,
   submittedBy: requisitions.submittedBy,
+  requestedForUserId: requisitions.requestedForUserId,
   submittedByName: users.fullName,
   approverId: users.approverId,
   requesterName: requisitions.requesterName,
@@ -189,14 +191,46 @@ const requisitionColumns = {
   status: requisitions.status,
 };
 
-/** Filters a requisition list by owner, assigned approver, or statuses. */
+/** Filters a requisition list by submitter/recipient, assigned approver, or statuses. */
 export type RequisitionFilter = {
+  /** Requests submitted by or filed for this user. */
+  submitterOrRequesterUserId?: number;
   /** Only requests this user submitted. */
   submittedBy?: number;
   /** Only requests whose submitter has this user as their approver. */
   approverId?: number;
   statuses?: readonly RequisitionStatus[];
 };
+
+/** Lists active mechanic accounts that may receive a requisition. */
+export async function findActiveMechanics(
+  tx: Tx,
+): Promise<{ userId: number; fullName: string }[]> {
+  return tx
+    .select({ userId: users.userId, fullName: users.fullName })
+    .from(users)
+    .where(and(eq(users.isMechanic, true), eq(users.isActive, true)))
+    .orderBy(asc(users.fullName));
+}
+
+/** Finds one currently valid mechanic recipient. */
+export async function findActiveMechanicById(
+  tx: Tx,
+  userId: number,
+): Promise<{ userId: number; fullName: string } | null> {
+  const [row] = await tx
+    .select({ userId: users.userId, fullName: users.fullName })
+    .from(users)
+    .where(
+      and(
+        eq(users.userId, userId),
+        eq(users.isMechanic, true),
+        eq(users.isActive, true),
+      ),
+    );
+
+  return row ?? null;
+}
 
 /** Inserts a request header and returns its new ID. */
 export async function insertRequisition(
@@ -347,6 +381,7 @@ export async function updateRequisitionHeader(
   tx: Tx,
   requisitionId: number,
   changes: {
+    requestedForUserId: number | null;
     requesterName: string;
     isUrgent: boolean;
     purpose: string;
@@ -599,6 +634,17 @@ export async function findRequisitions(
   limit: number,
 ): Promise<RequisitionListItemDto[]> {
   const conditions: SQL[] = [];
+
+  if (filter.submitterOrRequesterUserId !== undefined) {
+    const owner = or(
+      eq(requisitions.submittedBy, filter.submitterOrRequesterUserId),
+      eq(requisitions.requestedForUserId, filter.submitterOrRequesterUserId),
+    );
+
+    if (owner) {
+      conditions.push(owner);
+    }
+  }
 
   if (filter.submittedBy !== undefined) {
     conditions.push(eq(requisitions.submittedBy, filter.submittedBy));
