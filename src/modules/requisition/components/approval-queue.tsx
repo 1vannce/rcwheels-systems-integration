@@ -129,7 +129,7 @@ export function ApprovalQueue({
                   <td className="px-4 py-3.5 align-top whitespace-nowrap">
                     {req.isUrgent ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-orange-700">
-                        🔥 URGENT
+                        URGENT
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">Normal</span>

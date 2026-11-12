@@ -122,7 +122,7 @@ export function ApprovalDecisionModal({
               </DialogTitle>
               {isUrgent && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-700">
-                  🔥 URGENT
+                  URGENT
                 </span>
               )}
             </div>
