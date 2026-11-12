@@ -2,18 +2,30 @@ import "server-only";
 
 import { db } from "@/db";
 import { type AppUser } from "@/modules/core";
-import { findRequisitions } from "../repositories/requisition.repository";
-import type { RequisitionListItemDto } from "../types/requisition.dto";
+import { findActiveMechanics, findRequisitions } from "../repositories/requisition.repository";
+import type {
+  RequisitionListItemDto,
+  RequisitionMechanicOptionDto,
+} from "../types/requisition.dto";
 
 /** How many rows a request list returns before it needs paging. */
 const REQUEST_LIST_LIMIT = 100;
 
 /**
- * The signed-in user's own requests, urgent first and then newest first.
- * Overview figures only; the detail screen loads the lines and history.
+ * Requests submitted by the signed-in user or filed for their mechanic
+ * account, urgent first and then newest first.
  */
 export async function listMyRequestsService(user: AppUser): Promise<RequisitionListItemDto[]> {
-  return findRequisitions(db, { submittedBy: user.userId }, REQUEST_LIST_LIMIT);
+  return findRequisitions(
+    db,
+    { submitterOrRequesterUserId: user.userId },
+    REQUEST_LIST_LIMIT,
+  );
+}
+
+/** Active mechanic accounts the requester may select for an RF. */
+export async function listActiveMechanicsService(): Promise<RequisitionMechanicOptionDto[]> {
+  return findActiveMechanics(db);
 }
 
 /**

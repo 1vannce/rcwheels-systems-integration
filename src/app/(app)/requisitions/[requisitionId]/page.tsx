@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "@/modules/core";
 import { compareQuantities, listItemsWithStock, todayInManila } from "@/modules/inventory";
-import { getRequisitionDetailService as getRequisitionDetail } from "@/modules/requisition";
+import {
+  getRequisitionDetailService as getRequisitionDetail,
+  listActiveMechanicsService,
+} from "@/modules/requisition";
 import { ApprovalDecision } from "@/modules/requisition/components/approval-decision";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
@@ -37,7 +40,9 @@ export default async function RequisitionDetailPage({
   const canDecide = isApprover && detail.requisition.status === "pending_approval";
   const isSubmitter = detail.requisition.submittedBy === user.userId;
   const canResubmit = isSubmitter && detail.requisition.status === "rejected";
-  const items = canResubmit ? await listItemsWithStock() : null;
+  const [items, mechanics] = canResubmit
+    ? await Promise.all([listItemsWithStock(), listActiveMechanicsService()])
+    : [null, null];
   const isCustodian = user.role === "inventory_custodian";
   const canReserve =
     isCustodian &&
@@ -124,6 +129,7 @@ export default async function RequisitionDetailPage({
           minimumDeliveryDate={todayInManila()}
           requisitionId={detail.requisition.requisitionId}
           submitLabel="Resubmit for approval"
+          mechanics={mechanics ?? []}
           items={items.map(({ itemId, itemCode, itemName, unit, available }) => ({
             itemId,
             itemCode,
@@ -132,7 +138,7 @@ export default async function RequisitionDetailPage({
             available,
           }))}
           initial={{
-            requesterName: detail.requisition.requesterName,
+            requestedForUserId: detail.requisition.requestedForUserId,
             purpose: detail.requisition.purpose,
             deliveryDate: detail.requisition.deliveryDate,
             deliveryLocation: detail.requisition.deliveryLocation,

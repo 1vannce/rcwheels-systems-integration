@@ -41,10 +41,12 @@ export const users = pgTable(
       .references(() => roles.roleId),
     approverId: integer("approver_id").references((): AnyPgColumn => users.userId),
     isActive: boolean("is_active").notNull().default(true),
+    isMechanic: boolean("is_mechanic").notNull().default(false),
   },
   (t) => [
     index("users_role_id_idx").on(t.roleId),
     index("users_approver_id_idx").on(t.approverId),
+    index("users_mechanic_active_idx").on(t.isMechanic, t.isActive),
   ],
 ).enableRLS();
 

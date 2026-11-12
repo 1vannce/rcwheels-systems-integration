@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "@/db";
-import { AppUser } from "@/modules/core";
+import { recordBlockedAction, type AppUser } from "@/modules/core";
 import {
     findRequisitionById,
     findRequisitionHistory,
@@ -23,9 +23,18 @@ export async function getRequisitionDetailService(
 ): Promise<RequisitionDetailDto | null> {
   const requisition = await findRequisitionById(db, requisitionId);
 
-  // Check if the requisition exists and 
-  // if the actor has permission to view it
-  if (!requisition || !canViewRequisition(actor, requisition)) {
+  if (!requisition) {
+    return null;
+  }
+
+  if (!canViewRequisition(actor, requisition)) {
+    await recordBlockedAction({
+      actorUserId: actor.userId,
+      entityType: "requisitions",
+      entityId: requisitionId,
+      action: "requisition.view",
+      details: { reason: "User cannot access this requisition." },
+    });
     return null;
   }
 

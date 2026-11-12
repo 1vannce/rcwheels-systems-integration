@@ -23,7 +23,7 @@ export async function submitRequisitionAction(
     const user = await requireRole(["requester"], "requisition.submit");
 
     const parsed = CreateRequisitionDto.safeParse({
-      requesterName: textField(formData, "requesterName"),
+      requestedForUserId: textField(formData, "requestedForUserId"),
       purpose: textField(formData, "purpose"),
       deliveryDate: textField(formData, "deliveryDate"),
       deliveryLocation: textField(formData, "deliveryLocation"),
@@ -42,5 +42,8 @@ export async function submitRequisitionAction(
 
   revalidatePath("/requisitions/my-requests");
 
-  return { ok: true, message: "Request submitted for approval." };
+  return {
+    ok: true,
+    message: "Request submitted for approval. Your assigned approver has been notified.",
+  };
 }

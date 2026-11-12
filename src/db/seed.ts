@@ -24,13 +24,14 @@ const seedUsers: {
   email: string;
   fullName: string;
   role: RoleName;
+  isMechanic?: boolean;
   approverEmail?: string;
 }[] = [
   { email: "approver@rcwheels.test", fullName: "Marites Lim", role: "requisition_approver" },
   { email: "depthead@rcwheels.test", fullName: "Ramon Go", role: "requisition_approver" },
   { email: "requester@rcwheels.test", fullName: "Rosa Villareal", role: "requester", approverEmail: "approver@rcwheels.test" },
-  { email: "mechanic1@rcwheels.test", fullName: "Dante Abellana", role: "requester", approverEmail: "depthead@rcwheels.test" },
-  { email: "mechanic2@rcwheels.test", fullName: "Jun Paredes", role: "requester", approverEmail: "depthead@rcwheels.test" },
+  { email: "mechanic1@rcwheels.test", fullName: "Dante Abellana", role: "requester", isMechanic: true, approverEmail: "depthead@rcwheels.test" },
+  { email: "mechanic2@rcwheels.test", fullName: "Jun Paredes", role: "requester", isMechanic: true, approverEmail: "depthead@rcwheels.test" },
   { email: "custodian@rcwheels.test", fullName: "Liza Cabrera", role: "inventory_custodian" },
   { email: "invmanager@rcwheels.test", fullName: "Nestor Uy", role: "inventory_manager" },
   { email: "purchasing@rcwheels.test", fullName: "Carla Mendez", role: "purchasing_staff" },
@@ -350,12 +351,14 @@ async function main() {
             email: user.email,
             fullName: user.fullName,
             roleId: roleIds.get(user.role)!,
+            isMechanic: user.isMechanic ?? false,
           })
           .onConflictDoUpdate({
             target: schema.users.email,
             set: {
               fullName: user.fullName,
               roleId: roleIds.get(user.role)!,
+              isMechanic: user.isMechanic ?? false,
               ...(authUserId ? { authUserId } : {}),
             },
           });

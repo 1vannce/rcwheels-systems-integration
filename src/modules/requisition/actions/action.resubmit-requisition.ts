@@ -24,7 +24,7 @@ export async function resubmitRequisitionAction(
 
     const parsed = ResubmitRequisitionDto.safeParse({
       requisitionId,
-      requesterName: textField(formData, "requesterName"),
+      requestedForUserId: textField(formData, "requestedForUserId"),
       purpose: textField(formData, "purpose"),
       deliveryDate: textField(formData, "deliveryDate"),
       deliveryLocation: textField(formData, "deliveryLocation"),

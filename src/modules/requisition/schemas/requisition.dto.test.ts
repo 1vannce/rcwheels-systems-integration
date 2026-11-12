@@ -27,15 +27,61 @@ describe("CreateRequisitionDto", () => {
     expect(parsed.lines).toEqual([{ itemId: 3, requestedQty: "2.5" }]);
   });
 
-  it("leaves a blank requester name empty so the service uses the submitter", () => {
+  it("accepts an optional mechanic id and strips browser-supplied identity and status", () => {
     const parsed = CreateRequisitionDto.parse({
       ...delivery,
       purpose: "For a mechanic",
-      requesterName: "   ",
+      requestedForUserId: "7",
+      submittedBy: 99,
+      role: "system_administrator",
+      status: "approved",
+      requesterName: "Unverified name",
       lines: [{ itemId: 1, requestedQty: "1" }],
     });
 
-    expect(parsed.requesterName).toBeFalsy();
+    expect(parsed.requestedForUserId).toBe(7);
+    expect(parsed).not.toHaveProperty("submittedBy");
+    expect(parsed).not.toHaveProperty("role");
+    expect(parsed).not.toHaveProperty("status");
+    expect(parsed).not.toHaveProperty("requesterName");
+  });
+
+  it("treats a blank mechanic selection as a request for the signed-in user", () => {
+    const parsed = CreateRequisitionDto.parse({
+      ...delivery,
+      purpose: "For me",
+      requestedForUserId: "",
+      lines: [{ itemId: 1, requestedQty: "1" }],
+    });
+
+    expect(parsed.requestedForUserId).toBeUndefined();
+  });
+
+  it("rejects a malformed mechanic account id", () => {
+    const parsed = CreateRequisitionDto.safeParse({
+      ...delivery,
+      purpose: "For a mechanic",
+      requestedForUserId: "not-an-id",
+      lines: [{ itemId: 1, requestedQty: "1" }],
+    });
+
+    expect(parsed.success).toBe(false);
+  });
+
+  it("requires a purpose and a valid positive item id", () => {
+    const missingPurpose = CreateRequisitionDto.safeParse({
+      ...delivery,
+      purpose: "   ",
+      lines: [{ itemId: 1, requestedQty: "1" }],
+    });
+    const invalidItemId = CreateRequisitionDto.safeParse({
+      ...delivery,
+      purpose: "Select a valid item",
+      lines: [{ itemId: "0", requestedQty: "1" }],
+    });
+
+    expect(missingPurpose.success).toBe(false);
+    expect(invalidItemId.success).toBe(false);
   });
 
   it("requires at least one line", () => {

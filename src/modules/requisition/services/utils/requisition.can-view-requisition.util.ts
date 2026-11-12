@@ -4,8 +4,8 @@ import { AppUser } from "@/modules/core";
 import type { RequisitionDto } from "../../types/requisition.dto";
 
 /**
- * Record-level access: the submitter, the submitter's assigned approver, the
- * inventory roles that process the request, and the system administrator.
+ * Record-level access: the submitter, the mechanic recipient, the submitter's
+ * assigned approver, the inventory roles that process the request, and admin.
  */
 export function canViewRequisitionUtil(
     actor: AppUser, 
@@ -13,6 +13,7 @@ export function canViewRequisitionUtil(
 ): boolean {
   return (
     actor.userId === requisition.submittedBy ||
+    actor.userId === requisition.requestedForUserId ||
     actor.userId === requisition.approverId ||
     actor.role === "inventory_custodian" ||
     actor.role === "inventory_manager" ||

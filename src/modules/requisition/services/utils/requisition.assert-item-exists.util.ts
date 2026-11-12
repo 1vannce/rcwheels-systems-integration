@@ -1,7 +1,7 @@
 import "server-only";
 
 import { Tx } from "@/db";
-import { BlockedActionError } from "@/modules/core";
+import { InvalidInputError } from "@/modules/core";
 import { findExistingItemIds } from "../../repositories/requisition.repository";
 import type { CreateRequisitionLineDto } from "../../schemas/requisition.dto";
 
@@ -22,13 +22,7 @@ export async function assertItemsExistUtil(
     return;
   }
 
-  throw new BlockedActionError(
+  throw new InvalidInputError(
     "One or more selected items no longer exist. Refresh the page and choose again.",
-    {
-      entityType: "requisitions",
-      entityId: 0,
-      action: "requisition.submit",
-      details: { missingItemIds },
-    },
   );
 }

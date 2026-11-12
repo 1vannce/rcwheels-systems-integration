@@ -1,9 +1,10 @@
 import "server-only";
 
-import { 
-  AppUser, 
+import {
+  InvalidInputError,
+  recordAudit,
   runBusinessEvent,
-  recordAudit
+  type AppUser,
 } from "@/modules/core";
 import { todayInManila } from "@/modules/inventory";
 import {
@@ -17,9 +18,8 @@ import {
 import { assertItemsExistUtil as assertItemsExist } from "./utils/requisition.assert-item-exists.util";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
 import type { ResubmitRequisitionDto } from "../schemas/requisition.dto";
-import { 
-  notifyApproverUtil as notifyApprover
- } from "./utils/requisition.notify-approver.util";
+import { notifyApproverUtil as notifyApprover } from "./utils/requisition.notify-approver.util";
+import { resolveRequesterUtil } from "./utils/requisition.resolve-requester.util";
 
 /**
  * Corrects a rejected request and sends it back through approval.
@@ -33,9 +33,7 @@ export async function resubmitRequisitionService(
 ): Promise<void> {
   await runBusinessEvent(actor.userId, async (tx) => {
     if (dto.deliveryDate < todayInManila()) {
-      throw await blocked("Delivery date cannot be in the past.", "requisition.resubmit", {
-        deliveryDate: dto.deliveryDate,
-      });
+      throw new InvalidInputError("Delivery date cannot be in the past.");
     }
 
     const locked = await lockRequisition(tx, dto.requisitionId);
@@ -56,10 +54,10 @@ export async function resubmitRequisitionService(
     }
 
     await assertItemsExist(tx, dto.lines);
-    const requesterName = dto.requesterName || actor.fullName;
+    const requester = await resolveRequesterUtil(tx, actor, dto.requestedForUserId);
 
     await updateRequisitionHeader(tx, dto.requisitionId, {
-      requesterName,
+      ...requester,
       isUrgent: dto.isUrgent,
       purpose: dto.purpose,
       deliveryDate: dto.deliveryDate,
@@ -93,12 +91,12 @@ export async function resubmitRequisitionService(
       details: {
         lineCount: dto.lines.length,
         isUrgent: dto.isUrgent,
-        requesterName,
+        ...requester,
         deliveryDate: dto.deliveryDate,
         deliveryLocation: dto.deliveryLocation,
       },
     });
 
-    await notifyApprover(tx, actor, dto.requisitionId, requesterName, dto.isUrgent);
+    await notifyApprover(tx, actor, dto.requisitionId, requester.requesterName, dto.isUrgent);
   });
 }

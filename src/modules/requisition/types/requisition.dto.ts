@@ -32,6 +32,8 @@ export type RequisitionDto = {
   /** The signed-in user who submitted it, even when it is for someone else. */
   submittedBy: number;
   submittedByName: string;
+  /** The active mechanic account the request was filed for, if any. */
+  requestedForUserId: number | null;
   /** The submitter's assigned approver, to whom the request is routed. */
   approverId: number | null;
   /** The person the items are for. Defaults to the submitter's name. */
@@ -42,6 +44,12 @@ export type RequisitionDto = {
   deliveryDate: string;
   deliveryLocation: string;
   status: RequisitionStatus;
+};
+
+/** An active mechanic account available as an optional RF recipient. */
+export type RequisitionMechanicOptionDto = {
+  userId: number;
+  fullName: string;
 };
 
 /** A header row for list screens, with a count instead of the full lines. */

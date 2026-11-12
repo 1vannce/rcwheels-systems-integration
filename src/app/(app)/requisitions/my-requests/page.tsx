@@ -17,7 +17,7 @@ export default async function MyRequestsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <PageHeader
           title="My Requests"
-          description="Requests you submitted, urgent first and then newest first."
+          description="Requests you submitted or that were filed for your mechanic account, urgent first and then newest first."
         ></PageHeader>
         <Link
           href="/requisitions/new"
