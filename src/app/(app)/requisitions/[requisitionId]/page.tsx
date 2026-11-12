@@ -8,6 +8,7 @@ import {
   listActiveMechanicsService,
 } from "@/modules/requisition";
 import { ApprovalDecision } from "@/modules/requisition/components/approval-decision";
+import { formatRfNumber } from "@/modules/requisition/components/approval-decision-modal";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
 import { RequisitionDetails } from "@/modules/requisition/components/requisition-details";
@@ -99,6 +100,8 @@ export default async function RequisitionDetailPage({
         : line.reservedQty,
   }));
 
+  const rfNumber = formatRfNumber(detail.requisition.requisitionId, detail.requisition.submittedAt);
+
   return (
     <>
       <RequisitionDetails detail={detail} backHref={backHref} backLabel={backLabel} />
@@ -125,6 +128,7 @@ export default async function RequisitionDetailPage({
       )}
       {canResubmit && items && (
         <RequisitionForm
+          autoRfNumber={rfNumber}
           currentUser={user}
           mode="resubmit"
           minimumDeliveryDate={todayInManila()}

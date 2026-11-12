@@ -1,6 +1,9 @@
 import "server-only";
 
+import { sql } from "drizzle-orm";
+
 import { db } from "@/db";
+import { requisitions } from "@/db/schema";
 import { type AppUser } from "@/modules/core";
 import {
   findActiveMechanics,
@@ -40,13 +43,13 @@ export async function listActiveMechanicsService(): Promise<RequisitionMechanicO
 export async function listPendingApprovalsService(
   user: AppUser,
 ): Promise<PendingApprovalItemDto[]> {
-  const requisitions = await findRequisitions(
+  const reqs = await findRequisitions(
     db,
     { approverId: user.userId, statuses: ["pending_approval"] },
     REQUEST_LIST_LIMIT,
   );
 
-  const ids = requisitions.map((r) => r.requisitionId);
+  const ids = reqs.map((r) => r.requisitionId);
   const allLines = ids.length > 0 ? await findRequisitionLinesFor(db, ids) : [];
 
   const linesByRequisition = new Map<number, typeof allLines>();
@@ -56,7 +59,7 @@ export async function listPendingApprovalsService(
     linesByRequisition.set(line.requisitionId, existing);
   }
 
-  return requisitions.map((req) => ({
+  return reqs.map((req) => ({
     ...req,
     lines: linesByRequisition.get(req.requisitionId) ?? [],
   }));
@@ -83,4 +86,17 @@ export async function listCompletedRequisitionsService(): Promise<RequisitionLis
     { statuses: ["fulfilled", "rejected", "cancelled"] },
     REQUEST_LIST_LIMIT,
   );
+}
+
+/** Predicts the automated RF number for the next requisition. */
+export async function getNextRequisitionNumberService(): Promise<string> {
+  const [row] = await db
+    .select({ maxId: sql<number>`coalesce(max(${requisitions.requisitionId}), 0)` })
+    .from(requisitions);
+  const nextId = Number(row?.maxId ?? 0) + 1;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const seq = String(nextId).padStart(3, "0");
+  return `RF-${year}${month}-${seq}`;
 }

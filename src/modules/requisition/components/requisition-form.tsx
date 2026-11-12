@@ -11,6 +11,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 import { resubmitRequisitionAction } from "../actions/action.resubmit-requisition";
 import { submitRequisitionAction } from "../actions/action.submit-requisition";
+import { formatRfNumber } from "./approval-decision-modal";
 
 const selectClass =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -67,6 +68,7 @@ export function RequisitionForm({
   mechanics,
   minimumDeliveryDate,
   currentUser,
+  autoRfNumber,
   mode = "submit",
   initial,
   requisitionId,
@@ -76,6 +78,8 @@ export function RequisitionForm({
   mechanics: RequisitionFormMechanic[];
   minimumDeliveryDate: string;
   currentUser?: { fullName: string; role: string };
+  /** The automated next RF number predicted by the server, e.g. RF-202611-008. */
+  autoRfNumber?: string;
   /** "submit" posts a new request; "resubmit" corrects a rejected one. */
   mode?: "submit" | "resubmit";
   /** Pre-filled values for a resubmit. */
@@ -136,6 +140,11 @@ export function RequisitionForm({
     );
   }
 
+  const displayRfNumber =
+    mode === "resubmit" && requisitionId
+      ? (autoRfNumber ?? formatRfNumber(requisitionId, new Date()))
+      : (autoRfNumber ?? "auto");
+
   return (
     <form action={formAction} className="flex flex-col gap-6 rounded-lg border bg-card p-6 shadow-sm">
       {mode === "resubmit" && <input type="hidden" name="requisitionId" value={requisitionId} />}
@@ -151,8 +160,8 @@ export function RequisitionForm({
           <input
             id="rf-no"
             readOnly
-            value={mode === "resubmit" && requisitionId ? `RF-${String(requisitionId).padStart(6, "0")}` : "auto"}
-            className={readonlyInputClass}
+            value={displayRfNumber}
+            className={`${readonlyInputClass} font-mono font-medium text-foreground`}
           />
         </div>
 
