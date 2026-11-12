@@ -20,6 +20,7 @@ const builtScreens: readonly AppScreen[] = [
   "notifications",
   "requisition-new-rf",
   "requisition-my-requests",
+  "requisition-approval-queue",
   "inventory-item-list",
   "inventory-issue-queue",
   "inventory-ar-preparation",
