@@ -1,6 +1,9 @@
 import "server-only";
 
+import { sql } from "drizzle-orm";
+
 import { db } from "@/db";
+import { requisitions } from "@/db/schema";
 import { type AppUser } from "@/modules/core";
 import { findActiveMechanics, findRequisitions } from "../repositories/requisition.repository";
 import type {
@@ -47,4 +50,17 @@ export async function listApprovedForIssueService(): Promise<RequisitionListItem
     { statuses: ["approved", "awaiting_stock"] },
     REQUEST_LIST_LIMIT,
   );
+}
+
+/** Predicts the automated RF number for the next requisition. */
+export async function getNextRequisitionNumberService(): Promise<string> {
+  const [row] = await db
+    .select({ maxId: sql<number>`coalesce(max(${requisitions.requisitionId}), 0)` })
+    .from(requisitions);
+  const nextId = Number(row?.maxId ?? 0) + 1;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const seq = String(nextId).padStart(3, "0");
+  return `RF-${year}${month}-${seq}`;
 }
