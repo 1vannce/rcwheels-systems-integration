@@ -2,8 +2,13 @@ import "server-only";
 
 import { db } from "@/db";
 import { type AppUser } from "@/modules/core";
-import { findActiveMechanics, findRequisitions } from "../repositories/requisition.repository";
+import {
+  findActiveMechanics,
+  findRequisitionLinesFor,
+  findRequisitions,
+} from "../repositories/requisition.repository";
 import type {
+  PendingApprovalItemDto,
   RequisitionListItemDto,
   RequisitionMechanicOptionDto,
 } from "../types/requisition.dto";
@@ -30,14 +35,31 @@ export async function listActiveMechanicsService(): Promise<RequisitionMechanicO
 
 /**
  * The requests waiting for this approver's decision, urgent first and then
- * newest first.
+ * newest first, including lines and stock availability for decision review.
  */
-export async function listPendingApprovalsService(user: AppUser): Promise<RequisitionListItemDto[]> {
-  return findRequisitions(
+export async function listPendingApprovalsService(
+  user: AppUser,
+): Promise<PendingApprovalItemDto[]> {
+  const requisitions = await findRequisitions(
     db,
     { approverId: user.userId, statuses: ["pending_approval"] },
     REQUEST_LIST_LIMIT,
   );
+
+  const ids = requisitions.map((r) => r.requisitionId);
+  const allLines = ids.length > 0 ? await findRequisitionLinesFor(db, ids) : [];
+
+  const linesByRequisition = new Map<number, typeof allLines>();
+  for (const line of allLines) {
+    const existing = linesByRequisition.get(line.requisitionId) ?? [];
+    existing.push(line);
+    linesByRequisition.set(line.requisitionId, existing);
+  }
+
+  return requisitions.map((req) => ({
+    ...req,
+    lines: linesByRequisition.get(req.requisitionId) ?? [],
+  }));
 }
 
 /** Requests waiting for the custodian's stock check and reservation. */

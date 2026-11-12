@@ -57,6 +57,11 @@ export type RequisitionListItemDto = RequisitionDto & {
   lineCount: number;
 };
 
+/** A pending approval row with its lines and stock availability for pre-checking. */
+export type PendingApprovalItemDto = RequisitionListItemDto & {
+  lines: RequisitionLineDto[];
+};
+
 /**
  * One requested item with every figure a queue or detail screen needs.
  *

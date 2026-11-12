@@ -36,7 +36,7 @@ export async function submitRequisitionService(
   return runBusinessEvent(actor.userId, async (tx) => {
     if (actor.approverId === null) {
       throw await blocked(
-        "Your account has no assigned approver yet.",
+        "Your account does not have an assigned approver.",
         "requisition.submit",
         { requesterId: actor.userId },
       );

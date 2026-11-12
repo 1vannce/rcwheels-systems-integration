@@ -46,6 +46,7 @@ export { submitRequisitionService } from "./services/requisition.submit.service"
  */
 export { requisitionStatuses } from "./types/requisition.dto";
 export type {
+  PendingApprovalItemDto,
   RequisitionDetailDto,
   RequisitionDto,
   RequisitionLineDto,
