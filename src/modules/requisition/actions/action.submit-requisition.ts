@@ -40,7 +40,7 @@ export async function submitRequisitionAction(
     return actionFailure(error);
   }
 
-  revalidatePath("/requisitions");
+  revalidatePath("/requisitions/my-requests");
 
   return {
     ok: true,

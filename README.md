@@ -26,14 +26,14 @@ Stack: Next.js (App Router, TypeScript), Tailwind CSS and shadcn/ui, Supabase (P
 
    Drizzle commands read `.env`, so copy the same `DATABASE_URL` there when you run them. Never commit either file.
 
-3. Create the tables and the seed data (roles, fictional users, items, suppliers). Both commands read `.env` and can be run again safely:
+3. Create the tables and the seed data (roles, fictional users, items, opening stock balances, suppliers). Both commands read `.env` and can be run again safely:
 
    ```powershell
    npm run db:migrate
    npm run db:seed
    ```
 
-   The seed creates one account per role plus two mechanics and a second approver, all at `@rcwheels.test` (for example `custodian@rcwheels.test`), with `SEED_USER_PASSWORD` as the password. The full list is in `src/db/seed.ts`.
+   The seed creates one account per role plus two mechanics and a second approver, all at `@rcwheels.test` (for example `custodian@rcwheels.test`), with `SEED_USER_PASSWORD` as the password. It also gives each seeded item a starting quantity through a one-time `opening_balance` movement, so re-running it never adds stock twice. The full list is in `src/db/seed.ts`.
 
 4. Run the app at http://localhost:3000:
 

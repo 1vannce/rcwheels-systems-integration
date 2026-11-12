@@ -255,7 +255,7 @@ export function RequisitionForm({
       {result?.ok ? (
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <Link
-            href="/requisitions"
+            href="/requisitions/my-requests"
             className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             View in My requests →

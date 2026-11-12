@@ -1,16 +1,34 @@
-import { afterAll, beforeEach, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { db } from "@/db";
-import { notifications } from "@/db/schema";
-import {
-  closeDatabase,
-  createUsersForEveryRole,
-  describeWithDatabase,
-  resetDatabase,
-} from "@/test/db";
+import type { Tx } from "@/db";
 
 import type { AppRole } from "../types/role.type";
 import type { AppUser } from "../types/user.type";
+
+// Unit tests: the database and repositories are mocked, so no connection is
+// opened. Only the service's own rules (de-duplication, filtering, limit,
+// boolean conversion) are exercised here.
+const database = vi.hoisted(() => ({ db: {} }));
+
+const repositories = vi.hoisted(() => ({
+  insertNotifications: vi.fn(),
+  findNotificationsByRecipient: vi.fn(),
+  countUnreadByRecipient: vi.fn(),
+  markReadForRecipient: vi.fn(),
+  findActiveUserIdsByRoles: vi.fn(),
+}));
+
+vi.mock("@/db", () => ({ db: database.db }));
+vi.mock("../repositories/notification.repository", () => ({
+  insertNotifications: repositories.insertNotifications,
+  findNotificationsByRecipient: repositories.findNotificationsByRecipient,
+  countUnreadByRecipient: repositories.countUnreadByRecipient,
+  markReadForRecipient: repositories.markReadForRecipient,
+}));
+vi.mock("../repositories/user.repository", () => ({
+  findActiveUserIdsByRoles: repositories.findActiveUserIdsByRoles,
+}));
+
 import {
   countUnreadNotifications,
   listNotifications,
@@ -20,65 +38,126 @@ import {
   notifyUsers,
 } from "./notification.service";
 
-describeWithDatabase("notification service", () => {
-  let users: Record<AppRole, AppUser>;
+const tx = {} as Tx;
 
-  beforeEach(async () => {
-    await resetDatabase();
-    users = await createUsersForEveryRole();
-  });
+function user(userId: number, role: AppRole = "requester"): AppUser {
+  return {
+    userId,
+    email: `user${userId}@rcwheels.test`,
+    fullName: `User ${userId}`,
+    role,
+    approverId: null,
+  };
+}
 
-  afterAll(closeDatabase);
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-  it("notifies each recipient once", async () => {
-    const manager = users.inventory_manager;
-
-    await notifyUsers(db, [manager.userId, manager.userId], {
+describe("notifyUsers", () => {
+  it("notifies each recipient once and maps the content", async () => {
+    await notifyUsers(tx, [2, 2, 3], {
       type: "adjustment.requested",
       message: "A stock count needs approval.",
+      requisitionId: 9,
     });
 
-    const list = await listNotifications(manager);
-
-    expect(list).toHaveLength(1);
-    expect(list[0]).toMatchObject({
-      notificationType: "adjustment.requested",
-      message: "A stock count needs approval.",
-      readAt: null,
-    });
-  });
-
-  it("notifies the holders of a role, except the person who caused the event", async () => {
-    await notifyRoles(
-      db,
-      ["inventory_custodian", "inventory_manager"],
-      { type: "stock.incomplete", message: "Balance flagged incomplete." },
-      users.inventory_custodian.userId,
-    );
-
-    const rows = await db.select().from(notifications);
-
-    expect(rows.map((row) => row.recipientUserId)).toEqual([
-      users.inventory_manager.userId,
+    expect(repositories.insertNotifications).toHaveBeenCalledWith(tx, [
+      {
+        recipientUserId: 2,
+        requisitionId: 9,
+        notificationType: "adjustment.requested",
+        message: "A stock count needs approval.",
+      },
+      {
+        recipientUserId: 3,
+        requisitionId: 9,
+        notificationType: "adjustment.requested",
+        message: "A stock count needs approval.",
+      },
     ]);
   });
 
-  it("lets a user mark only their own notifications as read", async () => {
-    const manager = users.inventory_manager;
+  it("uses a null requisition when the content has none", async () => {
+    await notifyUsers(tx, [2], { type: "test", message: "Hello" });
 
-    await notifyUsers(db, [manager.userId], { type: "test", message: "One" });
-    await notifyUsers(db, [manager.userId], { type: "test", message: "Two" });
+    expect(repositories.insertNotifications).toHaveBeenCalledWith(tx, [
+      {
+        recipientUserId: 2,
+        requisitionId: null,
+        notificationType: "test",
+        message: "Hello",
+      },
+    ]);
+  });
+});
 
-    const [first] = await listNotifications(manager);
+describe("notifyRoles", () => {
+  it("resolves role holders and leaves out the person who caused the event", async () => {
+    repositories.findActiveUserIdsByRoles.mockResolvedValue([2, 3, 4]);
 
-    expect(await countUnreadNotifications(manager)).toBe(2);
-    expect(await markNotificationRead(users.requester, first.notificationId)).toBe(false);
-    expect(await countUnreadNotifications(manager)).toBe(2);
+    await notifyRoles(
+      tx,
+      ["inventory_custodian", "inventory_manager"],
+      { type: "stock.incomplete", message: "Balance flagged incomplete." },
+      3,
+    );
 
-    expect(await markNotificationRead(manager, first.notificationId)).toBe(true);
-    expect(await countUnreadNotifications(manager)).toBe(1);
+    expect(repositories.findActiveUserIdsByRoles).toHaveBeenCalledWith(tx, [
+      "inventory_custodian",
+      "inventory_manager",
+    ]);
+    expect(repositories.insertNotifications).toHaveBeenCalledWith(tx, [
+      {
+        recipientUserId: 2,
+        requisitionId: null,
+        notificationType: "stock.incomplete",
+        message: "Balance flagged incomplete.",
+      },
+      {
+        recipientUserId: 4,
+        requisitionId: null,
+        notificationType: "stock.incomplete",
+        message: "Balance flagged incomplete.",
+      },
+    ]);
+  });
+});
 
-    expect(await markAllNotificationsRead(manager)).toBe(1);
-    expect(await countUnreadNotifications(manager)).toBe(0);
+describe("notification reads", () => {
+  it("lists at most 100 notifications for the signed-in user", async () => {
+    repositories.findNotificationsByRecipient.mockResolvedValue([]);
+
+    await listNotifications(user(9));
+
+    expect(repositories.findNotificationsByRecipient).toHaveBeenCalledWith(
+      database.db,
+      9,
+      100,
+    );
+  });
+
+  it("counts unread notifications for the signed-in user", async () => {
+    repositories.countUnreadByRecipient.mockResolvedValue(3);
+
+    await expect(countUnreadNotifications(user(9))).resolves.toBe(3);
+    expect(repositories.countUnreadByRecipient).toHaveBeenCalledWith(database.db, 9);
+  });
+
+  it("marks one notification read only when the row belongs to the user", async () => {
+    repositories.markReadForRecipient.mockResolvedValue(0);
+    await expect(markNotificationRead(user(9), 12)).resolves.toBe(false);
+
+    repositories.markReadForRecipient.mockResolvedValue(1);
+    await expect(markNotificationRead(user(9), 12)).resolves.toBe(true);
+
+    expect(repositories.markReadForRecipient).toHaveBeenCalledWith(database.db, 9, 12);
+  });
+
+  it("marks every unread notification read and returns the count", async () => {
+    repositories.markReadForRecipient.mockResolvedValue(2);
+
+    await expect(markAllNotificationsRead(user(9))).resolves.toBe(2);
+    expect(repositories.markReadForRecipient).toHaveBeenCalledWith(database.db, 9);
   });
 });

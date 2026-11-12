@@ -21,7 +21,8 @@ export default async function NewRequisitionPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">New requisition</h1>
         <p className="text-sm text-muted-foreground">
-          Your request goes to your assigned approver. Stock is reserved only after approval.
+          Your request goes to your assigned approver. Stock is reserved only
+          after approval.
         </p>
       </div>
       <RequisitionForm

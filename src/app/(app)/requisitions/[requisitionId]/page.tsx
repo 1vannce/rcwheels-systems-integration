@@ -54,7 +54,7 @@ export default async function RequisitionDetailPage({
       ? detail.requisition.status === "for_delivery"
         ? "/inventory/dispatch"
         : "/inventory/issue-queue"
-      : "/requisitions";
+      : "/requisitions/my-requests";
   const backLabel = isApprover
     ? "Back to approval queue"
     : user.role === "inventory_custodian" || user.role === "inventory_manager"
