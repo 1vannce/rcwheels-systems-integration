@@ -21,7 +21,9 @@ export { submitRequisitionAction } from "./actions/action.submit-requisition";
  */
 export {
   listActiveMechanicsService,
+  listAllRequisitionsService,
   listApprovedForIssueService,
+  listCompletedRequisitionsService,
   listMyRequestsService,
   listPendingApprovalsService,
 } from "./services/requisition.lists.service";

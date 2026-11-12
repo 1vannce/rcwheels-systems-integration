@@ -70,3 +70,17 @@ export async function listApprovedForIssueService(): Promise<RequisitionListItem
     REQUEST_LIST_LIMIT,
   );
 }
+
+/** All digital requisition forms across the system, newest first. */
+export async function listAllRequisitionsService(): Promise<RequisitionListItemDto[]> {
+  return findRequisitions(db, {}, REQUEST_LIST_LIMIT);
+}
+
+/** Historical completed requisitions (fulfilled, rejected, cancelled). */
+export async function listCompletedRequisitionsService(): Promise<RequisitionListItemDto[]> {
+  return findRequisitions(
+    db,
+    { statuses: ["fulfilled", "rejected", "cancelled"] },
+    REQUEST_LIST_LIMIT,
+  );
+}

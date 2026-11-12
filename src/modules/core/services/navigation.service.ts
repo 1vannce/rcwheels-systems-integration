@@ -21,6 +21,8 @@ const builtScreens: readonly AppScreen[] = [
   "requisition-new-rf",
   "requisition-my-requests",
   "requisition-approval-queue",
+  "requisition-all",
+  "requisition-completed",
   "inventory-item-list",
   "inventory-issue-queue",
   "inventory-ar-preparation",
@@ -54,8 +56,23 @@ const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {
     activePathPrefixes: ["/requisitions/"],
   },
   "requisition-approval-queue": {
-    label: "Approval queue",
+    label: "Requisition approvals",
     href: "/requisitions/approvals",
+    group: "Requisition",
+  },
+  "requisition-discrepancy-reviews": {
+    label: "Discrepancy reviews",
+    href: "/delivery/discrepancies",
+    group: "Requisition",
+  },
+  "requisition-all": {
+    label: "All requisitions",
+    href: "/requisitions",
+    group: "Requisition",
+  },
+  "requisition-completed": {
+    label: "Completed requests",
+    href: "/requisitions/completed",
     group: "Requisition",
   },
 

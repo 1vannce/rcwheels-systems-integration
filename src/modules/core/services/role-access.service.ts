@@ -16,9 +16,16 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
     "delivery-acceptance-and-ar-signing",
     "delivery-rdr",
   ],
-  requisition_approver: [...sharedScreens, "requisition-approval-queue"],
+  requisition_approver: [
+    ...sharedScreens,
+    "requisition-approval-queue",
+    "requisition-discrepancy-reviews",
+    "requisition-all",
+    "requisition-completed",
+  ],
   inventory_custodian: [
     ...sharedScreens,
+    "requisition-all",
     "inventory-item-list",
     "inventory-stock-detail-and-movements",
     "inventory-issue-queue",
@@ -33,6 +40,7 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
   ],
   inventory_manager: [
     ...sharedScreens,
+    "requisition-all",
     "inventory-item-list",
     "inventory-stock-detail-and-movements",
     "inventory-adjustments",
