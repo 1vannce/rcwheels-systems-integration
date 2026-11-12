@@ -473,16 +473,7 @@ function ListView({ items }: { items: RequisitionListItemDto[] }) {
                       <Eye className="h-3 w-3" />
                       View
                     </Button>
-                    {(req.status === "pending_approval") && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                        render={<Link href={`/requisitions/${req.requisitionId}`} />}
-                      >
-                        Cancel
-                      </Button>
-                    )}
+
                   </div>
                 </td>
               </tr>
