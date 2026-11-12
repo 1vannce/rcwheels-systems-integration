@@ -125,17 +125,19 @@ export default async function RequisitionDetailPage({
       )}
       {canResubmit && items && (
         <RequisitionForm
+          currentUser={user}
           mode="resubmit"
           minimumDeliveryDate={todayInManila()}
           requisitionId={detail.requisition.requisitionId}
           submitLabel="Resubmit for approval"
           mechanics={mechanics ?? []}
-          items={items.map(({ itemId, itemCode, itemName, unit, available }) => ({
+          items={items.map(({ itemId, itemCode, itemName, unit, available, reorderPoint }) => ({
             itemId,
             itemCode,
             itemName,
             unit,
             available,
+            reorderPoint,
           }))}
           initial={{
             requestedForUserId: detail.requisition.requestedForUserId,

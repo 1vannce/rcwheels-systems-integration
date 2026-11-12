@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { requireScreen } from "@/modules/core";
+import { requireScreen, requireUser } from "@/modules/core";
 import { listItemsWithStock, todayInManila } from "@/modules/inventory";
 import { listActiveMechanicsService } from "@/modules/requisition";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
@@ -9,6 +9,7 @@ export const metadata: Metadata = { title: "New requisition | RCWheels" };
 
 export default async function NewRequisitionPage() {
   await requireScreen("requisition-new-rf");
+  const user = await requireUser();
 
   const [items, mechanics] = await Promise.all([
     listItemsWithStock(),
@@ -26,14 +27,16 @@ export default async function NewRequisitionPage() {
         </p>
       </div>
       <RequisitionForm
+        currentUser={user}
         mechanics={mechanics}
         minimumDeliveryDate={minimumDeliveryDate}
-        items={items.map(({ itemId, itemCode, itemName, unit, available }) => ({
+        items={items.map(({ itemId, itemCode, itemName, unit, available, reorderPoint }) => ({
           itemId,
           itemCode,
           itemName,
           unit,
           available,
+          reorderPoint,
         }))}
       />
     </>
