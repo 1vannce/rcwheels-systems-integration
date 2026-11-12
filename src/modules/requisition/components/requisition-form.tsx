@@ -11,7 +11,15 @@ import { SubmitButton } from "@/components/ui/submit-button";
 
 import { resubmitRequisitionAction } from "../actions/action.resubmit-requisition";
 import { submitRequisitionAction } from "../actions/action.submit-requisition";
-import { formatRfNumber } from "./approval-decision-modal";
+
+/** Formats a numeric requisitionId as RF-YYYYMM-NNN */
+function formatRfNumber(requisitionId: number, submittedAt: Date): string {
+  const d = new Date(submittedAt);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const seq = String(requisitionId).padStart(3, "0");
+  return `RF-${year}${month}-${seq}`;
+}
 
 const selectClass =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
