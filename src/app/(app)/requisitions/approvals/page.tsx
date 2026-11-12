@@ -6,7 +6,7 @@ import {
 } from "@/modules/requisition";
 import { ApprovalQueue } from "@/modules/requisition/components/approval-queue";
 
-export const metadata: Metadata = { title: "Approval queue | RCWheels" };
+export const metadata: Metadata = { title: "Requisition approvals | RCWheels" };
 
 export default async function ApprovalQueuePage() {
   const user = await requireScreen("requisition-approval-queue");
@@ -15,10 +15,9 @@ export default async function ApprovalQueuePage() {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Approval queue</h1>
+        <h1 className="text-2xl font-semibold">Requisition Approvals</h1>
         <p className="text-sm text-muted-foreground">
-          Requests routed to you, urgent first and then newest first. Open a request to approve
-          quantities or reject it.
+          Urgent requests are ranked first. Approval never authorizes a purchase — that stays with Accounting.
         </p>
       </div>
       <ApprovalQueue requisitions={requisitions} />
