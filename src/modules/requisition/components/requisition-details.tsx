@@ -3,7 +3,10 @@ import Link from "next/link";
 import { formatQuantity } from "@/modules/inventory";
 
 import type { RequisitionDetailDto } from "../types/requisition.dto";
-import { RequisitionStatusBadge, requisitionStatusLabels } from "./requisition-status-badge";
+import {
+  RequisitionStatusBadge,
+  requisitionStatusLabels,
+} from "./requisition-status-badge";
 
 const dateFormat = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
@@ -23,7 +26,7 @@ const deliveryDateFormat = new Intl.DateTimeFormat("en-PH", {
  */
 export function RequisitionDetails({
   detail,
-  backHref = "/requisitions",
+  backHref = "/requisitions/my-requests",
   backLabel = "Back to my requests",
 }: {
   detail: RequisitionDetailDto;
@@ -40,7 +43,9 @@ export function RequisitionDetails({
           {backLabel}
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">Requisition #{requisition.requisitionId}</h1>
+          <h1 className="text-2xl font-semibold">
+            Requisition #{requisition.requisitionId}
+          </h1>
           <RequisitionStatusBadge status={requisition.status} />
           {requisition.isUrgent && (
             <span className="text-xs font-medium text-destructive">Urgent</span>
@@ -52,7 +57,8 @@ export function RequisitionDetails({
         <div className="flex flex-col gap-0.5">
           <dt className="text-muted-foreground">Submitted by</dt>
           <dd>
-            {requisition.submittedByName} on {dateFormat.format(requisition.submittedAt)}
+            {requisition.submittedByName} on{" "}
+            {dateFormat.format(requisition.submittedAt)}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5">
@@ -62,7 +68,9 @@ export function RequisitionDetails({
         <div className="flex flex-col gap-0.5">
           <dt className="text-muted-foreground">Delivery date</dt>
           <dd>
-            {deliveryDateFormat.format(new Date(`${requisition.deliveryDate}T00:00:00Z`))}
+            {deliveryDateFormat.format(
+              new Date(`${requisition.deliveryDate}T00:00:00Z`),
+            )}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5">
@@ -149,7 +157,9 @@ export function RequisitionDetails({
                   {dateFormat.format(entry.changedAt)} · {entry.changedByName}
                 </span>
               </div>
-              {entry.reason && <p className="text-muted-foreground">{entry.reason}</p>}
+              {entry.reason && (
+                <p className="text-muted-foreground">{entry.reason}</p>
+              )}
             </li>
           ))}
         </ol>

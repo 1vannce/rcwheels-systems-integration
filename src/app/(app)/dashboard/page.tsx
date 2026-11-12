@@ -35,14 +35,20 @@ export default async function DashboardPage() {
           )}
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {groups.map((group) => (
-          <section key={group.title} className="flex flex-col gap-2 rounded-lg border p-4">
+          <section
+            key={group.title}
+            className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-xs"
+          >
             <h2 className="font-medium">{group.title}</h2>
-            <ul className="flex flex-col gap-1 text-sm">
+            <ul className="flex flex-col gap-1.5 text-sm">
               {group.items.map((item) => (
                 <li key={item.screen}>
-                  <Link href={item.href} className="underline underline-offset-4">
+                  <Link
+                    href={item.href}
+                    className="underline-offset-4 hover:underline"
+                  >
                     {item.label}
                   </Link>
                   {!item.isBuilt && (
