@@ -20,7 +20,6 @@ export { submitRequisitionAction } from "./actions/action.submit-requisition";
  * Service Exports
  */
 export {
-  getNextRequisitionNumberService,
   listActiveMechanicsService,
   listApprovedForIssueService,
   listMyRequestsService,
@@ -40,6 +39,7 @@ export { rejectRequisitionService } from "./services/requisition.reject.service"
 export { reserveRequisitionService } from "./services/requisition.reserve.service";
 export { resubmitRequisitionService } from "./services/requisition.resubmit.service";
 export { submitRequisitionService } from "./services/requisition.submit.service";
+
 
 /**
  * DTO Exports
