@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import type { PendingApprovalItemDto } from "../types/requisition.dto";
 import {
   ApprovalDecisionModal,
@@ -24,8 +25,7 @@ function fmt(value: string): string {
 type Tab = "all" | "urgent";
 
 /**
- * The assigned approver's queue with tabs, an urgent alert, a pre-check column,
- * and a "Review & Decide" quick-decision modal per row.
+ * The assigned approver's queue matching the application's shadcn/ui design system.
  */
 export function ApprovalQueue({
   requisitions,
@@ -42,7 +42,7 @@ export function ApprovalQueue({
 
   if (requisitions.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         No requests are waiting for your approval.
       </div>
     );
@@ -52,15 +52,15 @@ export function ApprovalQueue({
     <div className="flex flex-col gap-4">
       {/* Urgent alert banner */}
       {urgentCount > 0 && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900 shadow-xs">
-          <span className="mt-0.5 text-base text-amber-600" aria-hidden="true">
+        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
+          <span className="text-base text-amber-600 dark:text-amber-400" aria-hidden="true">
             ⚠
           </span>
           <div className="flex flex-col gap-0.5">
-            <p className="font-semibold">
+            <p className="font-medium">
               {urgentCount} urgent request{urgentCount !== 1 ? "s" : ""} need immediate review
             </p>
-            <p className="text-xs text-amber-800">
+            <p className="text-xs text-amber-700 dark:text-amber-300">
               Fast-tracked requests bypass the standard queue.
             </p>
           </div>
@@ -84,21 +84,21 @@ export function ApprovalQueue({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
+      <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <thead className="bg-muted text-xs font-medium text-muted-foreground">
             <tr>
-              <th className="px-4 py-3">RF Number</th>
-              <th className="px-4 py-3">Priority</th>
-              <th className="px-4 py-3">Submitted</th>
-              <th className="px-4 py-3">Requester</th>
-              <th className="px-4 py-3">Items &amp; Stock Pre-Check</th>
-              <th className="px-4 py-3 text-right">
+              <th className="p-3 font-medium">RF NUMBER</th>
+              <th className="p-3 font-medium">PRIORITY</th>
+              <th className="p-3 font-medium">SUBMITTED</th>
+              <th className="p-3 font-medium">REQUESTER</th>
+              <th className="p-3 font-medium">ITEMS &amp; STOCK PRE-CHECK</th>
+              <th className="p-3 text-right font-medium">
                 <span className="sr-only">Action</span>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y">
             {displayed.map((req) => {
               const rfNumber = formatRfNumber(req.requisitionId, req.submittedAt);
               const lines = req.lines ?? [];
@@ -114,21 +114,21 @@ export function ApprovalQueue({
               const recipientIsDifferent = req.requestedForUserId !== null;
 
               return (
-                <tr key={req.requisitionId} className="hover:bg-muted/30 transition-colors">
+                <tr key={req.requisitionId} className="hover:bg-muted/50 transition-colors">
                   {/* RF Number */}
-                  <td className="px-4 py-3.5 align-top whitespace-nowrap">
+                  <td className="p-3 align-top whitespace-nowrap">
                     <Link
                       href={`/requisitions/${req.requisitionId}`}
-                      className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                      className="font-medium underline underline-offset-4"
                     >
                       {rfNumber}
                     </Link>
                   </td>
 
                   {/* Priority */}
-                  <td className="px-4 py-3.5 align-top whitespace-nowrap">
+                  <td className="p-3 align-top whitespace-nowrap">
                     {req.isUrgent ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-orange-700">
+                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                         URGENT
                       </span>
                     ) : (
@@ -137,16 +137,16 @@ export function ApprovalQueue({
                   </td>
 
                   {/* Submitted */}
-                  <td className="px-4 py-3.5 align-top whitespace-nowrap text-xs text-muted-foreground">
+                  <td className="p-3 align-top whitespace-nowrap text-xs text-muted-foreground">
                     {dateFormat.format(req.submittedAt)}
                   </td>
 
                   {/* Requester */}
-                  <td className="px-4 py-3.5 align-top">
-                    <p className="font-medium text-foreground">{req.submittedByName}</p>
+                  <td className="p-3 align-top">
+                    <p className="font-medium">{req.submittedByName}</p>
                     {recipientIsDifferent ? (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        for <span className="font-medium text-foreground/80">{req.requesterName}</span> [Mechanic] · {req.deliveryLocation}
+                        for <span className="font-medium text-foreground">{req.requesterName}</span> [Mechanic] · {req.deliveryLocation}
                       </p>
                     ) : (
                       req.deliveryLocation && (
@@ -158,7 +158,7 @@ export function ApprovalQueue({
                   </td>
 
                   {/* Items & Stock Pre-Check */}
-                  <td className="px-4 py-3.5 align-top">
+                  <td className="p-3 align-top">
                     {lines.length === 0 ? (
                       <span className="text-xs text-muted-foreground">
                         {req.lineCount} item{req.lineCount !== 1 ? "s" : ""}
@@ -174,14 +174,14 @@ export function ApprovalQueue({
                               key={line.requisitionLineId}
                               className="inline-flex items-center gap-1.5 text-xs"
                             >
-                              <span className="font-medium text-foreground">
+                              <span className="font-medium">
                                 {line.itemCode} ×{qty}
                               </span>
                               <span
-                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
                                   avail > 0
-                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                    : "bg-rose-50 text-rose-700 border border-rose-200"
+                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                    : "border-destructive/30 bg-destructive/10 text-destructive"
                                 }`}
                               >
                                 {avail > 0 ? `In stock (${availStock})` : "Out of stock"}
@@ -199,7 +199,7 @@ export function ApprovalQueue({
                   </td>
 
                   {/* Action */}
-                  <td className="px-4 py-3.5 align-top text-right whitespace-nowrap">
+                  <td className="p-3 align-top text-right whitespace-nowrap">
                     <ApprovalDecisionModal
                       requisitionId={req.requisitionId}
                       rfNumber={rfNumber}
@@ -235,25 +235,23 @@ function TabButton({
   label: string;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant={active ? "default" : "outline"}
+      size="sm"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
-        active
-          ? "bg-blue-600 text-white shadow-xs"
-          : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-      }`}
+      className="gap-2"
     >
       {label}
       <span
-        className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${
+        className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold ${
           active
-            ? "bg-white/20 text-white"
+            ? "bg-primary-foreground/20 text-primary-foreground"
             : "bg-muted text-muted-foreground"
         }`}
       >
         {count}
       </span>
-    </button>
+    </Button>
   );
 }
