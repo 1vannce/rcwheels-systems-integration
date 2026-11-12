@@ -88,6 +88,15 @@ export async function listCompletedRequisitionsService(): Promise<RequisitionLis
   );
 }
 
+/** Requisitions that were rejected or have discrepancies needing review. */
+export async function listRejectedRequisitionsService(): Promise<RequisitionListItemDto[]> {
+  return findRequisitions(
+    db,
+    { statuses: ["rejected", "pending_resolution"] },
+    REQUEST_LIST_LIMIT,
+  );
+}
+
 /** Predicts the automated RF number for the next requisition. */
 export async function getNextRequisitionNumberService(): Promise<string> {
   const [row] = await db

@@ -22,7 +22,7 @@ const deliveryDateFormat = new Intl.DateTimeFormat("en-PH", {
 
 export type AllRequisitionsProps = {
   requisitions: RequisitionListItemDto[];
-  mode?: "all" | "completed";
+  mode?: "all" | "completed" | "rejected";
 };
 
 export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsProps) {
@@ -36,6 +36,10 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
     if (mode === "completed") {
       result = result.filter((r) =>
         ["fulfilled", "rejected", "cancelled"].includes(r.status),
+      );
+    } else if (mode === "rejected") {
+      result = result.filter((r) =>
+        ["rejected", "pending_resolution"].includes(r.status),
       );
     }
 
@@ -78,6 +82,12 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
           { id: "fulfilled", label: "Fulfilled", count: requisitions.filter((r) => r.status === "fulfilled").length },
           { id: "rejected", label: "Rejected", count: requisitions.filter((r) => r.status === "rejected").length },
           { id: "cancelled", label: "Cancelled", count: requisitions.filter((r) => r.status === "cancelled").length },
+        ]
+      : mode === "rejected"
+      ? [
+          { id: "all", label: "All Rejected", count: requisitions.filter((r) => ["rejected", "pending_resolution"].includes(r.status)).length },
+          { id: "rejected", label: "Rejected", count: requisitions.filter((r) => r.status === "rejected").length },
+          { id: "pending_resolution", label: "Pending Resolution", count: requisitions.filter((r) => r.status === "pending_resolution").length },
         ]
       : [
           { id: "all", label: "All", count: requisitions.length },

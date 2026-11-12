@@ -27,6 +27,7 @@ export {
   listCompletedRequisitionsService,
   listMyRequestsService,
   listPendingApprovalsService,
+  listRejectedRequisitionsService,
 } from "./services/requisition.lists.service";
 export { approveRequisitionService } from "./services/requisition.approve.service";
 export { 

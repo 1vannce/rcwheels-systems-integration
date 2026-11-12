@@ -19,7 +19,7 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
   requisition_approver: [
     ...sharedScreens,
     "requisition-approval-queue",
-    "requisition-discrepancy-reviews",
+    "requisition-rejected-reviews",
     "requisition-all",
     "requisition-completed",
   ],
