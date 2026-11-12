@@ -77,7 +77,7 @@ export function RequisitionForm({
   items: RequisitionFormItem[];
   mechanics: RequisitionFormMechanic[];
   minimumDeliveryDate: string;
-  currentUser?: { fullName: string; role: string };
+  currentUser?: { userId?: number; fullName: string; role: string };
   /** The automated next RF number predicted by the server, e.g. RF-202611-008. */
   autoRfNumber?: string;
   /** "submit" posts a new request; "resubmit" corrects a rejected one. */
@@ -145,12 +145,16 @@ export function RequisitionForm({
       ? (autoRfNumber ?? formatRfNumber(requisitionId, new Date()))
       : (autoRfNumber ?? "auto");
 
+  const employeeId = currentUser?.userId
+    ? `EMP-${String(currentUser.userId).padStart(4, "0")}`
+    : "EMP-0003";
+
   return (
     <form action={formAction} className="flex flex-col gap-6 rounded-lg border bg-card p-6 shadow-sm">
       {mode === "resubmit" && <input type="hidden" name="requisitionId" value={requisitionId} />}
       <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-      {/* ── Top Metadata Section (matching reference layout) ── */}
+      {/* ── Top Metadata Section ── */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* RF no. */}
         <div className="flex flex-col gap-1.5">
@@ -165,52 +169,42 @@ export function RequisitionForm({
           />
         </div>
 
-        {/* Shop / Location */}
+        {/* Date (date of requisition) */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="shop-location" className="text-xs font-medium text-muted-foreground">
-            Shop
+          <Label htmlFor="requisition-date" className="text-xs font-medium text-muted-foreground">
+            Date (date of requisition)
           </Label>
           <input
-            id="shop-location"
+            id="requisition-date"
             readOnly
-            value="SHOP — RCWheels Main Location"
+            value={minimumDeliveryDate}
             className={readonlyInputClass}
           />
         </div>
 
-        {/* Request from warehouse* */}
+        {/* Requester name */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="warehouse" className="text-xs font-medium text-muted-foreground">
-            Request from warehouse <span className="text-destructive">*</span>
-          </Label>
-          <select id="warehouse" disabled className={readonlyInputClass}>
-            <option>WH — Central Warehouse</option>
-          </select>
-        </div>
-
-        {/* Requested by */}
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="requested-by" className="text-xs font-medium text-muted-foreground">
-            Requested by
+          <Label htmlFor="requester-name" className="text-xs font-medium text-muted-foreground">
+            Requester name
           </Label>
           <input
-            id="requested-by"
+            id="requester-name"
             readOnly
-            value={currentUser ? `${currentUser.fullName} (${currentUser.role.replace(/_/g, " ")})` : "Current User"}
+            value={currentUser?.fullName ?? "Rosa Villareal"}
             className={readonlyInputClass}
           />
         </div>
 
-        {/* From alert */}
+        {/* Employee ID */}
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="from-alert" className="text-xs font-medium text-muted-foreground">
-            From alert
+          <Label htmlFor="employee-id" className="text-xs font-medium text-muted-foreground">
+            Employee ID
           </Label>
           <input
-            id="from-alert"
+            id="employee-id"
             readOnly
-            value="None (Manual request)"
-            className={readonlyInputClass}
+            value={employeeId}
+            className={`${readonlyInputClass} font-mono`}
           />
         </div>
 
@@ -232,6 +226,20 @@ export function RequisitionForm({
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Mark as urgent */}
+        <div className="flex items-center gap-2 pt-6">
+          <input
+            id="isUrgent"
+            name="isUrgent"
+            type="checkbox"
+            defaultChecked={initial?.isUrgent ?? false}
+            className="size-4 rounded border-input text-primary focus:ring-primary"
+          />
+          <Label htmlFor="isUrgent" className="cursor-pointer text-sm font-normal">
+            Mark as urgent (fast-tracks to approver)
+          </Label>
         </div>
 
         {/* Delivery date */}
@@ -263,20 +271,6 @@ export function RequisitionForm({
             placeholder="Where the items should be delivered"
           />
         </div>
-
-        {/* Mark as urgent */}
-        <div className="flex items-center gap-2 pt-2 sm:col-span-2">
-          <input
-            id="isUrgent"
-            name="isUrgent"
-            type="checkbox"
-            defaultChecked={initial?.isUrgent ?? false}
-            className="size-4 rounded border-input text-primary focus:ring-primary"
-          />
-          <Label htmlFor="isUrgent" className="cursor-pointer text-sm font-normal">
-            Mark as urgent (fast-tracks to approver)
-          </Label>
-        </div>
       </div>
 
       {/* Remarks / Purpose */}
@@ -296,7 +290,7 @@ export function RequisitionForm({
         />
       </div>
 
-      {/* ── Items Table Section (matching reference design) ── */}
+      {/* ── Items Table Section ── */}
       <div className="flex flex-col gap-3">
         <Label className="text-sm font-semibold">Items</Label>
 
