@@ -34,20 +34,20 @@ export async function submitRequisitionService(
   dto: CreateRequisitionDto,
 ): Promise<{ requisitionId: number }> {
   return runBusinessEvent(actor.userId, async (tx) => {
+    if (actor.approverId === null) {
+      throw await blocked(
+        "Your account has no assigned approver yet.",
+        "requisition.submit",
+        { requesterId: actor.userId },
+      );
+    }
+
     if (dto.deliveryDate < todayInManila()) {
       throw new InvalidInputError("Delivery date cannot be in the past.");
     }
 
     await assertItemsExist(tx, dto.lines);
     const requester = await resolveRequesterUtil(tx, actor, dto.requestedForUserId);
-
-    if (actor.approverId === null) {
-      throw blocked(
-        "Your account does not have an assigned approver.",
-        "requisition.submit",
-        { submitterId: actor.userId },
-      );
-    }
 
     const requisitionId = await insertRequisition(tx, {
       submittedBy: actor.userId,

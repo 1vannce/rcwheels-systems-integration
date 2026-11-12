@@ -32,6 +32,14 @@ export async function resubmitRequisitionService(
   dto: ResubmitRequisitionDto,
 ): Promise<void> {
   await runBusinessEvent(actor.userId, async (tx) => {
+    if (actor.approverId === null) {
+      throw await blocked(
+        "Your account has no assigned approver yet.",
+        "requisition.resubmit",
+        { requesterId: actor.userId, requisitionId: dto.requisitionId },
+      );
+    }
+
     if (dto.deliveryDate < todayInManila()) {
       throw new InvalidInputError("Delivery date cannot be in the past.");
     }

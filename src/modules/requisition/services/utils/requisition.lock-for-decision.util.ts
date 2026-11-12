@@ -30,7 +30,13 @@ export async function lockForDecisionUtil(
     });
   }
 
-  if (locked.approverId !== null && locked.approverId !== actor.userId) {
+  if (locked.approverId === null) {
+    throw blocked("This request has no assigned approver.", action, {
+      requisitionId,
+    });
+  }
+
+  if (locked.approverId !== actor.userId) {
     throw blocked("Only the assigned approver can decide this request.", action, {
       requisitionId,
     });

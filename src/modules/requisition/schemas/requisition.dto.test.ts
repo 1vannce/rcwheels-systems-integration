@@ -164,11 +164,53 @@ describe("ApproveRequisitionDto", () => {
       "Approve at least one line.",
     );
   });
+
+  it("refuses a zero approved quantity", () => {
+    const result = ApproveRequisitionDto.safeParse({
+      requisitionId: 4,
+      lines: [{ requisitionLineId: 9, approvedQty: "0" }],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.success ? null : result.error.issues[0].message).toBe(
+      "Enter a quantity above zero.",
+    );
+  });
+
+  it("refuses more than three decimal places for approved quantity", () => {
+    const result = ApproveRequisitionDto.safeParse({
+      requisitionId: 4,
+      lines: [{ requisitionLineId: 9, approvedQty: "2.1234" }],
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.success ? null : result.error.issues[0].message).toBe(
+      "Enter a number with up to 3 decimal places.",
+    );
+  });
 });
 
 describe("RejectRequisitionDto", () => {
   it("requires a reason", () => {
     expect(RejectRequisitionDto.safeParse({ requisitionId: 4 }).success).toBe(false);
+  });
+
+  it("refuses a whitespace-only or too short reason", () => {
+    const emptyResult = RejectRequisitionDto.safeParse({ requisitionId: 4, reason: "   " });
+    const shortResult = RejectRequisitionDto.safeParse({ requisitionId: 4, reason: "no" });
+
+    expect(emptyResult.success).toBe(false);
+    expect(shortResult.success).toBe(false);
+  });
+
+  it("accepts a valid reason and trims whitespace", () => {
+    const parsed = RejectRequisitionDto.parse({
+      requisitionId: "4",
+      reason: "  Item not needed for current work order.  ",
+    });
+
+    expect(parsed.requisitionId).toBe(4);
+    expect(parsed.reason).toBe("Item not needed for current work order.");
   });
 });
 
@@ -190,6 +232,20 @@ describe("ResubmitRequisitionDto", () => {
         lines: [{ itemId: 1, requestedQty: "1" }],
       }).success,
     ).toBe(false);
+  });
+
+  it("coerces requisitionId and accepts urgency on resubmit", () => {
+    const parsed = ResubmitRequisitionDto.parse({
+      ...delivery,
+      requisitionId: "12",
+      purpose: "Corrected urgency",
+      isUrgent: "on",
+      lines: [{ itemId: "2", requestedQty: "5" }],
+    });
+
+    expect(parsed.requisitionId).toBe(12);
+    expect(parsed.isUrgent).toBe(true);
+    expect(parsed.lines).toEqual([{ itemId: 2, requestedQty: "5" }]);
   });
 });
 

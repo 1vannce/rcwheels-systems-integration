@@ -6,10 +6,11 @@ import {
   auditLog,
   dispatches,
   notifications,
+  purchaseRequisitions,
+  roles,
   requisitionLines,
   requisitions,
   requisitionStatusHistory,
-  roles,
   users,
 } from "@/db/schema";
 import { BlockedActionError, type AppRole, type AppUser } from "@/modules/core";
@@ -32,6 +33,7 @@ import { rejectRequisitionService as rejectRequisition } from "./requisition.rej
 import { reserveRequisitionService as reserveRequisition } from "./requisition.reserve.service";
 import { resubmitRequisitionService as resubmitRequisition } from "./requisition.resubmit.service";
 import { submitRequisitionService as submitRequisition } from "./requisition.submit.service";
+import { listPendingApprovalsService as listPendingApprovals } from "./requisition.lists.service";
 
 // DB-backed coverage for the requisition lifecycle. Skipped unless
 // TEST_DATABASE_URL is set (see src/test/test-env.ts), as in CI.
@@ -43,11 +45,11 @@ describeWithDatabase("requisition service", () => {
   beforeEach(async () => {
     await resetDatabase();
     people = await createUsersForEveryRole();
-    people.requester.approverId = people.requisition_approver.userId;
     await db
       .update(users)
       .set({ approverId: people.requisition_approver.userId })
       .where(eq(users.userId, people.requester.userId));
+    people.requester = { ...people.requester, approverId: people.requisition_approver.userId };
     itemId = await createItem("REQ-1", "100");
   });
 
@@ -155,6 +157,7 @@ describeWithDatabase("requisition service", () => {
     expect(alerts[0].recipientUserId).toBe(people.requisition_approver.userId);
     expect(audits.some((row) => row.action === "requisition.submit")).toBe(true);
   });
+
 
   it("creates a multi-line urgent request for an active mechanic (BR-RQ-01/02/03/04/15)", async () => {
     const mechanic = await createRequester("mechanic@rcwheels.test", "Test Mechanic", true);
@@ -344,6 +347,104 @@ describeWithDatabase("requisition service", () => {
 
     expect(header.status).toBe("approved");
     expect(updated.approvedQty).toBe("6.000");
+
+    const alerts = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.requisitionId, requisitionId));
+    expect(
+      alerts.some((alert) => alert.recipientUserId === people.inventory_custodian.userId),
+    ).toBe(true);
+    expect(await db.select().from(purchaseRequisitions)).toHaveLength(0);
+  });
+
+  it("shows each pending request only to its assigned approver", async () => {
+    const assignedRequest = await submit("2");
+    const [approverRole] = await db
+      .select()
+      .from(roles)
+      .where(eq(roles.roleName, "requisition_approver"));
+    const [secondApprover] = await db
+      .insert(users)
+      .values({
+        authUserId: crypto.randomUUID(),
+        email: "second-approver@rcwheels.test",
+        fullName: "Second Test Approver",
+        roleId: approverRole.roleId,
+      })
+      .returning();
+    const secondApproverId = secondApprover.userId;
+    const [requesterRole] = await db
+      .select()
+      .from(roles)
+      .where(eq(roles.roleName, "requester"));
+    const [secondRequesterRow] = await db
+      .insert(users)
+      .values({
+        authUserId: crypto.randomUUID(),
+        email: "second-requester@rcwheels.test",
+        fullName: "Second Test Requester",
+        roleId: requesterRole.roleId,
+        approverId: secondApproverId,
+      })
+      .returning();
+    const secondRequester: AppUser = {
+      userId: secondRequesterRow.userId,
+      email: secondRequesterRow.email,
+      fullName: secondRequesterRow.fullName,
+      role: "requester",
+      approverId: secondApproverId,
+    };
+    const otherRequest = await submitRequisition(secondRequester, {
+      purpose: "Another request",
+      deliveryDate: todayInManila(),
+      deliveryLocation: "Workshop bay 1",
+      isUrgent: false,
+      lines: [{ itemId, requestedQty: "1" }],
+    });
+
+    const queue = await listPendingApprovals(people.requisition_approver);
+
+    expect(queue.map((request) => request.requisitionId)).toContain(assignedRequest.requisitionId);
+    expect(queue.map((request) => request.requisitionId)).not.toContain(otherRequest.requisitionId);
+  });
+
+  it("blocks and audits a decision when the request has no assigned approver", async () => {
+    const { requisitionId } = await submit("2");
+    await db
+      .update(users)
+      .set({ approverId: null })
+      .where(eq(users.userId, people.requester.userId));
+    const line = await firstLine(requisitionId);
+
+    await expect(
+      approveRequisition(people.requisition_approver, {
+        requisitionId,
+        lines: [{ requisitionLineId: line.requisitionLineId, approvedQty: "2" }],
+      }),
+    ).rejects.toThrow("no assigned approver");
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((entry) => entry.action === "blocked:requisition.approve")).toBe(true);
+  });
+
+  it("blocks and audits a rejection after the request is approved", async () => {
+    const { requisitionId } = await submit("2");
+    const line = await firstLine(requisitionId);
+    await approveRequisition(people.requisition_approver, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, approvedQty: "2" }],
+    });
+
+    await expect(
+      rejectRequisition(people.requisition_approver, {
+        requisitionId,
+        reason: "This decision is too late",
+      }),
+    ).rejects.toThrow("Only a pending request can be decided.");
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((entry) => entry.action === "blocked:requisition.reject")).toBe(true);
   });
 
   it("refuses an approval above the requested quantity", async () => {
@@ -373,6 +474,28 @@ describeWithDatabase("requisition service", () => {
         lines: [{ requisitionLineId: line.requisitionLineId, approvedQty: "5" }],
       }),
     ).rejects.toThrow("assigned approver");
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((entry) => entry.action === "blocked:requisition.approve")).toBe(true);
+  });
+
+  it("blocks and audits a requester trying to approve their own request", async () => {
+    const { requisitionId } = await submit("2");
+    await db
+      .update(users)
+      .set({ approverId: people.requester.userId })
+      .where(eq(users.userId, people.requester.userId));
+    const line = await firstLine(requisitionId);
+
+    await expect(
+      approveRequisition(people.requester, {
+        requisitionId,
+        lines: [{ requisitionLineId: line.requisitionLineId, approvedQty: "2" }],
+      }),
+    ).rejects.toThrow("cannot approve your own request");
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((entry) => entry.action === "blocked:requisition.approve")).toBe(true);
   });
 
   it("rejects with a reason and resubmits without losing the history (BR-RQ-06)", async () => {
@@ -412,6 +535,30 @@ describeWithDatabase("requisition service", () => {
       "rejected",
       "pending_approval",
     ]);
+  });
+
+  it("blocks and audits resubmission when the requester has no assigned approver", async () => {
+    const { requisitionId } = await submit("2");
+    await rejectRequisition(people.requisition_approver, {
+      requisitionId,
+      reason: "Correct the request",
+    });
+
+    const unassignedRequester = { ...people.requester, approverId: null };
+
+    await expect(
+      resubmitRequisition(unassignedRequester, {
+        requisitionId,
+        purpose: "Corrected request",
+        deliveryDate: todayInManila(),
+        deliveryLocation: "Workshop bay 1",
+        isUrgent: false,
+        lines: [{ itemId, requestedQty: "1" }],
+      }),
+    ).rejects.toThrow("no assigned approver");
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((entry) => entry.action === "blocked:requisition.resubmit")).toBe(true);
   });
 
   it("reserves fully, then moves to Awaiting Stock when the need exceeds availability", async () => {
