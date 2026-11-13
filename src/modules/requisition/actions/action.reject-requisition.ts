@@ -1,4 +1,4 @@
-"use server"
+"use server";
 
 import { revalidatePath } from "next/cache";
 import { actionFailure, requireRole, type ActionResult } from "@/modules/core";
@@ -36,6 +36,7 @@ export async function rejectRequisitionAction(
   }
 
   revalidatePath("/requisitions/approvals");
+  revalidatePath("/requisitions/my-requests");
   revalidatePath(`/requisitions/${requisitionId}`);
 
   return { ok: true, message: "Request rejected." };

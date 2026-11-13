@@ -19,6 +19,9 @@ export const appScreens = [
   "requisition-new-rf",
   "requisition-my-requests",
   "requisition-approval-queue",
+  "requisition-rejected-reviews",
+  "requisition-all",
+  "requisition-completed",
   "inventory-item-list",
   "inventory-stock-detail-and-movements",
   "inventory-issue-queue",
@@ -50,6 +53,6 @@ export const roleLabels: Record<AppRole, string> = {
   inventory_manager: "Inventory Control Manager",
   purchasing_staff: "Purchasing Staff",
   accounting_associate: "Accounting Associate",
-  delivery_operations: "Delivery / Operations",
+  delivery_operations: "Delivery Operations",
   system_administrator: "System Administrator",
 };

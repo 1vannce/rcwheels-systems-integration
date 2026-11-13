@@ -40,7 +40,9 @@ export async function approveRequisitionAction(
   }
 
   revalidatePath("/requisitions/approvals");
+  revalidatePath("/requisitions/my-requests");
   revalidatePath(`/requisitions/${requisitionId}`);
+  revalidatePath("/inventory/issue-queue");
 
   return { ok: true, message: "Request approved." };
 }

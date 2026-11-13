@@ -20,6 +20,10 @@ const builtScreens: readonly AppScreen[] = [
   "notifications",
   "requisition-new-rf",
   "requisition-my-requests",
+  "requisition-approval-queue",
+  "requisition-rejected-reviews",
+  "requisition-all",
+  "requisition-completed",
   "inventory-item-list",
   "inventory-issue-queue",
   "inventory-ar-preparation",
@@ -55,6 +59,21 @@ const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {
   "requisition-approval-queue": {
     label: "Approval queue",
     href: "/requisitions/approvals",
+    group: "Requisition",
+  },
+  "requisition-rejected-reviews": {
+    label: "Rejected reviews",
+    href: "/requisitions/rejected",
+    group: "Requisition",
+  },
+  "requisition-all": {
+    label: "All requisitions",
+    href: "/requisitions",
+    group: "Requisition",
+  },
+  "requisition-completed": {
+    label: "Completed request",
+    href: "/requisitions/completed",
     group: "Requisition",
   },
 

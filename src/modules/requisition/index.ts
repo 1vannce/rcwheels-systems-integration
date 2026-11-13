@@ -22,9 +22,12 @@ export { submitRequisitionAction } from "./actions/action.submit-requisition";
 export {
   getNextRequisitionNumberService,
   listActiveMechanicsService,
+  listAllRequisitionsService,
   listApprovedForIssueService,
+  listCompletedRequisitionsService,
   listMyRequestsService,
   listPendingApprovalsService,
+  listRejectedRequisitionsService,
 } from "./services/requisition.lists.service";
 export { approveRequisitionService } from "./services/requisition.approve.service";
 export { 
@@ -46,6 +49,7 @@ export { submitRequisitionService } from "./services/requisition.submit.service"
  */
 export { requisitionStatuses } from "./types/requisition.dto";
 export type {
+  PendingApprovalItemDto,
   RequisitionDetailDto,
   RequisitionDto,
   RequisitionLineDto,

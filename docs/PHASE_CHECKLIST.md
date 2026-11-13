@@ -35,8 +35,8 @@ Unfinished issues:
 
 ## Phase 3 - Requisition and issue
 
-- [ ] Implement RF creation, validation, and urgency
-- [ ] Implement approval, rejection, and resubmission
+- [x] Implement RF creation, validation, and urgency
+- [x] Implement approval, rejection, and resubmission
 - [ ] Implement stock checks and reservations
 - [ ] Implement Connector A
 - [ ] Implement partial issue and AR preparation
@@ -47,8 +47,8 @@ Unfinished issues:
 
 - [ ] #30 - [Dispatch issued stock through Connector A](https://github.com/1vannce/rcwheels-systems-integration/issues/30)
 - [ ] #31 - [Prepare partial issues and acknowledgement receipts](https://github.com/1vannce/rcwheels-systems-integration/issues/31)
-- [ ] #32 - [Create and validate requisition requests](https://github.com/1vannce/rcwheels-systems-integration/issues/32)
-- [ ] #33 - [Approval, rejection, and resubmission workflow](https://github.com/1vannce/rcwheels-systems-integration/issues/33)
+- [x] #32 - [Create and validate requisition requests](https://github.com/1vannce/rcwheels-systems-integration/issues/32)
+- [x] #33 - [Approval, rejection, and resubmission workflow](https://github.com/1vannce/rcwheels-systems-integration/issues/33)
 - [ ] #34 - [Stock check and reservation for approved requests](https://github.com/1vannce/rcwheels-systems-integration/issues/34)
 
 ## Phase 4 - Internal delivery

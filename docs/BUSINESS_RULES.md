@@ -116,8 +116,8 @@ flowchart TD
 | BR-RQ-02 | An RF needs at least one line. Each line needs an item from the item list and a quantity above zero (up to 3 decimal places). The purpose is required. | Proposal (required-field validation) | Built |
 | BR-RQ-03 | A request can be marked urgent. Urgency moves it up the queues but does not skip approval, the stock check, or any later step. | Proposal; wording proposed | Built |
 | BR-RQ-04 | A submitted RF starts as Pending Approval and goes to the requester's approver. | Decision 6 | Built |
-| BR-RQ-05 | The approver approves or rejects. A rejection needs a reason. The approver may approve less than the requested quantity; the approved quantity is stored separately from the requested quantity. | Proposal; reason and partial approval proposed | Planned |
-| BR-RQ-06 | A rejected RF can be corrected and resubmitted. The earlier decision stays in the status history and approval runs again. | Test scenario 11 | Planned |
+| BR-RQ-05 | The approver approves or rejects. A rejection needs a reason. The approver may approve less than the requested quantity; the approved quantity is stored separately from the requested quantity. | Proposal; reason and partial approval proposed | Built |
+| BR-RQ-06 | A rejected RF can be corrected and resubmitted. The earlier decision stays in the status history and approval runs again. | Test scenario 11 | Built |
 | BR-RQ-07 | An approved RF appears in the Inventory queue (connector A). Nothing is reserved until the Custodian verifies the stock. | Proposal | Planned |
 | BR-RQ-08 | The RF status only summarizes the line quantities. Each line tracks requested, approved, reserved, dispatched, accepted, returned, cancelled, and outstanding quantities. The line quantities are what the system relies on. | PLAN section 7 | Planned |
 | BR-RQ-09 | Unissued need = approved - accepted - in transit. Approved here excludes any separately cancelled quantity. | PLAN section 7 | Planned |
