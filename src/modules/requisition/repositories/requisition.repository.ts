@@ -464,15 +464,21 @@ export async function insertAcknowledgementReceipt(
   return row.acknowledgementReceiptId;
 }
 
-/** The dispatch already created for a request, if any. At most one. */
+/** The dispatch already created for a request, optionally matching a status (newest first). */
 export async function findDispatchByRequisition(
   tx: Tx,
   requisitionId: number,
+  status?: string,
 ): Promise<{ dispatchId: number; status: string } | null> {
+  const conditions = [eq(dispatches.requisitionId, requisitionId)];
+  if (status) {
+    conditions.push(eq(dispatches.status, status));
+  }
   const [row] = await tx
     .select({ dispatchId: dispatches.dispatchId, status: dispatches.status })
     .from(dispatches)
-    .where(eq(dispatches.requisitionId, requisitionId));
+    .where(and(...conditions))
+    .orderBy(desc(dispatches.dispatchId));
 
   return row ?? null;
 }
@@ -562,6 +568,7 @@ export async function findRequisitionsReadyForAr(
         sql`not exists (
           select 1 from ${dispatches}
           where ${dispatches.requisitionId} = ${requisitions.requisitionId}
+            and ${dispatches.status} = 'prepared'
         )`,
       ),
     )

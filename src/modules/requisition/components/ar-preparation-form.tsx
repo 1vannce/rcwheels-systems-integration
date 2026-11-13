@@ -15,6 +15,8 @@ export type ArLine = {
   itemCode: string;
   itemName: string;
   unit: string;
+  requestedQty?: string;
+  unissuedQty?: string;
   /** Quantity already reserved for this line. */
   reservedQty: string;
   /** The most that may be sent now: min(reserved, unissued). */
@@ -70,13 +72,22 @@ export function ArPreparationForm({
         />
       </div>
 
+      <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">Partial issue support</p>
+        <p className="mt-0.5">
+          Enter the quantity to dispatch with this Acknowledgement Receipt. If issuing less than the unissued quantity, the remaining balance stays open for subsequent dispatches.
+        </p>
+      </div>
+
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left">
             <tr>
               <th className="p-2 font-medium">Item</th>
+              <th className="p-2 text-right font-medium">Requested</th>
+              <th className="p-2 text-right font-medium">Unissued</th>
               <th className="p-2 text-right font-medium">Reserved</th>
-              <th className="p-2 text-right font-medium">Send</th>
+              <th className="p-2 text-right font-medium">Issue Qty</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -86,7 +97,13 @@ export function ArPreparationForm({
                   {line.itemCode} · {line.itemName}{" "}
                   <span className="text-muted-foreground">({line.unit})</span>
                 </td>
-                <td className="p-2 text-right tabular-nums">
+                <td className="p-2 text-right tabular-nums text-muted-foreground">
+                  {line.requestedQty ? formatQuantity(line.requestedQty) : "—"}
+                </td>
+                <td className="p-2 text-right tabular-nums text-muted-foreground">
+                  {line.unissuedQty ? formatQuantity(line.unissuedQty) : "—"}
+                </td>
+                <td className="p-2 text-right tabular-nums font-medium text-foreground">
                   {formatQuantity(line.reservedQty)}
                 </td>
                 <td className="w-36 p-2 text-right">

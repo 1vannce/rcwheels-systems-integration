@@ -12,8 +12,10 @@ import {
 } from "../repositories/requisition.repository";
 import type {
   PendingApprovalItemDto,
+  RequisitionLineDto,
   RequisitionListItemDto,
   RequisitionMechanicOptionDto,
+  RequisitionQueueItemDto,
 } from "../types/requisition.dto";
 
 /** How many rows a request list returns before it needs paging. */
@@ -66,12 +68,29 @@ export async function listPendingApprovalsService(
 }
 
 /** Requests waiting for the custodian's stock check and reservation. */
-export async function listApprovedForIssueService(): Promise<RequisitionListItemDto[]> {
-  return findRequisitions(
+export async function listApprovedForIssueService(): Promise<RequisitionQueueItemDto[]> {
+  const reqs = await findRequisitions(
     db,
     { statuses: ["approved", "awaiting_stock"] },
     REQUEST_LIST_LIMIT,
   );
+  if (reqs.length === 0) {
+    return [];
+  }
+  const allLines = await findRequisitionLinesFor(
+    db,
+    reqs.map((r) => r.requisitionId),
+  );
+  const linesByReq = new Map<number, RequisitionLineDto[]>();
+  for (const line of allLines) {
+    const list = linesByReq.get(line.requisitionId) ?? [];
+    list.push(line);
+    linesByReq.set(line.requisitionId, list);
+  }
+  return reqs.map((r) => ({
+    ...r,
+    lines: linesByReq.get(r.requisitionId) ?? [],
+  }));
 }
 
 /** All digital requisition forms across the system, newest first. */

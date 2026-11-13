@@ -2,7 +2,10 @@ import "server-only";
 
 import { AppUser, recordAudit, runBusinessEvent } from "@/modules/core";
 import { PrepareAcknowledgementReceiptDto } from "../schemas/requisition.dto";
-import { RequisitionListItemDto } from "../types/requisition.dto";
+import {
+  RequisitionLineDto,
+  RequisitionQueueItemDto,
+} from "../types/requisition.dto";
 import { 
     lockRequisition, 
     findRequisitionLines, 
@@ -12,7 +15,8 @@ import {
     insertDispatch, 
     insertDispatchLines, 
     insertAcknowledgementReceipt,
-    findRequisitionsReadyForAr
+    findRequisitionsReadyForAr,
+    findRequisitionLinesFor
 } from "../repositories/requisition.repository";
 import { compareQuantities, formatQuantity } from "@/modules/inventory";
 import { notifyRoles } from "@/modules/core";
@@ -49,7 +53,7 @@ export async function prepareAcknowledgementReceiptService(
       );
     }
 
-    if (await findDispatchByRequisition(tx, dto.requisitionId)) {
+    if (await findDispatchByRequisition(tx, dto.requisitionId, "prepared")) {
       throw blocked(
         "An acknowledgement receipt has already been prepared for this request.",
         "requisition.prepare-ar",
@@ -132,6 +136,23 @@ export async function prepareAcknowledgementReceiptService(
 }
 
 /** Approved requests with reserved stock and no AR yet: the AR preparation queue. */
-export async function listReadyForArPreparationService(): Promise<RequisitionListItemDto[]> {
-  return findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
+export async function listReadyForArPreparationService(): Promise<RequisitionQueueItemDto[]> {
+  const reqs = await findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
+  if (reqs.length === 0) {
+    return [];
+  }
+  const allLines = await findRequisitionLinesFor(
+    db,
+    reqs.map((r) => r.requisitionId),
+  );
+  const linesByReq = new Map<number, RequisitionLineDto[]>();
+  for (const line of allLines) {
+    const list = linesByReq.get(line.requisitionId) ?? [];
+    list.push(line);
+    linesByReq.set(line.requisitionId, list);
+  }
+  return reqs.map((r) => ({
+    ...r,
+    lines: linesByReq.get(r.requisitionId) ?? [],
+  }));
 }

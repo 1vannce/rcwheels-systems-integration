@@ -55,6 +55,7 @@ export type {
   RequisitionLineDto,
   RequisitionListItemDto,
   RequisitionMechanicOptionDto,
+  RequisitionQueueItemDto,
   RequisitionStatus,
   RequisitionStatusEntryDto,
 } from "./types/requisition.dto";

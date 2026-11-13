@@ -48,7 +48,7 @@ export async function dispatchRequisitionService(
       );
     }
 
-    const dispatch = await findDispatchByRequisition(tx, dto.requisitionId);
+    const dispatch = await findDispatchByRequisition(tx, dto.requisitionId, "prepared");
 
     if (!dispatch) {
       throw blocked(
@@ -56,10 +56,6 @@ export async function dispatchRequisitionService(
         "requisition.dispatch",
         dto,
       );
-    }
-
-    if (dispatch.status !== "prepared") {
-      throw blocked("This dispatch has already been released.", "requisition.dispatch", dto);
     }
 
     const lines = await findDispatchLines(tx, dispatch.dispatchId);
