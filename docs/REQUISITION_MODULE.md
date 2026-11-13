@@ -144,7 +144,8 @@ to, reason). History is never edited.
 ## Derived quantities (never stored on the line)
 
 - `reservedQty` = sum of **active** `stock_reservations` for the line.
-- `dispatchedQty` / `acceptedQty` = sum from `dispatch_lines`.
+- `dispatchedQty` = sum from `dispatch_lines` of released dispatches only; a
+  prepared AR counts once it is dispatched. `acceptedQty` = sum from `dispatch_lines`.
 - `returnedQty` = sum from `return_lines` (phase 4).
 - `outstandingQty` = approved − cancelled − accepted − returned.
 - `in transit` = dispatched − accepted − returned.

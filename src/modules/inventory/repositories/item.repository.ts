@@ -48,8 +48,10 @@ export async function findItemsWithStock(
           where rl.dispatch_line_id = dl.dispatch_line_id
         ), 0))
         from dispatch_lines dl
+        join dispatches d on d.dispatch_id = dl.dispatch_id
         join requisition_lines ql on ql.requisition_line_id = dl.requisition_line_id
-        where ql.item_id = i.item_id
+        -- A prepared AR is not in transit until it is dispatched.
+        where ql.item_id = i.item_id and d.status = 'dispatched'
       ), 0)::numeric(14, 3) as in_transit
     from items i
     left join stock_balances b on b.item_id = i.item_id

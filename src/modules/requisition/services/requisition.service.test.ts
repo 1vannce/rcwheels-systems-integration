@@ -14,7 +14,7 @@ import {
   users,
 } from "@/db/schema";
 import { BlockedActionError, type AppRole, type AppUser } from "@/modules/core";
-import { todayInManila } from "@/modules/inventory";
+import { getItemStockDetail, todayInManila } from "@/modules/inventory";
 import { CreateRequisitionDto } from "../schemas/requisition.dto";
 import {
   closeDatabase,
@@ -644,6 +644,47 @@ describeWithDatabase("requisition service", () => {
       dispatchRequisition(people.inventory_custodian, { requisitionId }),
     ).rejects.toBeInstanceOf(BlockedActionError);
     expect(await onHand(itemId)).toBe("90.000");
+  });
+
+  it("shows nothing dispatched or in transit until the prepared AR is released (B1)", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "10" }],
+    });
+    await prepareAcknowledgementReceipt(people.inventory_custodian, {
+      requisitionId,
+      deliveryPersonnel: "Test Driver",
+      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "4" }],
+    });
+
+    async function figures() {
+      const detail = await getRequisitionDetailService(people.inventory_custodian, requisitionId);
+      const stock = await getItemStockDetail(itemId);
+
+      return {
+        dispatched: detail!.lines[0].dispatchedQty,
+        unissued: detail!.lines[0].unissuedQty,
+        reserved: detail!.lines[0].reservedQty,
+        inTransit: stock!.item.inTransit,
+      };
+    }
+
+    expect(await figures()).toEqual({
+      dispatched: "0.000",
+      unissued: "10.000",
+      reserved: "10.000",
+      inTransit: "0.000",
+    });
+
+    await dispatchRequisition(people.inventory_custodian, { requisitionId });
+
+    expect(await figures()).toEqual({
+      dispatched: "4.000",
+      unissued: "6.000",
+      reserved: "6.000",
+      inTransit: "4.000",
+    });
   });
   it("issues a partial quantity, then prepares and dispatches the reserved remainder (issue #31)", async () => {
     const { requisitionId, line } = await approvedRequest("10");

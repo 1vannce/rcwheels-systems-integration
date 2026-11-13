@@ -17,7 +17,7 @@ the implementation and its phase exit criterion are verified.
 - [x] Complete the app layout and role-based screens
 - [x] Add audit log, notifications, and document attachments
 - [x] Add fictional seed data
-- [ ] Verify each seeded role can log in and see only its own screens
+- [x] Verify each seeded role can log in and see only its own screens
 
 ## Phase 2 - Inventory core
 
@@ -32,9 +32,9 @@ the implementation and its phase exit criterion are verified.
 - [x] Implement RF creation, validation, and urgency
 - [x] Implement approval, rejection, and resubmission
 - [x] Implement stock checks and reservations
-- [ ] Implement Connector A
+- [x] Implement Connector A
 - [x] Implement partial issue and AR preparation
-- [ ] Implement dispatch
+- [x] Implement dispatch
 - [x] Verify an approved in-stock request reaches dispatch with stock deducted once
 
 Unfinished issues:
@@ -89,6 +89,7 @@ Unfinished issues:
 
 - Progress updated 2026-11-11: foundation implementation and inventory-core implementation are present on `main`; phase exit criteria still need verification.
 - Progress updated 2026-11-13: #7, #8, #9, #32, #33, and #34 are closed. The Phase 3 exit path (approve, reserve, prepare AR, dispatch, stock deducted once, second dispatch refused) passes in `requisition.service.test.ts` against a local PostgreSQL 18 test database. Partial issue now lets the reserved remainder be prepared and dispatched later. Connector A and dispatch stay open until #30 is compared with the merged code.
+- Progress updated 2026-11-13 (Phase 3 close-out, branch `test/phase3-role-blocks`): a manual run of the local app with every seeded account confirmed each role's menu and that every other screen opened by URL ends at `/forbidden` with a `blocked:open-screen:*` audit row (Phase 1 item). Scenario 12 for reserve, prepare AR, and dispatch is covered by `requisition.actions.test.ts` (requester, mechanic, and approver blocked and audited; custodian passes). The manual run also covered scenario 1 (stock deducted once at dispatch), the partial issue and remainder (two dispatches, each deducting only its sent quantity), a double-clicked and a stale-tab dispatch (one deduction), and the screen states. #30 was compared with the merged code: dispatch and Connector A (an approved request appears in the issue queue and notifies the Custodian) are in place. Fixed on this branch: a prepared but unreleased AR was shown as dispatched and in transit. Still open: what the header status should read while a partial remainder waits for its next AR. Not yet run on the deployed site.
 - Keep this checklist synchronized with issue and pull request status.
 - Do not mark a phase complete until its PLAN.md exit criterion is verified.
 - Closed issues are intentionally omitted from the unfinished-work lists.
