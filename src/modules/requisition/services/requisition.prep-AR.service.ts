@@ -2,13 +2,13 @@ import "server-only";
 
 import { AppUser, recordAudit, runBusinessEvent } from "@/modules/core";
 import { PrepareAcknowledgementReceiptDto } from "../schemas/requisition.dto";
-import { RequisitionListItemDto } from "../types/requisition.dto";
+import { AR_PREPARABLE_STATUSES, RequisitionListItemDto } from "../types/requisition.dto";
 import { 
     lockRequisition, 
     findRequisitionLines, 
     updateRequisitionStatus, 
     insertRequisitionStatusHistory, 
-    findDispatchByRequisition, 
+    findPreparedDispatchByRequisition, 
     insertDispatch, 
     insertDispatchLines, 
     insertAcknowledgementReceipt,
@@ -41,7 +41,7 @@ export async function prepareAcknowledgementReceiptService(
       throw blocked("The request no longer exists.", "requisition.prepare-ar", dto);
     }
 
-    if (locked.status !== "approved" && locked.status !== "awaiting_stock") {
+    if (!(AR_PREPARABLE_STATUSES as readonly string[]).includes(locked.status)) {
       throw blocked(
         "Only a reserved request can be prepared for delivery.",
         "requisition.prepare-ar",
@@ -49,9 +49,11 @@ export async function prepareAcknowledgementReceiptService(
       );
     }
 
-    if (await findDispatchByRequisition(tx, dto.requisitionId)) {
+    // One open AR at a time: the prepared issue must be dispatched before the
+    // remainder of a partial issue can be prepared (issue #31).
+    if (await findPreparedDispatchByRequisition(tx, dto.requisitionId)) {
       throw blocked(
-        "An acknowledgement receipt has already been prepared for this request.",
+        "An acknowledgement receipt is already waiting for dispatch on this request.",
         "requisition.prepare-ar",
         dto,
       );
@@ -131,7 +133,7 @@ export async function prepareAcknowledgementReceiptService(
   });
 }
 
-/** Approved requests with reserved stock and no AR yet: the AR preparation queue. */
+/** Requests with reserved stock and no open AR: the AR preparation queue. */
 export async function listReadyForArPreparationService(): Promise<RequisitionListItemDto[]> {
   return findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
 }

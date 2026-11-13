@@ -26,6 +26,17 @@ export const requisitionStatuses = [
 
 export type RequisitionStatus = (typeof requisitionStatuses)[number];
 
+/**
+ * Statuses from which the Custodian may prepare an AR for reserved stock. Out
+ * for Delivery is included so the reserved remainder of a partial issue can be
+ * sent later (issue #31).
+ */
+export const AR_PREPARABLE_STATUSES = [
+  "approved",
+  "awaiting_stock",
+  "out_for_delivery",
+] as const satisfies readonly RequisitionStatus[];
+
 /** A requisition header with the requester's display name resolved. */
 export type RequisitionDto = {
   requisitionId: number;
