@@ -31,7 +31,7 @@ Unfinished issues:
 - [x] Implement stock events as domain functions
 - [x] Implement approved adjustments and sales deductions
 - [x] Add the incomplete-balance flag and physical-verification guard
-- [ ] Pass unit tests for every stock event, including duplicate and simultaneous posting
+- [x] Pass unit tests for every stock event, including duplicate and simultaneous posting
 
 ## Phase 3 - Requisition and issue
 
