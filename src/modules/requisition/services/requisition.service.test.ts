@@ -14,7 +14,7 @@ import {
   users,
 } from "@/db/schema";
 import { BlockedActionError, type AppRole, type AppUser } from "@/modules/core";
-import { todayInManila } from "@/modules/inventory";
+import { getItemStockDetail, todayInManila } from "@/modules/inventory";
 import { CreateRequisitionDto } from "../schemas/requisition.dto";
 import {
   closeDatabase,
@@ -28,7 +28,10 @@ import { approveRequisitionService as approveRequisition } from "./requisition.a
 import { dispatchRequisitionService as dispatchRequisition } from "./requisition.dispatch.service";
 import { getRequisitionDetailService } from "./requisition.get-details.service";
 import { listActiveMechanicsService, listMyRequestsService } from "./requisition.lists.service";
-import { prepareAcknowledgementReceiptService as prepareAcknowledgementReceipt } from "./requisition.prep-AR.service";
+import {
+  listReadyForArPreparationService as listReadyForArPreparation,
+  prepareAcknowledgementReceiptService as prepareAcknowledgementReceipt,
+} from "./requisition.prep-AR.service";
 import { rejectRequisitionService as rejectRequisition } from "./requisition.reject.service";
 import { reserveRequisitionService as reserveRequisition } from "./requisition.reserve.service";
 import { resubmitRequisitionService as resubmitRequisition } from "./requisition.resubmit.service";
@@ -643,44 +646,188 @@ describeWithDatabase("requisition service", () => {
     expect(await onHand(itemId)).toBe("90.000");
   });
 
-  it("supports partial issue and AR preparation, keeping remaining need open", async () => {
+  it("shows nothing dispatched or in transit until the prepared AR is released (B1)", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "10" }],
+    });
+    await prepareAcknowledgementReceipt(people.inventory_custodian, {
+      requisitionId,
+      deliveryPersonnel: "Test Driver",
+      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "4" }],
+    });
+
+    async function figures() {
+      const detail = await getRequisitionDetailService(people.inventory_custodian, requisitionId);
+      const stock = await getItemStockDetail(itemId);
+
+      return {
+        dispatched: detail!.lines[0].dispatchedQty,
+        unissued: detail!.lines[0].unissuedQty,
+        reserved: detail!.lines[0].reservedQty,
+        inTransit: stock!.item.inTransit,
+      };
+    }
+
+    expect(await figures()).toEqual({
+      dispatched: "0.000",
+      unissued: "10.000",
+      reserved: "10.000",
+      inTransit: "0.000",
+    });
+
+    await dispatchRequisition(people.inventory_custodian, { requisitionId });
+
+    expect(await figures()).toEqual({
+      dispatched: "4.000",
+      unissued: "6.000",
+      reserved: "6.000",
+      inTransit: "4.000",
+    });
+  });
+  it("issues a partial quantity, then prepares and dispatches the reserved remainder (issue #31)", async () => {
     const { requisitionId, line } = await approvedRequest("10");
     await reserveRequisition(people.inventory_custodian, {
       requisitionId,
       lines: [{ requisitionLineId: line.requisitionLineId, quantity: "10" }],
     });
 
-    const { dispatchId } = await prepareAcknowledgementReceipt(people.inventory_custodian, {
+    const prepareFirst = () =>
+      prepareAcknowledgementReceipt(people.inventory_custodian, {
+        requisitionId,
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "4" }],
+      });
+
+    await prepareFirst();
+
+    // The open AR cannot be prepared twice before it is dispatched.
+    await expect(prepareFirst()).rejects.toBeInstanceOf(BlockedActionError);
+    expect((await listReadyForArPreparation()).map((r) => r.requisitionId)).not.toContain(
       requisitionId,
-      deliveryPersonnel: "Delivery Courier",
-      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "4" }],
+    );
+
+    await dispatchRequisition(people.inventory_custodian, { requisitionId });
+    expect(await onHand(itemId)).toBe("96.000");
+
+    // The remainder stays reserved and open, and the request returns to the AR queue.
+    const afterPartial = (await getRequisitionDetailService(people.inventory_custodian, requisitionId))!;
+    expect(afterPartial.requisition.status).toBe("out_for_delivery");
+    expect(afterPartial.lines[0]).toMatchObject({
+      dispatchedQty: "4.000",
+      reservedQty: "6.000",
+      unissuedQty: "6.000",
     });
-    expect(dispatchId).toBeGreaterThan(0);
+    expect((await listReadyForArPreparation()).map((r) => r.requisitionId)).toContain(
+      requisitionId,
+    );
 
-    const [prepared] = await db
-      .select()
-      .from(requisitions)
-      .where(eq(requisitions.requisitionId, requisitionId));
-    expect(prepared.status).toBe("for_delivery");
-    expect(await onHand(itemId)).toBe("100.000");
-
-    // Cannot prepare another AR while an active prepared dispatch is still pending release
+    // A later issue cannot exceed what is still reserved.
     await expect(
       prepareAcknowledgementReceipt(people.inventory_custodian, {
         requisitionId,
-        deliveryPersonnel: "Delivery Courier",
-        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "6" }],
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "7" }],
       }),
-    ).rejects.toThrow("Only a reserved request can be prepared for delivery.");
+    ).rejects.toThrow("Only 6 is reserved");
 
+    await prepareAcknowledgementReceipt(people.inventory_custodian, {
+      requisitionId,
+      deliveryPersonnel: "Test Driver",
+      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "6" }],
+    });
     await dispatchRequisition(people.inventory_custodian, { requisitionId });
 
-    expect(await onHand(itemId)).toBe("96.000");
+    expect(await onHand(itemId)).toBe("90.000");
+    await expect(
+      dispatchRequisition(people.inventory_custodian, { requisitionId }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+    expect(await onHand(itemId)).toBe("90.000");
 
-    const detail = await getRequisitionDetailService(people.inventory_custodian, requisitionId);
-    expect(detail).not.toBeNull();
-    const detailLine = detail!.lines[0];
-    expect(detailLine.dispatchedQty).toBe("4.000");
-    expect(detailLine.reservedQty).toBe("6.000");
+    const done = (await getRequisitionDetailService(people.inventory_custodian, requisitionId))!;
+    expect(done.lines[0]).toMatchObject({
+      dispatchedQty: "10.000",
+      reservedQty: "0.000",
+      unissuedQty: "0.000",
+    });
+    expect(
+      await db.select().from(dispatches).where(eq(dispatches.requisitionId, requisitionId)),
+    ).toHaveLength(2);
+    expect(done.history.map((entry) => entry.toStatus)).toEqual([
+      "pending_approval",
+      "approved",
+      "for_delivery",
+      "out_for_delivery",
+      "for_delivery",
+      "out_for_delivery",
+    ]);
+    expect((await listReadyForArPreparation()).map((r) => r.requisitionId)).not.toContain(
+      requisitionId,
+    );
+  });
+
+  it("dispatches a partial issue and deducts only the sent quantity", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "10" }],
+    });
+
+    await prepareAcknowledgementReceipt(people.inventory_custodian, {
+      requisitionId,
+      deliveryPersonnel: "Test Driver",
+      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "6" }],
+    });
+    await dispatchRequisition(people.inventory_custodian, { requisitionId });
+
+    expect(await onHand(itemId)).toBe("94.000");
+
+    const [header] = await db
+      .select()
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, requisitionId));
+    expect(header.status).toBe("out_for_delivery");
+  });
+
+  it("refuses to send more than was reserved", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "5" }],
+    });
+
+    await expect(
+      prepareAcknowledgementReceipt(people.inventory_custodian, {
+        requisitionId,
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "8" }],
+      }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+    expect(await onHand(itemId)).toBe("100.000");
+  });
+
+  it("blocks AR preparation and dispatch for a request that is not ready", async () => {
+    const { requisitionId, line } = await submit("5").then(async (r) => ({
+      requisitionId: r.requisitionId,
+      line: await firstLine(r.requisitionId),
+    }));
+
+    await expect(
+      prepareAcknowledgementReceipt(people.inventory_custodian, {
+        requisitionId,
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "5" }],
+      }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+
+    await expect(
+      dispatchRequisition(people.inventory_custodian, { requisitionId }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((a) => a.action === "blocked:requisition.prepare-ar")).toBe(true);
+    expect(audits.some((a) => a.action === "blocked:requisition.dispatch")).toBe(true);
+    expect(await onHand(itemId)).toBe("100.000");
   });
 });

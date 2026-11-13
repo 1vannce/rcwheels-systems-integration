@@ -24,6 +24,7 @@ import type {
   RequisitionStatus,
   RequisitionStatusEntryDto,
 } from "../types/requisition.dto";
+import { AR_PREPARABLE_STATUSES } from "../types/requisition.dto";
 
 // Drizzle queries for requisitions only. This file holds no business rules and
 // calls no other module; every function takes the caller's transaction so it
@@ -80,11 +81,17 @@ const reservedQty = sql<string>`coalesce((
     and ${stockReservations.status} = 'active'
 ), 0)::numeric(14, 3)`;
 
-/** Quantity already sent to the requester on this line's dispatch lines. */
+/**
+ * Quantity already sent to the requester on this line's dispatch lines. A
+ * prepared AR that has not been released yet is not counted: stock leaves only
+ * at dispatch (PLAN section 7).
+ */
 const dispatchedQty = sql<string>`coalesce((
   select sum(${dispatchLines.sentQty})
   from ${dispatchLines}
+  inner join ${dispatches} on ${dispatches.dispatchId} = ${dispatchLines.dispatchId}
   where ${dispatchLines.requisitionLineId} = ${requisitionLines.requisitionLineId}
+    and ${dispatches.status} = 'dispatched'
 ), 0)::numeric(14, 3)`;
 
 /** Quantity the requester has accepted from this line's dispatches. */
@@ -464,21 +471,21 @@ export async function insertAcknowledgementReceipt(
   return row.acknowledgementReceiptId;
 }
 
-/** The dispatch already created for a request, optionally matching a status (newest first). */
-export async function findDispatchByRequisition(
+/**
+ * The request's prepared dispatch that has not been released yet, if any. A
+ * request has at most one open AR at a time; released dispatches stay as
+ * history, so a partial issue can be followed by another for the remainder.
+ */
+export async function findPreparedDispatchByRequisition(
   tx: Tx,
   requisitionId: number,
-  status?: string,
 ): Promise<{ dispatchId: number; status: string } | null> {
-  const conditions = [eq(dispatches.requisitionId, requisitionId)];
-  if (status) {
-    conditions.push(eq(dispatches.status, status));
-  }
   const [row] = await tx
     .select({ dispatchId: dispatches.dispatchId, status: dispatches.status })
     .from(dispatches)
-    .where(and(...conditions))
-    .orderBy(desc(dispatches.dispatchId));
+    .where(and(eq(dispatches.requisitionId, requisitionId), eq(dispatches.status, "prepared")))
+    .orderBy(asc(dispatches.dispatchId))
+    .limit(1);
 
   return row ?? null;
 }
@@ -536,8 +543,9 @@ export async function updateDispatchStatus(
 }
 
 /**
- * Approved requests that have reserved stock and no dispatch yet: the work
- * waiting on the AR preparation screen.
+ * Requests that have reserved stock and no open (prepared) AR: the work
+ * waiting on the AR preparation screen. Out for Delivery is included so the
+ * reserved remainder of a partial issue can be prepared later.
  */
 export async function findRequisitionsReadyForAr(
   tx: Tx,
@@ -556,7 +564,7 @@ export async function findRequisitionsReadyForAr(
     .innerJoin(users, eq(users.userId, requisitions.submittedBy))
     .where(
       and(
-        inArray(requisitions.status, ["approved", "awaiting_stock"]),
+        inArray(requisitions.status, AR_PREPARABLE_STATUSES),
         sql`exists (
           select 1
           from ${stockReservations}

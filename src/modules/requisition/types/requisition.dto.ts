@@ -26,6 +26,17 @@ export const requisitionStatuses = [
 
 export type RequisitionStatus = (typeof requisitionStatuses)[number];
 
+/**
+ * Statuses from which the Custodian may prepare an AR for reserved stock. Out
+ * for Delivery is included so the reserved remainder of a partial issue can be
+ * sent later (issue #31).
+ */
+export const AR_PREPARABLE_STATUSES = [
+  "approved",
+  "awaiting_stock",
+  "out_for_delivery",
+] as const satisfies readonly RequisitionStatus[];
+
 /** A requisition header with the requester's display name resolved. */
 export type RequisitionDto = {
   requisitionId: number;
@@ -71,7 +82,8 @@ export type RequisitionQueueItemDto = RequisitionListItemDto & {
  * One requested item with every figure a queue or detail screen needs.
  *
  * - `reservedQty` is the sum of this line's active reservations.
- * - `dispatchedQty`, `acceptedQty`, and `returnedQty` come from dispatch lines.
+ * - `dispatchedQty` sums dispatch lines of released (dispatched) dispatches only;
+ *   `acceptedQty` and `returnedQty` come from dispatch lines.
  * - `outstandingQty` = approved - cancelled - accepted - returned.
  * - `unissuedQty` = approved - cancelled - in transit, where in transit is
  *   dispatched - accepted - returned.

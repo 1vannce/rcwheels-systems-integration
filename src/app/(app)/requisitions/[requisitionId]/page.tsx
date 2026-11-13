@@ -8,6 +8,7 @@ import {
   listActiveMechanicsService,
 } from "@/modules/requisition";
 import { ApprovalDecision } from "@/modules/requisition/components/approval-decision";
+import { AR_PREPARABLE_STATUSES } from "@/modules/requisition/types/requisition.dto";
 import { formatRfNumber } from "@/modules/requisition/utils/rf-number.util";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
@@ -83,7 +84,7 @@ export default async function RequisitionDetailPage({
 
   const canPrepareAr =
     isCustodian &&
-    (detail.requisition.status === "approved" || detail.requisition.status === "awaiting_stock") &&
+    (AR_PREPARABLE_STATUSES as readonly string[]).includes(detail.requisition.status) &&
     detail.lines.some((line) => compareQuantities(line.reservedQty, "0") > 0);
 
   const canDispatch = isCustodian && detail.requisition.status === "for_delivery";
