@@ -24,6 +24,7 @@ import type {
   RequisitionStatus,
   RequisitionStatusEntryDto,
 } from "../types/requisition.dto";
+import { AR_PREPARABLE_STATUSES } from "../types/requisition.dto";
 
 // Drizzle queries for requisitions only. This file holds no business rules and
 // calls no other module; every function takes the caller's transaction so it
@@ -464,15 +465,21 @@ export async function insertAcknowledgementReceipt(
   return row.acknowledgementReceiptId;
 }
 
-/** The dispatch already created for a request, if any. At most one. */
-export async function findDispatchByRequisition(
+/**
+ * The request's prepared dispatch that has not been released yet, if any. A
+ * request has at most one open AR at a time; released dispatches stay as
+ * history, so a partial issue can be followed by another for the remainder.
+ */
+export async function findPreparedDispatchByRequisition(
   tx: Tx,
   requisitionId: number,
 ): Promise<{ dispatchId: number; status: string } | null> {
   const [row] = await tx
     .select({ dispatchId: dispatches.dispatchId, status: dispatches.status })
     .from(dispatches)
-    .where(eq(dispatches.requisitionId, requisitionId));
+    .where(and(eq(dispatches.requisitionId, requisitionId), eq(dispatches.status, "prepared")))
+    .orderBy(asc(dispatches.dispatchId))
+    .limit(1);
 
   return row ?? null;
 }
@@ -530,8 +537,9 @@ export async function updateDispatchStatus(
 }
 
 /**
- * Approved requests that have reserved stock and no dispatch yet: the work
- * waiting on the AR preparation screen.
+ * Requests that have reserved stock and no open (prepared) AR: the work
+ * waiting on the AR preparation screen. Out for Delivery is included so the
+ * reserved remainder of a partial issue can be prepared later.
  */
 export async function findRequisitionsReadyForAr(
   tx: Tx,
@@ -550,7 +558,7 @@ export async function findRequisitionsReadyForAr(
     .innerJoin(users, eq(users.userId, requisitions.submittedBy))
     .where(
       and(
-        inArray(requisitions.status, ["approved", "awaiting_stock"]),
+        inArray(requisitions.status, AR_PREPARABLE_STATUSES),
         sql`exists (
           select 1
           from ${stockReservations}
@@ -562,6 +570,7 @@ export async function findRequisitionsReadyForAr(
         sql`not exists (
           select 1 from ${dispatches}
           where ${dispatches.requisitionId} = ${requisitions.requisitionId}
+            and ${dispatches.status} = 'prepared'
         )`,
       ),
     )

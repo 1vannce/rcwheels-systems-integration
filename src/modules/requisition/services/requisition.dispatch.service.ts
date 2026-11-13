@@ -5,7 +5,7 @@ import { DispatchRequisitionDto } from "../schemas/requisition.dto";
 import { RequisitionListItemDto } from "../types/requisition.dto";
 import { 
     lockRequisition, 
-    findDispatchByRequisition, 
+    findPreparedDispatchByRequisition, 
     findDispatchLines, 
     updateDispatchStatus, 
     updateRequisitionStatus, 
@@ -48,18 +48,14 @@ export async function dispatchRequisitionService(
       );
     }
 
-    const dispatch = await findDispatchByRequisition(tx, dto.requisitionId);
+    const dispatch = await findPreparedDispatchByRequisition(tx, dto.requisitionId);
 
     if (!dispatch) {
       throw blocked(
-        "This request has no prepared acknowledgement receipt.",
+        "This request has no prepared acknowledgement receipt waiting for dispatch.",
         "requisition.dispatch",
         dto,
       );
-    }
-
-    if (dispatch.status !== "prepared") {
-      throw blocked("This dispatch has already been released.", "requisition.dispatch", dto);
     }
 
     const lines = await findDispatchLines(tx, dispatch.dispatchId);
