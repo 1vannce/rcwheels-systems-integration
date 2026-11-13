@@ -7,20 +7,12 @@ import { LayoutGrid, List, Eye, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { RequisitionListItemDto, RequisitionStatus } from "../types/requisition.dto";
+import { formatRfNumber } from "../utils/rf-number.util";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Formats a numeric requisitionId as RF-YYYYMM-NNN based on submission date. */
-function formatRfNumber(requisitionId: number, submittedAt: Date): string {
-  const d = new Date(submittedAt);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const seq = String(requisitionId).padStart(3, "0");
-  return `RF-${year}${month}-${seq}`;
-}
 
 const dateFormat = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",

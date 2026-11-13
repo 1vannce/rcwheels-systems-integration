@@ -30,15 +30,6 @@ function fmt(value: string): string {
   return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
 }
 
-/** Formats a numeric requisitionId as RF-YYYYMM-NNN using the submission date. */
-export function formatRfNumber(requisitionId: number, submittedAt: Date): string {
-  const d = new Date(submittedAt);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const seq = String(requisitionId).padStart(3, "0");
-  return `RF-${year}${month}-${seq}`;
-}
-
 const dateFormat = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
   timeStyle: "short",

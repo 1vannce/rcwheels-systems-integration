@@ -8,7 +8,7 @@ import {
   listActiveMechanicsService,
 } from "@/modules/requisition";
 import { ApprovalDecision } from "@/modules/requisition/components/approval-decision";
-import { formatRfNumber } from "@/modules/requisition/components/approval-decision-modal";
+import { formatRfNumber } from "@/modules/requisition/utils/rf-number.util";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
 import { RequisitionDetails } from "@/modules/requisition/components/requisition-details";

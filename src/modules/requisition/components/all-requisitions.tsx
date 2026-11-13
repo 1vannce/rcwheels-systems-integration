@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { RequisitionListItemDto, RequisitionStatus } from "../types/requisition.dto";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
-import { formatRfNumber } from "./approval-decision-modal";
+import { formatRfNumber } from "../utils/rf-number.util";
 
 const dateFormat = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",

@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { requireScreen } from "@/modules/core";
+import { requireUser, roleCanAccessScreen } from "@/modules/core";
 import { listAllRequisitionsService as listAllRequisitions } from "@/modules/requisition";
 import { MyRequestsView } from "@/modules/requisition/components/my-requests-view";
 
 export const metadata: Metadata = { title: "Material Requisitions | RCWheels" };
 
 export default async function AllRequisitionsPage() {
-  await requireScreen("requisition-all");
+  const user = await requireUser();
+  // Roles without the all-requisitions screen keep the old /requisitions entry point.
+  if (!roleCanAccessScreen(user.role, "requisition-all")) {
+    redirect("/requisitions/my-requests");
+  }
   const requisitions = await listAllRequisitions();
 
   return (

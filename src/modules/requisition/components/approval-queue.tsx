@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { PendingApprovalItemDto } from "../types/requisition.dto";
+import { formatRfNumber } from "../utils/rf-number.util";
 import {
   ApprovalDecisionModal,
-  formatRfNumber,
   type ApprovalDecisionLine,
 } from "./approval-decision-modal";
 
