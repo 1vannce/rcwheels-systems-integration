@@ -19,12 +19,6 @@ the implementation and its phase exit criterion are verified.
 - [x] Add fictional seed data
 - [ ] Verify each seeded role can log in and see only its own screens
 
-Unfinished issues:
-
-- [ ] #7 - [Add seed script with fictional data](https://github.com/1vannce/rcwheels-systems-integration/issues/7)
-- [ ] #8 - [Login page and role-based redirect](https://github.com/1vannce/rcwheels-systems-integration/issues/8)
-- [ ] #9 - [Audit log and notification services](https://github.com/1vannce/rcwheels-systems-integration/issues/9)
-
 ## Phase 2 - Inventory core
 
 - [x] Implement items and stock balances
@@ -37,19 +31,16 @@ Unfinished issues:
 
 - [x] Implement RF creation, validation, and urgency
 - [x] Implement approval, rejection, and resubmission
-- [ ] Implement stock checks and reservations
+- [x] Implement stock checks and reservations
 - [ ] Implement Connector A
-- [ ] Implement partial issue and AR preparation
+- [x] Implement partial issue and AR preparation
 - [ ] Implement dispatch
-- [ ] Verify an approved in-stock request reaches dispatch with stock deducted once
+- [x] Verify an approved in-stock request reaches dispatch with stock deducted once
 
 Unfinished issues:
 
 - [ ] #30 - [Dispatch issued stock through Connector A](https://github.com/1vannce/rcwheels-systems-integration/issues/30)
 - [ ] #31 - [Prepare partial issues and acknowledgement receipts](https://github.com/1vannce/rcwheels-systems-integration/issues/31)
-- [x] #32 - [Create and validate requisition requests](https://github.com/1vannce/rcwheels-systems-integration/issues/32)
-- [x] #33 - [Approval, rejection, and resubmission workflow](https://github.com/1vannce/rcwheels-systems-integration/issues/33)
-- [ ] #34 - [Stock check and reservation for approved requests](https://github.com/1vannce/rcwheels-systems-integration/issues/34)
 
 ## Phase 4 - Internal delivery
 
@@ -97,6 +88,7 @@ Unfinished issues:
 ## Tracking notes
 
 - Progress updated 2026-11-11: foundation implementation and inventory-core implementation are present on `main`; phase exit criteria still need verification.
+- Progress updated 2026-11-13: #7, #8, #9, #32, #33, and #34 are closed. The Phase 3 exit path (approve, reserve, prepare AR, dispatch, stock deducted once, second dispatch refused) passes in `requisition.service.test.ts` against a local PostgreSQL 18 test database. Partial issue now lets the reserved remainder be prepared and dispatched later. Connector A and dispatch stay open until #30 is compared with the merged code.
 - Keep this checklist synchronized with issue and pull request status.
 - Do not mark a phase complete until its PLAN.md exit criterion is verified.
 - Closed issues are intentionally omitted from the unfinished-work lists.
