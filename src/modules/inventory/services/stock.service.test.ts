@@ -296,7 +296,7 @@ describeWithDatabase("stock service", () => {
 
     await expect(
       db.transaction((tx) => dispatchStock(tx, { dispatchLineId, reservationId })),
-    ).rejects.toThrow();
+    ).rejects.toThrow(ALREADY_POSTED);
     expect(await onHand(itemId)).toBe("6.000");
     expect((await movements()).filter((m) => m.movementType === "dispatch")).toHaveLength(1);
   });
@@ -392,7 +392,7 @@ describeWithDatabase("stock service", () => {
     });
     await expect(
       db.transaction((tx) => inspectReturn(tx, { returnLineId, result: "damaged" })),
-    ).rejects.toThrow();
+    ).rejects.toThrow(ALREADY_POSTED);
     expect(await onHand(itemId, "damaged")).toBe("0.000");
   });
 
