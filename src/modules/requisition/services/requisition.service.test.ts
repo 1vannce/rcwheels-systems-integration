@@ -642,4 +642,67 @@ describeWithDatabase("requisition service", () => {
     ).rejects.toBeInstanceOf(BlockedActionError);
     expect(await onHand(itemId)).toBe("90.000");
   });
+  it("dispatches a partial issue and deducts only the sent quantity", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "10" }],
+    });
+
+    await prepareAcknowledgementReceipt(people.inventory_custodian, {
+      requisitionId,
+      deliveryPersonnel: "Test Driver",
+      lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "6" }],
+    });
+    await dispatchRequisition(people.inventory_custodian, { requisitionId });
+
+    expect(await onHand(itemId)).toBe("94.000");
+
+    const [header] = await db
+      .select()
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, requisitionId));
+    expect(header.status).toBe("out_for_delivery");
+  });
+
+  it("refuses to send more than was reserved", async () => {
+    const { requisitionId, line } = await approvedRequest("10");
+    await reserveRequisition(people.inventory_custodian, {
+      requisitionId,
+      lines: [{ requisitionLineId: line.requisitionLineId, quantity: "5" }],
+    });
+
+    await expect(
+      prepareAcknowledgementReceipt(people.inventory_custodian, {
+        requisitionId,
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "8" }],
+      }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+    expect(await onHand(itemId)).toBe("100.000");
+  });
+
+  it("blocks AR preparation and dispatch for a request that is not ready", async () => {
+    const { requisitionId, line } = await submit("5").then(async (r) => ({
+      requisitionId: r.requisitionId,
+      line: await firstLine(r.requisitionId),
+    }));
+
+    await expect(
+      prepareAcknowledgementReceipt(people.inventory_custodian, {
+        requisitionId,
+        deliveryPersonnel: "Test Driver",
+        lines: [{ requisitionLineId: line.requisitionLineId, sentQty: "5" }],
+      }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+
+    await expect(
+      dispatchRequisition(people.inventory_custodian, { requisitionId }),
+    ).rejects.toBeInstanceOf(BlockedActionError);
+
+    const audits = await db.select().from(auditLog);
+    expect(audits.some((a) => a.action === "blocked:requisition.prepare-ar")).toBe(true);
+    expect(audits.some((a) => a.action === "blocked:requisition.dispatch")).toBe(true);
+    expect(await onHand(itemId)).toBe("100.000");
+  });
 });
