@@ -77,7 +77,8 @@ export type PendingApprovalItemDto = RequisitionListItemDto & {
  * One requested item with every figure a queue or detail screen needs.
  *
  * - `reservedQty` is the sum of this line's active reservations.
- * - `dispatchedQty`, `acceptedQty`, and `returnedQty` come from dispatch lines.
+ * - `dispatchedQty` sums dispatch lines of released (dispatched) dispatches only;
+ *   `acceptedQty` and `returnedQty` come from dispatch lines.
  * - `outstandingQty` = approved - cancelled - accepted - returned.
  * - `unissuedQty` = approved - cancelled - in transit, where in transit is
  *   dispatched - accepted - returned.

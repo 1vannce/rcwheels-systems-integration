@@ -81,11 +81,17 @@ const reservedQty = sql<string>`coalesce((
     and ${stockReservations.status} = 'active'
 ), 0)::numeric(14, 3)`;
 
-/** Quantity already sent to the requester on this line's dispatch lines. */
+/**
+ * Quantity already sent to the requester on this line's dispatch lines. A
+ * prepared AR that has not been released yet is not counted: stock leaves only
+ * at dispatch (PLAN section 7).
+ */
 const dispatchedQty = sql<string>`coalesce((
   select sum(${dispatchLines.sentQty})
   from ${dispatchLines}
+  inner join ${dispatches} on ${dispatches.dispatchId} = ${dispatchLines.dispatchId}
   where ${dispatchLines.requisitionLineId} = ${requisitionLines.requisitionLineId}
+    and ${dispatches.status} = 'dispatched'
 ), 0)::numeric(14, 3)`;
 
 /** Quantity the requester has accepted from this line's dispatches. */
