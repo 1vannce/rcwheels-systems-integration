@@ -255,8 +255,8 @@ async function seedItemAvailabilityExample(tx: Tx, userIds: Map<string, number>)
 }
 
 /**
- * Creates the Supabase Auth accounts that are missing and returns each seeded
- * email's auth ID. Returns null when the secret key or password is not set.
+ * Creates the Supabase Auth accounts that are missing, resets the password of
+ * the ones that exist, and returns each seeded email's auth ID. Returns null when the secret key or password is not set.
  */
 async function ensureAuthUsers(): Promise<Map<string, string> | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -291,7 +291,20 @@ async function ensureAuthUsers(): Promise<Map<string, string> | null> {
   }
 
   for (const { email } of seedUsers) {
-    if (authIds.has(email)) {
+    const existingId = authIds.get(email);
+
+    if (existingId) {
+      // Keep existing accounts in sync with SEED_USER_PASSWORD, so changing it
+      // and re-running the seed is enough to sign in again.
+      const { error } = await supabase.auth.admin.updateUserById(existingId, {
+        password,
+        email_confirm: true,
+      });
+
+      if (error) {
+        throw new Error(`Could not update the auth account for ${email}: ${error.message}`);
+      }
+
       continue;
     }
 
