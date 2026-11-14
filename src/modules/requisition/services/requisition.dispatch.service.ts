@@ -2,7 +2,7 @@ import "server-only";
 
 import { AppUser, recordAudit, runBusinessEvent } from "@/modules/core";
 import { DispatchRequisitionDto } from "../schemas/requisition.dto";
-import { RequisitionListItemDto } from "../types/requisition.dto";
+import { RequisitionQueueItemDto } from "../types/requisition.dto";
 import { 
     lockRequisition, 
     findPreparedDispatchByRequisition, 
@@ -18,6 +18,7 @@ import { compareQuantities, formatQuantity } from "@/modules/inventory";
 import { notifyUsers } from "@/modules/core";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
 import { db } from "@/db";
+import { attachLinesToRequisitions } from "./requisition.lists.service";
 
 /** Defines How many rows a request list returns before it needs paging. */
 const REQUEST_LIST_LIMIT = 100;
@@ -118,6 +119,7 @@ export async function dispatchRequisitionService(
 }
 
 /** Requests whose prepared dispatch is waiting to be released. */
-export async function listReadyForDispatchService(): Promise<RequisitionListItemDto[]> {
-  return findRequisitions(db, { statuses: ["for_delivery"] }, REQUEST_LIST_LIMIT);
+export async function listReadyForDispatchService(): Promise<RequisitionQueueItemDto[]> {
+  const reqs = await findRequisitions(db, { statuses: ["for_delivery"] }, REQUEST_LIST_LIMIT);
+  return attachLinesToRequisitions(reqs);
 }

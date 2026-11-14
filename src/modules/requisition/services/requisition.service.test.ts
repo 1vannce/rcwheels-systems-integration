@@ -25,7 +25,10 @@ import {
 import { createItem, onHand } from "@/test/stock-fixtures";
 
 import { approveRequisitionService as approveRequisition } from "./requisition.approve.service";
-import { dispatchRequisitionService as dispatchRequisition } from "./requisition.dispatch.service";
+import {
+  dispatchRequisitionService as dispatchRequisition,
+  listReadyForDispatchService as listReadyForDispatch,
+} from "./requisition.dispatch.service";
 import { getRequisitionDetailService } from "./requisition.get-details.service";
 import { listActiveMechanicsService, listMyRequestsService } from "./requisition.lists.service";
 import {
@@ -623,6 +626,12 @@ describeWithDatabase("requisition service", () => {
       .from(requisitions)
       .where(eq(requisitions.requisitionId, requisitionId));
     expect(prepared.status).toBe("for_delivery");
+
+    const readyBefore = await listReadyForDispatch();
+    expect(readyBefore.map((r) => r.requisitionId)).toContain(requisitionId);
+    const dispatchEntry = readyBefore.find((r) => r.requisitionId === requisitionId);
+    expect(dispatchEntry?.lines).toHaveLength(1);
+    expect(dispatchEntry?.lines[0].itemCode).toBe("REQ-1");
     expect(await onHand(itemId)).toBe("100.000");
 
     await dispatchRequisition(people.inventory_custodian, { requisitionId });
@@ -638,6 +647,9 @@ describeWithDatabase("requisition service", () => {
 
     expect(dispatched.status).toBe("out_for_delivery");
     expect(dispatch.status).toBe("dispatched");
+    expect((await listReadyForDispatch()).map((r) => r.requisitionId)).not.toContain(
+      requisitionId,
+    );
     expect(await onHand(itemId)).toBe("90.000");
 
     await expect(
