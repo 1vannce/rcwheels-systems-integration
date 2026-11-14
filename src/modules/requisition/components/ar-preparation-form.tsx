@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 import { prepareAcknowledgementReceiptAction } from "../actions/action.prep-requisition-AR";
-import { compareQuantities, formatQuantity } from "../utils/quantity.util";
+import { compareQuantities, formatQuantity, isQuantity } from "../utils/quantity.util";
 
 /** One line of the dispatch being prepared. */
 export type ArLine = {
@@ -43,13 +43,18 @@ export function ArPreparationForm({
   );
 
   const payload = lines
-    .filter((line) => compareQuantities(quantities[line.requisitionLineId] ?? "0", "0") > 0)
+    .filter((line) => {
+      const val = quantities[line.requisitionLineId] ?? "";
+      return isQuantity(val) && compareQuantities(val, "0") > 0;
+    })
     .map((line) => ({
       requisitionLineId: line.requisitionLineId,
       sentQty: quantities[line.requisitionLineId] ?? "",
     }));
 
-  const nothingToSend = lines.every((line) => compareQuantities(line.maxQty, "0") <= 0);
+  const nothingToSend = lines.every(
+    (line) => !isQuantity(line.maxQty) || compareQuantities(line.maxQty, "0") <= 0,
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
@@ -103,7 +108,7 @@ export function ArPreparationForm({
                   {formatQuantity(line.reservedQty)}
                 </td>
                 <td className="w-36 p-2 text-right">
-                  {Number(line.maxQty) <= 0 ? (
+                  {!isQuantity(line.maxQty) || compareQuantities(line.maxQty, "0") <= 0 ? (
                     <span className="text-muted-foreground">Not reserved</span>
                   ) : (
                     <Input
