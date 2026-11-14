@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import type { RequisitionQueueItemDto } from "../types/requisition.dto";
+import { formatQuantity, compareQuantities } from "../utils/quantity.util";
 import { formatRfNumber } from "../utils/rf-number.util";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
 
@@ -20,10 +21,6 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
   hour12: true,
   timeZone: "Asia/Manila",
 });
-
-function fmtQty(value: string): string {
-  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
-}
 
 /**
  * The Custodian's issue queue. Each row links to the request detail, where the
@@ -179,9 +176,12 @@ export function IssueQueue({
                       ) : (
                         <div className="flex flex-wrap items-center gap-1.5">
                           {lines.map((l) => {
-                            const reqQty = fmtQty(l.requestedQty);
-                            const availQty = fmtQty(l.availableStock);
-                            const hasStock = Number(l.availableStock) > 0;
+                            const reqQty = formatQuantity(l.requestedQty);
+                            const availQty = formatQuantity(l.availableStock);
+                            const fullStock =
+                              compareQuantities(l.availableStock, l.requestedQty) >= 0;
+                            const partialStock =
+                              !fullStock && compareQuantities(l.availableStock, "0") > 0;
 
                             return (
                               <span
@@ -192,12 +192,18 @@ export function IssueQueue({
                                 <span>×{reqQty}</span>
                                 <span
                                   className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-                                    hasStock
+                                    fullStock
                                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                                      : "bg-destructive/15 text-destructive"
+                                      : partialStock
+                                        ? "bg-amber-500/15 text-amber-700 dark:text-amber-400"
+                                        : "bg-destructive/15 text-destructive"
                                   }`}
                                 >
-                                  {hasStock ? `avail: ${availQty}` : "shortage"}
+                                  {fullStock
+                                    ? `avail: ${availQty}`
+                                    : partialStock
+                                      ? `partial: ${availQty}`
+                                      : "shortage"}
                                 </span>
                               </span>
                             );

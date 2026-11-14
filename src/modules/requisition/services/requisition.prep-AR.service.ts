@@ -4,7 +4,6 @@ import { AppUser, recordAudit, runBusinessEvent } from "@/modules/core";
 import { PrepareAcknowledgementReceiptDto } from "../schemas/requisition.dto";
 import {
   AR_PREPARABLE_STATUSES,
-  RequisitionLineDto,
   RequisitionQueueItemDto,
 } from "../types/requisition.dto";
 import { 
@@ -17,11 +16,11 @@ import {
     insertDispatchLines, 
     insertAcknowledgementReceipt,
     findRequisitionsReadyForAr,
-    findRequisitionLinesFor
 } from "../repositories/requisition.repository";
 import { compareQuantities, formatQuantity } from "@/modules/inventory";
 import { notifyRoles } from "@/modules/core";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
+import { attachLinesToRequisitions } from "./requisition.lists.service";
 import { db } from "@/db";
 
 /** Defines How many rows a request list returns before it needs paging. */
@@ -141,21 +140,5 @@ export async function prepareAcknowledgementReceiptService(
 /** Requests with reserved stock and no open AR: the AR preparation queue. */
 export async function listReadyForArPreparationService(): Promise<RequisitionQueueItemDto[]> {
   const reqs = await findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
-  if (reqs.length === 0) {
-    return [];
-  }
-  const allLines = await findRequisitionLinesFor(
-    db,
-    reqs.map((r) => r.requisitionId),
-  );
-  const linesByReq = new Map<number, RequisitionLineDto[]>();
-  for (const line of allLines) {
-    const list = linesByReq.get(line.requisitionId) ?? [];
-    list.push(line);
-    linesByReq.set(line.requisitionId, list);
-  }
-  return reqs.map((r) => ({
-    ...r,
-    lines: linesByReq.get(r.requisitionId) ?? [],
-  }));
+  return attachLinesToRequisitions(reqs);
 }

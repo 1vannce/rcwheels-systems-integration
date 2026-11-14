@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 import { prepareAcknowledgementReceiptAction } from "../actions/action.prep-requisition-AR";
+import { compareQuantities, formatQuantity } from "../utils/quantity.util";
 
 /** One line of the dispatch being prepared. */
 export type ArLine = {
@@ -22,11 +23,6 @@ export type ArLine = {
   /** The most that may be sent now: min(reserved, unissued). */
   maxQty: string;
 };
-
-/** Drops trailing zeros for display without pulling server-only code into the bundle. */
-function formatQuantity(value: string): string {
-  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
-}
 
 /**
  * AR preparation form. The Custodian names the delivery person and confirms
@@ -47,13 +43,13 @@ export function ArPreparationForm({
   );
 
   const payload = lines
-    .filter((line) => Number(quantities[line.requisitionLineId] ?? "0") > 0)
+    .filter((line) => compareQuantities(quantities[line.requisitionLineId] ?? "0", "0") > 0)
     .map((line) => ({
       requisitionLineId: line.requisitionLineId,
       sentQty: quantities[line.requisitionLineId] ?? "",
     }));
 
-  const nothingToSend = lines.every((line) => Number(line.maxQty) <= 0);
+  const nothingToSend = lines.every((line) => compareQuantities(line.maxQty, "0") <= 0);
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
