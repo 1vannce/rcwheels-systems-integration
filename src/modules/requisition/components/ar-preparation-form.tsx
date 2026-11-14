@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
 import { prepareAcknowledgementReceiptAction } from "../actions/action.prep-requisition-AR";
+import { compareQuantities, formatQuantity, isQuantity } from "../utils/quantity.util";
 
 /** One line of the dispatch being prepared. */
 export type ArLine = {
@@ -15,16 +16,13 @@ export type ArLine = {
   itemCode: string;
   itemName: string;
   unit: string;
+  requestedQty?: string;
+  unissuedQty?: string;
   /** Quantity already reserved for this line. */
   reservedQty: string;
   /** The most that may be sent now: min(reserved, unissued). */
   maxQty: string;
 };
-
-/** Drops trailing zeros for display without pulling server-only code into the bundle. */
-function formatQuantity(value: string): string {
-  return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
-}
 
 /**
  * AR preparation form. The Custodian names the delivery person and confirms
@@ -45,13 +43,18 @@ export function ArPreparationForm({
   );
 
   const payload = lines
-    .filter((line) => Number(quantities[line.requisitionLineId] ?? "0") > 0)
+    .filter((line) => {
+      const val = quantities[line.requisitionLineId] ?? "";
+      return isQuantity(val) && compareQuantities(val, "0") > 0;
+    })
     .map((line) => ({
       requisitionLineId: line.requisitionLineId,
       sentQty: quantities[line.requisitionLineId] ?? "",
     }));
 
-  const nothingToSend = lines.every((line) => Number(line.maxQty) <= 0);
+  const nothingToSend = lines.every(
+    (line) => !isQuantity(line.maxQty) || compareQuantities(line.maxQty, "0") <= 0,
+  );
 
   return (
     <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
@@ -70,13 +73,22 @@ export function ArPreparationForm({
         />
       </div>
 
+      <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground">Partial issue support</p>
+        <p className="mt-0.5">
+          Enter the quantity to dispatch with this Acknowledgement Receipt. If issuing less than the unissued quantity, the remaining balance stays open for subsequent dispatches.
+        </p>
+      </div>
+
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left">
             <tr>
               <th className="p-2 font-medium">Item</th>
+              <th className="p-2 text-right font-medium">Requested</th>
+              <th className="p-2 text-right font-medium">Unissued</th>
               <th className="p-2 text-right font-medium">Reserved</th>
-              <th className="p-2 text-right font-medium">Send</th>
+              <th className="p-2 text-right font-medium">Issue Qty</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -86,11 +98,17 @@ export function ArPreparationForm({
                   {line.itemCode} · {line.itemName}{" "}
                   <span className="text-muted-foreground">({line.unit})</span>
                 </td>
-                <td className="p-2 text-right tabular-nums">
+                <td className="p-2 text-right tabular-nums text-muted-foreground">
+                  {line.requestedQty ? formatQuantity(line.requestedQty) : "—"}
+                </td>
+                <td className="p-2 text-right tabular-nums text-muted-foreground">
+                  {line.unissuedQty ? formatQuantity(line.unissuedQty) : "—"}
+                </td>
+                <td className="p-2 text-right tabular-nums font-medium text-foreground">
                   {formatQuantity(line.reservedQty)}
                 </td>
                 <td className="w-36 p-2 text-right">
-                  {Number(line.maxQty) <= 0 ? (
+                  {!isQuantity(line.maxQty) || compareQuantities(line.maxQty, "0") <= 0 ? (
                     <span className="text-muted-foreground">Not reserved</span>
                   ) : (
                     <Input

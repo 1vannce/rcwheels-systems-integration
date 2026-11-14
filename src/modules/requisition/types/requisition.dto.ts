@@ -73,6 +73,11 @@ export type PendingApprovalItemDto = RequisitionListItemDto & {
   lines: RequisitionLineDto[];
 };
 
+/** A queue row with its lines and quantity details for issue / AR prep. */
+export type RequisitionQueueItemDto = RequisitionListItemDto & {
+  lines: RequisitionLineDto[];
+};
+
 /**
  * One requested item with every figure a queue or detail screen needs.
  *

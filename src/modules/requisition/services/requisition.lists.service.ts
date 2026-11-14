@@ -12,8 +12,10 @@ import {
 } from "../repositories/requisition.repository";
 import type {
   PendingApprovalItemDto,
+  RequisitionLineDto,
   RequisitionListItemDto,
   RequisitionMechanicOptionDto,
+  RequisitionQueueItemDto,
 } from "../types/requisition.dto";
 
 /** How many rows a request list returns before it needs paging. */
@@ -36,6 +38,29 @@ export async function listActiveMechanicsService(): Promise<RequisitionMechanicO
   return findActiveMechanics(db);
 }
 
+/** Attaches line items to a list of requisition headers. */
+export async function attachLinesToRequisitions(
+  reqs: RequisitionListItemDto[],
+): Promise<RequisitionQueueItemDto[]> {
+  if (reqs.length === 0) {
+    return [];
+  }
+  const allLines = await findRequisitionLinesFor(
+    db,
+    reqs.map((r) => r.requisitionId),
+  );
+  const linesByReq = new Map<number, RequisitionLineDto[]>();
+  for (const line of allLines) {
+    const list = linesByReq.get(line.requisitionId) ?? [];
+    list.push(line);
+    linesByReq.set(line.requisitionId, list);
+  }
+  return reqs.map((r) => ({
+    ...r,
+    lines: linesByReq.get(r.requisitionId) ?? [],
+  }));
+}
+
 /**
  * The requests waiting for this approver's decision, urgent first and then
  * newest first, including lines and stock availability for decision review.
@@ -49,29 +74,18 @@ export async function listPendingApprovalsService(
     REQUEST_LIST_LIMIT,
   );
 
-  const ids = reqs.map((r) => r.requisitionId);
-  const allLines = ids.length > 0 ? await findRequisitionLinesFor(db, ids) : [];
-
-  const linesByRequisition = new Map<number, typeof allLines>();
-  for (const line of allLines) {
-    const existing = linesByRequisition.get(line.requisitionId) ?? [];
-    existing.push(line);
-    linesByRequisition.set(line.requisitionId, existing);
-  }
-
-  return reqs.map((req) => ({
-    ...req,
-    lines: linesByRequisition.get(req.requisitionId) ?? [],
-  }));
+  return attachLinesToRequisitions(reqs);
 }
 
 /** Requests waiting for the custodian's stock check and reservation. */
-export async function listApprovedForIssueService(): Promise<RequisitionListItemDto[]> {
-  return findRequisitions(
+export async function listApprovedForIssueService(): Promise<RequisitionQueueItemDto[]> {
+  const reqs = await findRequisitions(
     db,
     { statuses: ["approved", "awaiting_stock"] },
     REQUEST_LIST_LIMIT,
   );
+
+  return attachLinesToRequisitions(reqs);
 }
 
 /** All digital requisition forms across the system, newest first. */

@@ -94,6 +94,8 @@ export default async function RequisitionDetailPage({
     itemCode: line.itemCode,
     itemName: line.itemName,
     unit: line.unit,
+    requestedQty: line.requestedQty,
+    unissuedQty: line.unissuedQty,
     reservedQty: line.reservedQty,
     maxQty:
       compareQuantities(line.reservedQty, line.unissuedQty) > 0

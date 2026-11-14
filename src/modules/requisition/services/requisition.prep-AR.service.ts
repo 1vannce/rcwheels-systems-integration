@@ -2,7 +2,10 @@ import "server-only";
 
 import { AppUser, recordAudit, runBusinessEvent } from "@/modules/core";
 import { PrepareAcknowledgementReceiptDto } from "../schemas/requisition.dto";
-import { AR_PREPARABLE_STATUSES, RequisitionListItemDto } from "../types/requisition.dto";
+import {
+  AR_PREPARABLE_STATUSES,
+  RequisitionQueueItemDto,
+} from "../types/requisition.dto";
 import { 
     lockRequisition, 
     findRequisitionLines, 
@@ -12,11 +15,12 @@ import {
     insertDispatch, 
     insertDispatchLines, 
     insertAcknowledgementReceipt,
-    findRequisitionsReadyForAr
+    findRequisitionsReadyForAr,
 } from "../repositories/requisition.repository";
 import { compareQuantities, formatQuantity } from "@/modules/inventory";
 import { notifyRoles } from "@/modules/core";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
+import { attachLinesToRequisitions } from "./requisition.lists.service";
 import { db } from "@/db";
 
 /** Defines How many rows a request list returns before it needs paging. */
@@ -134,6 +138,7 @@ export async function prepareAcknowledgementReceiptService(
 }
 
 /** Requests with reserved stock and no open AR: the AR preparation queue. */
-export async function listReadyForArPreparationService(): Promise<RequisitionListItemDto[]> {
-  return findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
+export async function listReadyForArPreparationService(): Promise<RequisitionQueueItemDto[]> {
+  const reqs = await findRequisitionsReadyForAr(db, REQUEST_LIST_LIMIT);
+  return attachLinesToRequisitions(reqs);
 }
