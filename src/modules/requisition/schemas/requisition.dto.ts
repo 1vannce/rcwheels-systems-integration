@@ -188,3 +188,10 @@ export const DispatchRequisitionDto = z.object({
 });
 
 export type DispatchRequisitionDto = z.infer<typeof DispatchRequisitionDto>;
+
+/** The assigned approver marks a Delivered request Fulfilled (decision 5). */
+export const MarkRequisitionFulfilledDto = z.object({
+  requisitionId: id,
+});
+
+export type MarkRequisitionFulfilledDto = z.infer<typeof MarkRequisitionFulfilledDto>;

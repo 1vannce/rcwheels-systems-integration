@@ -10,6 +10,7 @@
  */
 export { approveRequisitionAction } from "./actions/action.approve-requisition";
 export { dispatchRequisitionAction } from "./actions/action.dispatch-requisition";
+export { markRequisitionFulfilledAction } from "./actions/action.mark-requisition-fulfilled";
 export { prepareAcknowledgementReceiptAction } from "./actions/action.prep-requisition-AR";
 export { rejectRequisitionAction } from "./actions/action.reject-requisition";
 export { reserveRequisitionAction } from "./actions/action.reserve-requisition";
@@ -34,6 +35,12 @@ export {
   dispatchRequisitionService, 
   listReadyForDispatchService 
 } from "./services/requisition.dispatch.service";
+export {
+  cancelRequisitionLineBalance,
+  markRequisitionFulfilledService,
+  settleRequisitionAfterDelivery,
+} from "./services/requisition.delivery.service";
+export type { DeliveryRequisitionParties } from "./services/requisition.delivery.service";
 export { getRequisitionDetailService } from "./services/requisition.get-details.service";
 export { 
   prepareAcknowledgementReceiptService, 
@@ -43,6 +50,11 @@ export { rejectRequisitionService } from "./services/requisition.reject.service"
 export { reserveRequisitionService } from "./services/requisition.reserve.service";
 export { resubmitRequisitionService } from "./services/requisition.resubmit.service";
 export { submitRequisitionService } from "./services/requisition.submit.service";
+
+/**
+ * Pure helpers shared with other modules' services
+ */
+export { formatRfNumber } from "./utils/rf-number.util";
 
 /**
  * DTO Exports

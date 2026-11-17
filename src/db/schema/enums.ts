@@ -57,6 +57,7 @@ export const requisitionStatusEnum = pgEnum("requisition_status", [
   "awaiting_stock",
   "for_delivery",
   "out_for_delivery",
+  "delivered",
   "pending_resolution",
   "fulfilled",
   "cancelled",

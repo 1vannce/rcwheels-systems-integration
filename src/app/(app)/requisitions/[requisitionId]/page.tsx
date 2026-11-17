@@ -12,6 +12,7 @@ import { AR_PREPARABLE_STATUSES } from "@/modules/requisition/types/requisition.
 import { formatRfNumber } from "@/modules/requisition/utils/rf-number.util";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
+import { FulfilButton } from "@/modules/requisition/components/fulfil-button";
 import { RequisitionDetails } from "@/modules/requisition/components/requisition-details";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 import { ReserveForm } from "@/modules/requisition/components/reserve-form";
@@ -88,6 +89,7 @@ export default async function RequisitionDetailPage({
     detail.lines.some((line) => compareQuantities(line.reservedQty, "0") > 0);
 
   const canDispatch = isCustodian && detail.requisition.status === "for_delivery";
+  const canFulfil = isApprover && detail.requisition.status === "delivered";
 
   const arLines = detail.lines.map((line) => ({
     requisitionLineId: line.requisitionLineId,
@@ -129,6 +131,7 @@ export default async function RequisitionDetailPage({
       {canDispatch && (
         <DispatchButton requisitionId={detail.requisition.requisitionId} />
       )}
+      {canFulfil && <FulfilButton requisitionId={detail.requisition.requisitionId} />}
       {canResubmit && items && (
         <RequisitionForm
           autoRfNumber={rfNumber}
