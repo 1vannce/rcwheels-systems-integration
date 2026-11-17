@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listApprovedForIssueService as listApprovedForIssue } from "@/modules/requisition";
 import { IssueQueue } from "@/modules/requisition/components/issue-queue";
@@ -12,12 +13,10 @@ export default async function IssueQueuePage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Issue queue</h1>
-        <p className="text-sm text-muted-foreground">
-          Approved requests waiting for a stock check and reservation.
-        </p>
-      </div>
+      <PageHeader
+        title="Issue queue"
+        description="Approved requests waiting for a stock check. Open one to reserve what is available."
+      />
       <IssueQueue requisitions={requisitions} />
     </>
   );

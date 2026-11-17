@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PageHeader from "@/components/page-header";
 import { notFound } from "next/navigation";
 
 import { requireScreen } from "@/modules/core";
@@ -19,14 +19,16 @@ export default async function ItemStockPage({
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <Link href="/inventory/items" className="text-sm underline underline-offset-4">
-          Back to items
-        </Link>
-        <h1 className="text-2xl font-semibold">
-          {detail.item.itemCode} · {detail.item.itemName}
-        </h1>
-      </div>
+      <PageHeader
+        back={{ href: "/inventory/items", label: "Back to items" }}
+        title={detail.item.itemName}
+        badges={
+          <span className="rounded-sm border bg-card px-2 py-0.5 text-sm font-medium">
+            <span className="sr-only">Item code </span>
+            {detail.item.itemCode}
+          </span>
+        }
+      />
       <StockDetail item={detail.item} movements={detail.movements} />
       {user.role === "inventory_manager" && (
         <ReorderPointForm

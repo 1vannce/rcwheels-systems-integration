@@ -1,3 +1,6 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+
 import { formatQuantity } from "../services/quantity.service";
 import type { SalesDeduction } from "../types/stock.type";
 import { ReverseSaleForm } from "./reverse-sale-form";
@@ -15,13 +18,18 @@ function salesReference(eventKey: string): string {
 
 export function SalesDeductionTable({ deductions }: { deductions: SalesDeduction[] }) {
   if (deductions.length === 0) {
-    return <p className="text-sm text-muted-foreground">No sales deductions yet.</p>;
+    return (
+      <EmptyState
+        title="No sales deductions yet"
+        description="Record a sale with the form above to deduct its items from available stock."
+      />
+    );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted text-left">
+    <div className="overflow-x-auto rounded-lg border bg-card">
+      <table className="data-table">
+        <thead>
           <tr>
             <th className="p-2 font-medium">Posted</th>
             <th className="p-2 font-medium">Sales reference</th>
@@ -33,17 +41,17 @@ export function SalesDeductionTable({ deductions }: { deductions: SalesDeduction
         <tbody className="divide-y">
           {deductions.map((deduction) => (
             <tr key={deduction.movementId}>
-              <td className="p-2">{dateFormat.format(deduction.postedAt)}</td>
-              <td className="p-2">{salesReference(deduction.eventKey)}</td>
+              <td className="p-2 whitespace-nowrap">{dateFormat.format(deduction.postedAt)}</td>
+              <td className="p-2 font-medium">{salesReference(deduction.eventKey)}</td>
               <td className="p-2">
-                {deduction.itemCode} · {deduction.itemName}
+                <span className="font-medium">{deduction.itemCode}</span> {deduction.itemName}
               </td>
               <td className="p-2 text-right tabular-nums">
                 {formatQuantity(deduction.quantity)} {deduction.unit}
               </td>
               <td className="p-2">
                 {deduction.reversedByMovementId ? (
-                  "Reversed"
+                  <StatusBadge tone="closed">Reversed</StatusBadge>
                 ) : (
                   <ReverseSaleForm movementId={deduction.movementId} />
                 )}

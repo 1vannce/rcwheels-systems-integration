@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listReadyForDispatchService as listReadyForDispatch } from "@/modules/requisition";
 import { DispatchQueue } from "@/modules/requisition/components/dispatch-queue";
@@ -12,13 +13,10 @@ export default async function DispatchPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Dispatch</h1>
-        <p className="text-sm text-muted-foreground">
-          Requests with a prepared acknowledgement receipt, waiting to be
-          released.
-        </p>
-      </div>
+      <PageHeader
+        title="Dispatch"
+        description="Requests with a prepared acknowledgement receipt. Dispatch them to deduct the stock and send them out."
+      />
       <DispatchQueue requisitions={requisitions} />
     </>
   );

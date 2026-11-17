@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listReadyForArPreparationService as listReadyForArPreparation } from "@/modules/requisition";
 import { ArPreparationQueue } from "@/modules/requisition/components/ar-preparation-queue";
@@ -12,13 +13,10 @@ export default async function ArPreparationPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">AR preparation</h1>
-        <p className="text-sm text-muted-foreground">
-          Reserved requests that are ready for a dispatch and acknowledgement
-          receipt.
-        </p>
-      </div>
+      <PageHeader
+        title="AR preparation"
+        description="Requests with reserved stock. Prepare an acknowledgement receipt to set them For Delivery."
+      />
       <ArPreparationQueue requisitions={requisitions} />
     </>
   );

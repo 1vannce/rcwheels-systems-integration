@@ -14,14 +14,14 @@ export function ReverseSaleForm({ movementId }: { movementId: number }) {
   return (
     <form action={formAction} className="flex flex-col gap-1.5">
       <input type="hidden" name="movementId" value={movementId} />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           name="reason"
           aria-label="Reason for the reversal"
-          placeholder="Reason"
+          placeholder="Reason for reversing"
           required
           maxLength={300}
-          className="h-7 min-w-40"
+          className="h-7 min-w-40 flex-1"
         />
         <SubmitButton size="sm" variant="outline">
           Reverse

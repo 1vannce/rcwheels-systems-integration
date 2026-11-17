@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import {
   formatQuantity,
@@ -22,13 +23,10 @@ export default async function SalesDeductionsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Sales deductions</h1>
-        <p className="text-sm text-muted-foreground">
-          Deduct sold stock against its sales record. Only available stock can be deducted;
-          stock reserved for requests cannot.
-        </p>
-      </div>
+      <PageHeader
+        title="Sales deductions"
+        description="Deduct sold stock against its sales record. Only available stock can be deducted; stock reserved for requests cannot."
+      />
       <SalesDeductionForm
         today={todayInManila()}
         items={items.map((item) => ({
