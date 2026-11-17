@@ -7,7 +7,7 @@ import { listDeliveriesToAccept } from "@/modules/delivery";
 import { AcceptanceForm } from "@/modules/delivery/components/acceptance-form";
 import { DeliveryQueueTable } from "@/modules/delivery/components/delivery-queue-table";
 
-export const metadata: Metadata = { title: "Acceptance and AR signing | RCWheels" };
+export const metadata: Metadata = { title: "Acceptance and AR signing" };
 
 export default async function AcceptancePage() {
   const user = await requireScreen("delivery-acceptance-and-ar-signing");

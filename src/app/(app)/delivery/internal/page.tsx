@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listInternalDeliveryQueue } from "@/modules/delivery";
 import { DeliveryQueueTable } from "@/modules/delivery/components/delivery-queue-table";
 
-export const metadata: Metadata = { title: "Internal delivery | RCWheels" };
+export const metadata: Metadata = { title: "Internal delivery" };
 
 export default async function InternalDeliveryPage() {
   await requireScreen("delivery-internal-delivery-queue");

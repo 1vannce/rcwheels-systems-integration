@@ -8,7 +8,7 @@ import {
   ReturnsToReceiveTable,
 } from "@/modules/delivery/components/return-tables";
 
-export const metadata: Metadata = { title: "Return inspection | RCWheels" };
+export const metadata: Metadata = { title: "Return inspection" };
 
 export default async function ReturnInspectionPage() {
   const user = await requireScreen("delivery-return-inspection");

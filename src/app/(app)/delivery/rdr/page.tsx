@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listDiscrepancies } from "@/modules/delivery";
 import { DiscrepancyTable } from "@/modules/delivery/components/discrepancy-table";
 
-export const metadata: Metadata = { title: "Requester discrepancies | RCWheels" };
+export const metadata: Metadata = { title: "Requester discrepancies" };
 
 export default async function DiscrepancyReportsPage() {
   const user = await requireScreen("delivery-rdr");
