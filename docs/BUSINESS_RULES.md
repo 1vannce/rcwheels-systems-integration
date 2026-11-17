@@ -60,7 +60,7 @@ flowchart TD
 | BR-AC-02 | The roles are: requester, requisition approver, Inventory Custodian, Inventory Control or Monitoring Manager, Purchasing Staff, Accounting Associate, Delivery or Operations personnel, and system administrator. Each role sees only its own screens and actions. | Proposal; administrator is a prototype addition | Built |
 | BR-AC-03 | The server checks the role on every action. The browser's claim about who the user is, their role, or a stock figure is never trusted. | Proposal | Built |
 | BR-AC-04 | An action or screen refused for role reasons is blocked and written to the audit log. | Plan rule 12 | Built |
-| BR-AC-05 | Mechanics have their own accounts and sign their own Acknowledgement Receipts. | Decision 2 | Planned |
+| BR-AC-05 | Mechanics have their own accounts and sign their own Acknowledgement Receipts. | Decision 2 | Built |
 | BR-AC-06 | A user cannot approve their own requisition, PO, or stock count. | Plan rule 11 | Built for stock counts; Planned for requisitions and POs |
 | BR-AC-07 | Each requester has an assigned approver, and requests route to that person. The approver is a manager, department head, or boss. | Decision 6 | Planned |
 | BR-AC-08 | Only the system administrator creates accounts, assigns roles, and deactivates users. A deactivated user cannot sign in, and their history stays. | Proposed | Planned |
@@ -121,11 +121,11 @@ flowchart TD
 | BR-RQ-07 | An approved RF appears in the Inventory queue (connector A). Nothing is reserved until the Custodian verifies the stock. | Proposal | Planned |
 | BR-RQ-08 | The RF status only summarizes the line quantities. Each line tracks requested, approved, reserved, dispatched, accepted, returned, cancelled, and outstanding quantities. The line quantities are what the system relies on. | PLAN section 7 | Planned |
 | BR-RQ-09 | Unissued need = approved - accepted - in transit. Approved here excludes any separately cancelled quantity. | PLAN section 7 | Planned |
-| BR-RQ-10 | Inventory Control or Monitoring Manager sets For Delivery. The requisition approver marks Fulfilled. | Decision 5 | Planned |
-| BR-RQ-11 | A requisition becomes Fulfilled only when every required quantity is accepted, or the remaining balance is separately cancelled. | Plan rule 5 | Planned |
+| BR-RQ-10 | Inventory Control or Monitoring Manager sets For Delivery. The requisition approver marks Fulfilled, from the proposed Delivered status that means every approved quantity is accepted or cancelled. | Decision 5 | Built (Fulfilled); Planned (For Delivery by the manager) |
+| BR-RQ-11 | A requisition becomes Fulfilled only when every required quantity is accepted, or the remaining balance is separately cancelled. | Plan rule 5 | Built |
 | BR-RQ-12 | A supplier receipt alone never fulfills a requisition. | Plan rule 4 | Planned |
 | BR-RQ-13 | The requisition approver can cancel a remaining request balance. Cancelling a requisition does not cancel a PO. | Plan rule 6 | Planned |
-| BR-RQ-14 | A delivery rejection puts the request in Pending Resolution. It never changes an approved request to Rejected. | Plan rule 7 | Planned |
+| BR-RQ-14 | A delivery rejection puts the request in Pending Resolution. It never changes an approved request to Rejected. | Plan rule 7 | Built |
 | BR-RQ-15 | Every status change writes a status history row with who, when, from, to, and reason. | ERD | Built |
 | BR-RQ-16 | Approving a requisition does not approve a purchase. | Plan rule 1 | Planned |
 
@@ -375,18 +375,18 @@ flowchart TD
 
 | ID | Rule | Basis | Status |
 | --- | --- | --- | --- |
-| BR-DL-01 | Only reserved stock can be dispatched, and only up to the reserved quantity for that requisition line. | Plan rule 8 | Built (stock); Planned (screens) |
-| BR-DL-02 | A dispatch has a delivery person's name and one Acknowledgement Receipt (AR) at most. A dispatch can be partial. | ERD | Planned |
-| BR-DL-03 | A dispatch and its prepared AR appear in the Internal Delivery queue (connector C). | Proposal | Planned |
-| BR-DL-04 | The requester inspects the items and accepts or rejects each line. Partial acceptance is allowed. | Proposal | Planned |
-| BR-DL-05 | Signing an AR means the signed-in requester confirms it. The system stores their identity and the time. There is no drawn signature. | Decisions 2 and 3 | Planned |
+| BR-DL-01 | Only reserved stock can be dispatched, and only up to the reserved quantity for that requisition line. | Plan rule 8 | Built |
+| BR-DL-02 | A dispatch has a delivery person's name and one Acknowledgement Receipt (AR) at most. A dispatch can be partial. | ERD | Built |
+| BR-DL-03 | A dispatch and its prepared AR appear in the Internal Delivery queue (connector C). | Proposal | Built |
+| BR-DL-04 | The requester inspects the items and accepts or rejects each line. Partial acceptance is allowed. | Proposal | Built |
+| BR-DL-05 | Signing an AR means the signed-in requester confirms it. The system stores their identity and the time. There is no drawn signature. | Decisions 2 and 3 | Built |
 | BR-DL-06 | Accepted quantity cannot exceed the quantity still in transit on that line. Each acceptance posts once. | PLAN section 7 | Built |
-| BR-DL-07 | A rejected line needs a Requester Discrepancy Report (RDR) with the problem and the affected quantity. The request moves to Pending Resolution. | Plan rule 7 | Planned |
+| BR-DL-07 | A rejected line needs a Requester Discrepancy Report (RDR) with the problem and the affected quantity. The request moves to Pending Resolution. | Plan rule 7 | Built |
 | BR-DL-08 | Returned items go into Held stock, and a return cannot exceed the quantity in transit. Each return line posts once. | PLAN section 7 | Built |
-| BR-DL-09 | The Custodian inspects each return as usable, damaged, or uncertain. Uncertain stays Held until reinspected. | PLAN section 7 | Built (stock); Planned (screens) |
-| BR-DL-10 | The requisition approver resolves an RDR by approving a replacement or cancelling the quantity. | Proposal | Planned |
-| BR-DL-11 | An approved replacement, and any remaining quantity after partial issue or partial acceptance, goes back to the Inventory queue (connector F). | PLAN section 5 | Planned |
-| BR-DL-12 | The request is Fulfilled only when every required quantity is accepted or the balance is separately cancelled. | Plan rule 5 | Planned |
+| BR-DL-09 | The Custodian inspects each return as usable, damaged, or uncertain. Uncertain stays Held until reinspected. | PLAN section 7 | Built |
+| BR-DL-10 | The requisition approver resolves an RDR by approving a replacement or cancelling the quantity. | Proposal | Built |
+| BR-DL-11 | An approved replacement, and any remaining quantity after partial issue or partial acceptance, goes back to the Inventory queue (connector F). | PLAN section 5 | Built |
+| BR-DL-12 | The request is Fulfilled only when every required quantity is accepted or the balance is separately cancelled. | Plan rule 5 | Built |
 
 ---
 
