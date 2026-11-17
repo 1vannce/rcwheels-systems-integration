@@ -14,7 +14,7 @@ export function AdjustmentDecision({ adjustmentId }: { adjustmentId: number }) {
   return (
     <form action={formAction} className="flex flex-col gap-1.5">
       <input type="hidden" name="adjustmentId" value={adjustmentId} />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <SubmitButton name="decision" value="approve" size="sm">
           Approve
         </SubmitButton>
@@ -23,7 +23,7 @@ export function AdjustmentDecision({ adjustmentId }: { adjustmentId: number }) {
           aria-label="Reason for rejecting"
           placeholder="Reason, if rejecting"
           maxLength={300}
-          className="h-7 min-w-40"
+          className="h-7 min-w-40 flex-1"
         />
         <SubmitButton name="decision" value="reject" size="sm" variant="outline">
           Reject

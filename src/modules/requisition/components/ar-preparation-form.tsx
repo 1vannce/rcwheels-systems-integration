@@ -57,12 +57,18 @@ export function ArPreparationForm({
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="font-medium">Prepare acknowledgement receipt</h2>
+    <form action={formAction} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Prepare acknowledgement receipt</h2>
+        <p className="text-sm text-muted-foreground">
+          Name who delivers the items and how much of each reserved line goes out now. No stock
+          is deducted until the dispatch is released.
+        </p>
+      </div>
       <input type="hidden" name="requisitionId" value={requisitionId} />
       <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex max-w-sm flex-col gap-1.5">
         <Label htmlFor="deliveryPersonnel">Delivery personnel</Label>
         <Input
           id="deliveryPersonnel"
@@ -73,29 +79,27 @@ export function ArPreparationForm({
         />
       </div>
 
-      <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">Partial issue support</p>
-        <p className="mt-0.5">
-          Enter the quantity to dispatch with this Acknowledgement Receipt. If issuing less than the unissued quantity, the remaining balance stays open for subsequent dispatches.
-        </p>
-      </div>
+      <p className="rounded-md border bg-muted/60 px-3 py-2.5 text-sm text-muted-foreground">
+        You can issue less than the unissued quantity. The remaining balance stays open for a
+        later dispatch.
+      </p>
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left">
+      <div className="overflow-x-auto rounded-lg border bg-card">
+        <table className="data-table">
+          <thead>
             <tr>
               <th className="p-2 font-medium">Item</th>
               <th className="p-2 text-right font-medium">Requested</th>
               <th className="p-2 text-right font-medium">Unissued</th>
               <th className="p-2 text-right font-medium">Reserved</th>
-              <th className="p-2 text-right font-medium">Issue Qty</th>
+              <th className="p-2 text-right font-medium">Issue now</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {lines.map((line) => (
               <tr key={line.requisitionLineId}>
                 <td className="p-2">
-                  {line.itemCode} · {line.itemName}{" "}
+                  <span className="font-medium">{line.itemCode}</span> {line.itemName}{" "}
                   <span className="text-muted-foreground">({line.unit})</span>
                 </td>
                 <td className="p-2 text-right tabular-nums text-muted-foreground">
@@ -109,7 +113,7 @@ export function ArPreparationForm({
                 </td>
                 <td className="w-36 p-2 text-right">
                   {!isQuantity(line.maxQty) || compareQuantities(line.maxQty, "0") <= 0 ? (
-                    <span className="text-muted-foreground">Not reserved</span>
+                    <span className="text-sm text-muted-foreground">Not reserved</span>
                   ) : (
                     <Input
                       aria-label={`Quantity to send for ${line.itemName}`}

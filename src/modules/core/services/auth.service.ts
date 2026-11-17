@@ -1,5 +1,6 @@
 import "server-only";
 
+import { brand } from "@/lib/brand";
 import { db } from "@/db";
 import { createClient } from "@/lib/server";
 
@@ -31,7 +32,7 @@ export async function signIn(email: string, password: string): Promise<ActionRes
       details: { reason: "no active RCWheels account for this sign-in" },
     });
 
-    return { ok: false, error: "This account has no access to RCWheels." };
+    return { ok: false, error: `This account has no access to ${brand.name}.` };
   }
 
   await recordAudit(db, {

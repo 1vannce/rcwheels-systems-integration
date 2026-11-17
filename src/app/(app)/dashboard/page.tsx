@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import PageHeader from "@/components/page-header";
 import {
   countUnreadNotifications,
   getNavigationForRole,
   requireScreen,
 } from "@/modules/core";
 
-export const metadata: Metadata = { title: "Dashboard | RCWheels" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 // The dashboard reads the signed-in user at request time, so navigating here
 // waits for that data instead of showing an instant shell.
@@ -22,38 +23,42 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Welcome, {user.fullName}</h1>
-        <p className="text-sm text-muted-foreground">
-          {unreadCount === 0 ? (
-            "You have no unread notifications."
+      <PageHeader
+        title={`Welcome, ${user.fullName}`}
+        description={
+          unreadCount === 0 ? (
+            "You have no unread notifications. Pick a screen below to start work."
           ) : (
-            <Link href="/notifications" className="underline underline-offset-4">
+            <Link
+              href="/notifications"
+              className="font-medium text-primary underline underline-offset-4"
+            >
               You have {unreadCount} unread{" "}
               {unreadCount === 1 ? "notification" : "notifications"}.
             </Link>
-          )}
-        </p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          )
+        }
+      />
+      <div className="grid items-start gap-x-8 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
         {groups.map((group) => (
-          <section
-            key={group.title}
-            className="flex flex-col gap-3 rounded-xl border bg-card p-5 shadow-xs"
-          >
-            <h2 className="font-medium">{group.title}</h2>
-            <ul className="flex flex-col gap-1.5 text-sm">
+          <section key={group.title} className="flex flex-col gap-1">
+            <h2 className="border-b-2 border-foreground/80 pb-1.5 text-lg font-semibold">
+              {group.title}
+            </h2>
+            <ul className="flex flex-col divide-y">
               {group.items.map((item) => (
                 <li key={item.screen}>
                   <Link
                     href={item.href}
-                    className="underline-offset-4 hover:underline"
+                    className="flex items-center justify-between gap-3 rounded-sm px-1 py-2.5 text-sm font-medium hover:bg-muted hover:text-primary"
                   >
                     {item.label}
+                    {!item.isBuilt && (
+                      <span className="text-xs font-normal text-muted-foreground">
+                        Later phase
+                      </span>
+                    )}
                   </Link>
-                  {!item.isBuilt && (
-                    <span className="text-muted-foreground"> (later phase)</span>
-                  )}
                 </li>
               ))}
             </ul>

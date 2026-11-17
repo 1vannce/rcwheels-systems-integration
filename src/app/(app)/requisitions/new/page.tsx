@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen, requireUser } from "@/modules/core";
 import { listItemsWithStock, todayInManila } from "@/modules/inventory";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@/modules/requisition";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 
-export const metadata: Metadata = { title: "New requisition | RCWheels" };
+export const metadata: Metadata = { title: "New requisition" };
 
 export default async function NewRequisitionPage() {
   await requireScreen("requisition-new-rf");
@@ -23,13 +24,10 @@ export default async function NewRequisitionPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">New requisition</h1>
-        <p className="text-sm text-muted-foreground">
-          Your request goes to your assigned approver. Stock is reserved only
-          after approval.
-        </p>
-      </div>
+      <PageHeader
+        title="New requisition"
+        description="Your request goes to your assigned approver. Stock is reserved only after it's approved."
+      />
       <RequisitionForm
         autoRfNumber={autoRfNumber}
         currentUser={user}

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 import {
   markAllNotificationsReadAction,
@@ -18,13 +19,18 @@ export function NotificationList({
   notifications: AppNotification[];
 }) {
   if (notifications.length === 0) {
-    return <p className="text-sm text-muted-foreground">You have no notifications.</p>;
+    return (
+      <EmptyState
+        title="You have no notifications"
+        description="When a request you're involved in changes, or work arrives in your queue, it shows up here."
+      />
+    );
   }
 
   const hasUnread = notifications.some((notification) => !notification.readAt);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {hasUnread && (
         <form action={markAllNotificationsReadAction}>
           <Button type="submit" variant="outline" size="sm">
@@ -32,34 +38,41 @@ export function NotificationList({
           </Button>
         </form>
       )}
-      <ul className="flex flex-col divide-y rounded-lg border">
-        {notifications.map((notification) => (
-          <li
-            key={notification.notificationId}
-            className="flex items-start justify-between gap-4 p-3"
-          >
-            <div className="flex flex-col gap-1">
-              <p className={notification.readAt ? "text-sm" : "text-sm font-medium"}>
-                {notification.message}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {dateFormat.format(notification.createdAt)}
-              </p>
-            </div>
-            {!notification.readAt && (
-              <form action={markNotificationReadAction}>
-                <input
-                  type="hidden"
-                  name="notificationId"
-                  value={notification.notificationId}
-                />
-                <Button type="submit" variant="ghost" size="sm">
-                  Mark as read
-                </Button>
-              </form>
-            )}
-          </li>
-        ))}
+      <ul className="flex flex-col divide-y rounded-lg border bg-card">
+        {notifications.map((notification) => {
+          const isUnread = !notification.readAt;
+
+          return (
+            <li
+              key={notification.notificationId}
+              className={`flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${
+                isUnread ? "shadow-[inset_3px_0_0_var(--primary)]" : ""
+              }`}
+            >
+              <div className="flex flex-col gap-0.5 pl-1">
+                <p className={isUnread ? "text-sm font-medium" : "text-sm text-muted-foreground"}>
+                  {isUnread && <span className="sr-only">Unread: </span>}
+                  {notification.message}
+                </p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {dateFormat.format(notification.createdAt)}
+                </p>
+              </div>
+              {isUnread && (
+                <form action={markNotificationReadAction} className="shrink-0">
+                  <input
+                    type="hidden"
+                    name="notificationId"
+                    value={notification.notificationId}
+                  />
+                  <Button type="submit" variant="ghost" size="sm">
+                    Mark as read
+                  </Button>
+                </form>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

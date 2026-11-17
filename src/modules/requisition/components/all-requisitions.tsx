@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { UrgentBadge } from "@/components/ui/status-badge";
 import type { RequisitionListItemDto, RequisitionStatus } from "../types/requisition.dto";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
 import { formatRfNumber } from "../utils/rf-number.util";
@@ -78,23 +80,23 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
   const tabs =
     mode === "completed"
       ? [
-          { id: "all", label: "All Completed", count: requisitions.filter((r) => ["fulfilled", "rejected", "cancelled"].includes(r.status)).length },
+          { id: "all", label: "All completed", count: requisitions.filter((r) => ["fulfilled", "rejected", "cancelled"].includes(r.status)).length },
           { id: "fulfilled", label: "Fulfilled", count: requisitions.filter((r) => r.status === "fulfilled").length },
           { id: "rejected", label: "Rejected", count: requisitions.filter((r) => r.status === "rejected").length },
           { id: "cancelled", label: "Cancelled", count: requisitions.filter((r) => r.status === "cancelled").length },
         ]
       : mode === "rejected"
       ? [
-          { id: "all", label: "All Rejected", count: requisitions.filter((r) => ["rejected", "pending_resolution"].includes(r.status)).length },
+          { id: "all", label: "All rejected", count: requisitions.filter((r) => ["rejected", "pending_resolution"].includes(r.status)).length },
           { id: "rejected", label: "Rejected", count: requisitions.filter((r) => r.status === "rejected").length },
-          { id: "pending_resolution", label: "Pending Resolution", count: requisitions.filter((r) => r.status === "pending_resolution").length },
+          { id: "pending_resolution", label: "Pending resolution", count: requisitions.filter((r) => r.status === "pending_resolution").length },
         ]
       : [
           { id: "all", label: "All", count: requisitions.length },
-          { id: "pending_approval", label: "Pending Approval", count: requisitions.filter((r) => r.status === "pending_approval").length },
+          { id: "pending_approval", label: "Pending approval", count: requisitions.filter((r) => r.status === "pending_approval").length },
           { id: "approved", label: "Approved", count: requisitions.filter((r) => r.status === "approved").length },
-          { id: "awaiting_stock", label: "Awaiting Stock", count: requisitions.filter((r) => r.status === "awaiting_stock").length },
-          { id: "for_delivery_all", label: "For Delivery", count: requisitions.filter((r) => r.status === "for_delivery" || r.status === "out_for_delivery").length },
+          { id: "awaiting_stock", label: "Awaiting stock", count: requisitions.filter((r) => r.status === "awaiting_stock").length },
+          { id: "for_delivery_all", label: "For delivery", count: requisitions.filter((r) => r.status === "for_delivery" || r.status === "out_for_delivery").length },
           { id: "completed_tab", label: "Completed", count: requisitions.filter((r) => ["fulfilled", "rejected", "cancelled"].includes(r.status)).length },
         ];
 
@@ -110,6 +112,7 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
               variant={selectedTab === tab.id ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedTab(tab.id)}
+              aria-pressed={selectedTab === tab.id}
               className="gap-2"
             >
               {tab.label}
@@ -129,31 +132,33 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
         <div className="w-full sm:w-64">
           <Input
             type="search"
-            placeholder="Search RF#, requester, bay..."
+            placeholder="Search RF number, requester, or location"
+            aria-label="Search requests"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 text-xs"
+            className="h-8"
           />
         </div>
       </div>
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          No requisitions found matching the selected filters.
-        </div>
+        <EmptyState
+          title="No requests match these filters"
+          description="Choose another status or clear the search to see more requests."
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted text-xs font-medium text-muted-foreground">
+        <div className="overflow-x-auto rounded-lg border bg-card">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="p-3 font-medium">RF NUMBER</th>
-                <th className="p-3 font-medium">PRIORITY</th>
-                <th className="p-3 font-medium">SUBMITTED</th>
-                <th className="p-3 font-medium">REQUESTER</th>
-                <th className="p-3 font-medium">DELIVERY</th>
-                <th className="p-3 text-right font-medium">ITEMS</th>
-                <th className="p-3 font-medium">STATUS</th>
+                <th className="p-3 font-medium">RF number</th>
+                <th className="p-3 font-medium">Priority</th>
+                <th className="p-3 font-medium">Submitted</th>
+                <th className="p-3 font-medium">Requester</th>
+                <th className="p-3 font-medium">Delivery</th>
+                <th className="p-3 text-right font-medium">Items</th>
+                <th className="p-3 font-medium">Status</th>
                 <th className="p-3 text-right font-medium">
                   <span className="sr-only">Action</span>
                 </th>
@@ -170,7 +175,7 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
                     <td className="p-3 align-top whitespace-nowrap">
                       <Link
                         href={`/requisitions/${req.requisitionId}`}
-                        className="font-medium underline underline-offset-4"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
                       >
                         {rfNumber}
                       </Link>
@@ -179,9 +184,7 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
                     {/* Priority */}
                     <td className="p-3 align-top whitespace-nowrap">
                       {req.isUrgent ? (
-                        <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                          URGENT
-                        </span>
+                        <UrgentBadge />
                       ) : (
                         <span className="text-xs text-muted-foreground">Normal</span>
                       )}
@@ -197,7 +200,7 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
                       <p className="font-medium">{req.submittedByName}</p>
                       {recipientIsDifferent && (
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          for <span className="font-medium text-foreground">{req.requesterName}</span> [Mechanic]
+                          for <span className="font-medium text-foreground">{req.requesterName}</span> (mechanic)
                         </p>
                       )}
                     </td>

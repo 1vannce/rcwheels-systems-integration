@@ -14,9 +14,9 @@ function FormMessage({
     return (
       <div
         role="alert"
-        className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+        className="flex items-start gap-2 rounded-md border border-destructive/25 bg-destructive/8 px-3 py-2.5 text-sm text-destructive"
       >
-        <AlertCircle className="size-4 shrink-0" />
+        <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         <span>{result.error}</span>
       </div>
     );
@@ -25,9 +25,9 @@ function FormMessage({
   return result.message ? (
     <div
       role="status"
-      className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-300"
+      className="flex items-start gap-2 rounded-md border border-emerald-600/25 bg-emerald-500/8 px-3 py-2.5 text-sm font-medium text-emerald-800 dark:text-emerald-200"
     >
-      <CheckCircle2 className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+      <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-emerald-700 dark:text-emerald-300" />
       <span>{result.message}</span>
     </div>
   ) : null;

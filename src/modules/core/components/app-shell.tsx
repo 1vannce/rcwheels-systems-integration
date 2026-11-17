@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { brand } from "@/lib/brand";
 import { usePathname } from "next/navigation";
 import { BellIcon } from "lucide-react";
 
@@ -47,8 +49,8 @@ export function AppShell({
         navigation={navigation}
         unreadCount={unreadCount}
       />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+      <SidebarInset className="md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-sidebar-border">
+        <header className="sticky top-0 z-10 flex md:rounded-t-xl h-14 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
           <div className="flex min-w-0 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
@@ -59,7 +61,7 @@ export function AppShell({
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink render={<Link href="/dashboard" />}>
-                    RCWheels
+                    {brand.name}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
@@ -78,17 +80,19 @@ export function AppShell({
                 aria-label={`${unreadCount} unread ${
                   unreadCount === 1 ? "notification" : "notifications"
                 }`}
-                className="relative inline-flex size-9 items-center justify-center rounded-lg hover:bg-muted"
+                className="relative inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <BellIcon aria-hidden="true" className="size-4" />
-                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] leading-4 text-primary-foreground">
+                <span className="absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-primary px-1 text-center text-[10px] font-semibold leading-4 tabular-nums text-primary-foreground">
                   {unreadCount}
                 </span>
               </Link>
             </div>
           )}
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4">{children}</main>
+        <main className="flex w-full max-w-[1440px] flex-1 flex-col gap-5 px-4 py-5 md:px-6 md:py-6">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

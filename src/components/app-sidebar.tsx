@@ -1,8 +1,11 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { CircleDotIcon } from "lucide-react";
+
+import wordmarkLight from "@/assets/ubecmags-wordmark-light.png";
+import { BrandMark } from "@/components/brand-mark";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -16,6 +19,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { brand } from "@/lib/brand";
 import type { NavigationGroup } from "@/modules/core";
 
 export function AppSidebar({
@@ -37,15 +41,19 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="RCWheels"
+              tooltip={brand.name}
+              className="h-auto py-2 group-data-[collapsible=icon]:py-0"
               render={<Link href="/dashboard" />}
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <CircleDotIcon className="size-4" aria-hidden="true" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">RCWheels</span>
-                <span className="truncate text-xs">Business management</span>
+              <BrandMark className="hidden group-data-[collapsible=icon]:block" />
+              <div className="flex flex-col gap-1.5 group-data-[collapsible=icon]:hidden">
+                <Image
+                  src={wordmarkLight}
+                  alt={brand.name}
+                  priority
+                  className="h-8 w-auto"
+                />
+                <span className="text-xs text-sidebar-foreground/60">{brand.tagline}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

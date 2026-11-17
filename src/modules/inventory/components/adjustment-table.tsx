@@ -1,3 +1,6 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+
 import { formatQuantity, subtractQuantities } from "../services/quantity.service";
 import type { StockAdjustment } from "../types/stock.type";
 import { AdjustmentDecision } from "./adjustment-decision";
@@ -20,15 +23,20 @@ export function AdjustmentTable({
   currentUserId: number;
 }) {
   if (adjustments.length === 0) {
-    return <p className="text-sm text-muted-foreground">No stock counts recorded yet.</p>;
+    return (
+      <EmptyState
+        title="No stock counts recorded yet"
+        description="When a physical count differs from the system balance, the Custodian records it here for an Inventory Manager to approve."
+      />
+    );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted text-left">
+    <div className="overflow-x-auto rounded-lg border bg-card">
+      <table className="data-table">
+        <thead>
           <tr>
-            <th className="p-2 font-medium">Counted</th>
+            <th className="p-2 font-medium">Date</th>
             <th className="p-2 font-medium">Item</th>
             <th className="p-2 font-medium">Balance</th>
             <th className="p-2 text-right font-medium">Recorded</th>
@@ -48,9 +56,9 @@ export function AdjustmentTable({
 
             return (
               <tr key={adjustment.adjustmentId}>
-                <td className="p-2">{dateFormat.format(adjustment.countedAt)}</td>
+                <td className="p-2 whitespace-nowrap">{dateFormat.format(adjustment.countedAt)}</td>
                 <td className="p-2">
-                  {adjustment.itemCode} · {adjustment.itemName}
+                  <span className="font-medium">{adjustment.itemCode}</span> {adjustment.itemName}
                 </td>
                 <td className="p-2">{conditionLabels[adjustment.condition]}</td>
                 <td className="p-2 text-right tabular-nums">
@@ -59,7 +67,7 @@ export function AdjustmentTable({
                 <td className="p-2 text-right tabular-nums">
                   {formatQuantity(adjustment.countedQty)}
                 </td>
-                <td className="p-2 text-right tabular-nums">
+                <td className="p-2 text-right font-semibold tabular-nums">
                   {difference.startsWith("-") ? "" : "+"}
                   {formatQuantity(difference)}
                 </td>
@@ -72,10 +80,17 @@ export function AdjustmentTable({
                     <AdjustmentDecision adjustmentId={adjustment.adjustmentId} />
                   ) : (
                     <>
-                      {adjustment.status === "pending" && "Waiting for approval"}
-                      {adjustment.status === "approved" &&
-                        `Approved by ${adjustment.approvedByName}`}
-                      {adjustment.status === "rejected" && "Rejected"}
+                      {adjustment.status === "pending" && (
+                        <StatusBadge tone="waiting">Waiting for approval</StatusBadge>
+                      )}
+                      {adjustment.status === "approved" && (
+                        <StatusBadge tone="done">
+                          Approved by {adjustment.approvedByName}
+                        </StatusBadge>
+                      )}
+                      {adjustment.status === "rejected" && (
+                        <StatusBadge tone="stopped">Rejected</StatusBadge>
+                      )}
                     </>
                   )}
                 </td>
