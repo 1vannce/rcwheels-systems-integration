@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CircleDotIcon } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -40,12 +39,19 @@ export function AppSidebar({
               tooltip="RCWheels"
               render={<Link href="/dashboard" />}
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <CircleDotIcon className="size-4" aria-hidden="true" />
+              <div
+                aria-hidden="true"
+                className="flex aspect-square size-8 items-center justify-center rounded-sm bg-signal text-[0.8rem] font-bold tracking-tight text-[oklch(0.22_0.04_45)] [font-stretch:80%]"
+              >
+                RC
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">RCWheels</span>
-                <span className="truncate text-xs">Business management</span>
+              <div className="grid flex-1 text-left leading-tight">
+                <span className="truncate text-[0.95rem] font-semibold [font-stretch:85%]">
+                  RCWheels
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Stockroom and requisitions
+                </span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
