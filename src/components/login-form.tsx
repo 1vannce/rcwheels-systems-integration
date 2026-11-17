@@ -42,7 +42,7 @@ export function LoginForm({
             id="email"
             name="email"
             type="email"
-            placeholder="name@rcwheels.example"
+            placeholder="name@rcwheels.test"
             autoComplete="username"
             className="h-9"
             required
