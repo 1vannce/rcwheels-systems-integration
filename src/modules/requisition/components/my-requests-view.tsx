@@ -86,13 +86,13 @@ const BOARD_COLUMNS: BoardColumn[] = [
   {
     id: "approved",
     label: "Approved",
-    dotClass: "bg-blue-600",
+    dotClass: "bg-neutral-900 dark:bg-neutral-100",
     statuses: ["approved", "awaiting_stock"],
   },
   {
     id: "delivery",
     label: "For delivery",
-    dotClass: "bg-blue-400",
+    dotClass: "bg-neutral-400",
     statuses: ["for_delivery", "out_for_delivery"],
   },
   {

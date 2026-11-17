@@ -102,7 +102,7 @@ export function NavMain({ groups }: { groups: NavigationGroup[] }) {
                     <span>{item.label}</span>
                   </SidebarMenuButton>
                   {!item.isBuilt && (
-                    <SidebarMenuBadge className="font-normal text-muted-foreground group-data-[collapsible=icon]:hidden">
+                    <SidebarMenuBadge className="font-normal text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
                       Later
                     </SidebarMenuBadge>
                   )}

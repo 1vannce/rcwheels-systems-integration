@@ -41,7 +41,7 @@ export function AppSidebar({
             >
               <div
                 aria-hidden="true"
-                className="flex aspect-square size-8 items-center justify-center rounded-sm bg-signal text-[0.8rem] font-bold tracking-tight text-[oklch(0.22_0.04_45)] [font-stretch:80%]"
+                className="flex aspect-square size-8 items-center justify-center rounded-sm bg-signal text-[0.8rem] font-bold tracking-tight text-white [font-stretch:80%]"
               >
                 RC
               </div>
@@ -49,9 +49,10 @@ export function AppSidebar({
                 <span className="truncate text-[0.95rem] font-semibold [font-stretch:85%]">
                   RCWheels
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-xs text-sidebar-foreground/60">
                   Stockroom and requisitions
                 </span>
+                <span aria-hidden="true" className="speed-stripe mt-1.5" />
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -58,9 +58,9 @@ export function NavUser({
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{name}</span>
-              <span className="truncate text-xs text-muted-foreground">{roleLabel}</span>
+              <span className="truncate text-xs text-sidebar-foreground/60">{roleLabel}</span>
             </div>
-            <ChevronsUpDownIcon aria-hidden="true" className="ml-auto size-4 text-muted-foreground" />
+            <ChevronsUpDownIcon aria-hidden="true" className="ml-auto size-4 text-sidebar-foreground/60" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"

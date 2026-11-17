@@ -5,13 +5,13 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * RCWheels visual system
+ * Visual system, taken from the Ubec Mags logo
  *
- * Form paper   cool off-white page, white sheets for records
- * Graphite     blue-grey ink for text, never pure black
- * Ballpoint    the one action colour: links, primary buttons, focus
- * Steel        sidebar and quiet surfaces (the parts cabinet)
- * Signal       safety orange, reserved for urgent requests and the brand mark
+ * Black        the wordmark: sidebar frame and primary buttons
+ * White        record sheets on a neutral light-grey page
+ * Racing red   the logo's speed bar: brand mark, active navigation, focus,
+ *              urgent requests, and unread counts. Never a whole button.
+ * Mags grey    the "MAGS" lettering: secondary text
  *
  * Type is one variable family (IBM Plex Sans). Page titles and document
  * numbers use the condensed end of its width axis; everything else is the
@@ -65,81 +65,80 @@
 }
 
 :root {
-  /* Form paper #F6F7F9 and white record sheets */
-  --background: oklch(0.977 0.003 250);
+  --background: oklch(0.97 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.27 0.02 255);
+  --card-foreground: oklch(0.205 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.27 0.02 255);
-  /* Graphite ink #1F2937-ish */
-  --foreground: oklch(0.27 0.02 255);
-  /* Ballpoint blue #2C4DB3 */
-  --primary: oklch(0.47 0.16 266);
-  --primary-foreground: oklch(0.985 0.005 266);
-  --secondary: oklch(0.95 0.006 250);
-  --secondary-foreground: oklch(0.27 0.02 255);
-  --muted: oklch(0.955 0.005 250);
-  --muted-foreground: oklch(0.49 0.02 255);
-  --accent: oklch(0.945 0.025 266);
-  --accent-foreground: oklch(0.36 0.13 266);
-  --destructive: oklch(0.54 0.2 27);
-  --border: oklch(0.9 0.008 250);
-  --input: oklch(0.85 0.012 250);
-  --ring: oklch(0.55 0.16 266);
-  /* Signal orange #E35F12; text-strength variant for small type */
-  --signal: oklch(0.65 0.19 45);
-  --signal-foreground: oklch(0.5 0.15 42);
-  --chart-1: oklch(0.47 0.16 266);
-  --chart-2: oklch(0.6 0.13 160);
-  --chart-3: oklch(0.7 0.15 75);
-  --chart-4: oklch(0.65 0.19 45);
-  --chart-5: oklch(0.49 0.02 255);
-  --radius: 0.4rem;
-  /* Steel cabinet #E9EDF1 */
-  --sidebar: oklch(0.945 0.008 250);
-  --sidebar-foreground: oklch(0.3 0.02 255);
-  --sidebar-primary: oklch(0.47 0.16 266);
-  --sidebar-primary-foreground: oklch(0.985 0.005 266);
-  --sidebar-accent: oklch(0.985 0.003 250);
-  --sidebar-accent-foreground: oklch(0.36 0.13 266);
-  --sidebar-border: oklch(0.88 0.01 250);
-  --sidebar-ring: oklch(0.55 0.16 266);
+  --popover-foreground: oklch(0.205 0 0);
+  /* Ink #171717 for reading; pure black is kept for surfaces */
+  --foreground: oklch(0.205 0 0);
+  --primary: oklch(0 0 0);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.945 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.955 0 0);
+  /* Mags grey #6E6E6E */
+  --muted-foreground: oklch(0.52 0 0);
+  --accent: oklch(0.945 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.55 0.22 27);
+  --border: oklch(0.905 0 0);
+  --input: oklch(0.86 0 0);
+  /* Racing red #E10600 */
+  --ring: oklch(0.6 0.24 29);
+  --signal: oklch(0.6 0.24 29);
+  --signal-foreground: oklch(0.52 0.21 28);
+  --chart-1: oklch(0.205 0 0);
+  --chart-2: oklch(0.6 0.24 29);
+  --chart-3: oklch(0.52 0 0);
+  --chart-4: oklch(0.75 0 0);
+  --chart-5: oklch(0.42 0.15 27);
+  --radius: 0.5rem;
+  /* The black frame around the work area */
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.93 0 0);
+  --sidebar-primary: oklch(0.6 0.24 29);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.24 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.6 0.24 29);
 }
 
 .dark {
-  --background: oklch(0.2 0.012 255);
-  --foreground: oklch(0.94 0.006 250);
-  --card: oklch(0.235 0.014 255);
-  --card-foreground: oklch(0.94 0.006 250);
-  --popover: oklch(0.25 0.014 255);
-  --popover-foreground: oklch(0.94 0.006 250);
-  --primary: oklch(0.74 0.12 266);
-  --primary-foreground: oklch(0.2 0.04 266);
-  --secondary: oklch(0.29 0.014 255);
-  --secondary-foreground: oklch(0.94 0.006 250);
-  --muted: oklch(0.28 0.013 255);
-  --muted-foreground: oklch(0.73 0.015 250);
-  --accent: oklch(0.31 0.04 266);
-  --accent-foreground: oklch(0.88 0.06 266);
-  --destructive: oklch(0.7 0.18 25);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 17%);
-  --ring: oklch(0.68 0.12 266);
-  --signal: oklch(0.72 0.17 50);
-  --signal-foreground: oklch(0.8 0.14 55);
-  --chart-1: oklch(0.74 0.12 266);
-  --chart-2: oklch(0.72 0.13 160);
-  --chart-3: oklch(0.8 0.14 80);
-  --chart-4: oklch(0.72 0.17 50);
-  --chart-5: oklch(0.73 0.015 250);
-  --sidebar: oklch(0.225 0.013 255);
-  --sidebar-foreground: oklch(0.9 0.006 250);
-  --sidebar-primary: oklch(0.74 0.12 266);
-  --sidebar-primary-foreground: oklch(0.2 0.04 266);
-  --sidebar-accent: oklch(0.29 0.02 260);
-  --sidebar-accent-foreground: oklch(0.94 0.03 266);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.68 0.12 266);
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.18 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.2 0 0);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(1 0 0);
+  --primary-foreground: oklch(0 0 0);
+  --secondary: oklch(0.25 0 0);
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.23 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.26 0 0);
+  --accent-foreground: oklch(0.95 0 0);
+  --destructive: oklch(0.68 0.2 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.66 0.22 29);
+  --signal: oklch(0.64 0.23 29);
+  --signal-foreground: oklch(0.74 0.17 27);
+  --chart-1: oklch(0.95 0 0);
+  --chart-2: oklch(0.66 0.22 29);
+  --chart-3: oklch(0.72 0 0);
+  --chart-4: oklch(0.5 0 0);
+  --chart-5: oklch(0.55 0.16 27);
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.93 0 0);
+  --sidebar-primary: oklch(0.66 0.22 29);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0 0);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.66 0.22 29);
 }
 
 @layer base {
@@ -169,6 +168,23 @@
 }
 
 @layer components {
+  /*
+   * The speed stripe from the logo: a red bar that breaks into three slanted
+   * cuts. Used once per surface, under the brand.
+   */
+  .speed-stripe {
+    height: 4px;
+    width: 4.5rem;
+    background:
+      linear-gradient(var(--signal), var(--signal)) left / 62% 100% no-repeat,
+      repeating-linear-gradient(
+          115deg,
+          transparent 0 3px,
+          var(--signal) 3px 7px
+        )
+        right / 34% 100% no-repeat;
+  }
+
   /*
    * Data tables. Headers are quiet sentence-case labels over a single rule;
    * rows separate with hairlines, and every cell uses tabular figures so

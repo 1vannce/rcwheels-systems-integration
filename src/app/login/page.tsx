@@ -24,6 +24,7 @@ export default function LoginPage() {
             <span className="text-xs text-muted-foreground">
               Stockroom and requisitions
             </span>
+            <span aria-hidden="true" className="speed-stripe mt-1.5" />
           </div>
         </div>
         <div className="flex flex-1 items-center justify-center py-8">

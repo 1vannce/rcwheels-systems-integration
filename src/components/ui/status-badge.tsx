@@ -10,12 +10,13 @@ export type StatusTone = "waiting" | "active" | "done" | "review" | "stopped" | 
 const toneClasses: Record<StatusTone, string> = {
   waiting:
     "bg-amber-50 text-amber-900 before:bg-amber-500 dark:bg-amber-400/10 dark:text-amber-200",
-  active: "bg-blue-50 text-blue-900 before:bg-blue-600 dark:bg-blue-400/10 dark:text-blue-200",
+  active:
+    "bg-neutral-100 text-neutral-900 before:bg-neutral-900 dark:bg-white/10 dark:text-neutral-100 dark:before:bg-neutral-100",
   done:
     "bg-emerald-50 text-emerald-900 before:bg-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-200",
   review:
     "bg-violet-50 text-violet-900 before:bg-violet-600 dark:bg-violet-400/10 dark:text-violet-200",
-  stopped: "bg-red-50 text-red-900 before:bg-red-600 dark:bg-red-400/10 dark:text-red-200",
+  stopped: "bg-red-50 text-red-900 before:bg-red-800 dark:bg-red-400/10 dark:text-red-200",
   closed: "bg-muted text-muted-foreground before:bg-muted-foreground/60",
 };
 
@@ -47,14 +48,14 @@ export function StatusBadge({
 }
 
 /**
- * The urgent marker. Safety orange is reserved for this one meaning across
- * the app, so an urgent request stands out in any list.
+ * The urgent marker. Racing red marks urgency across the app, so an urgent
+ * request stands out in any list.
  */
 export function UrgentBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-sm bg-signal px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-[oklch(0.22_0.04_45)]",
+        "inline-flex items-center rounded-sm bg-signal px-1.5 py-0.5 text-xs font-semibold whitespace-nowrap text-white",
         className,
       )}
     >
