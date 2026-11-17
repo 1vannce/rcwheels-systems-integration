@@ -55,14 +55,20 @@ export function ReserveForm({
   const nothingReservable = lines.every((line) => Number(line.maxQty) <= 0);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="font-medium">Reserve stock</h2>
+    <form action={formAction} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Reserve stock</h2>
+        <p className="text-sm text-muted-foreground">
+          Each line starts at the most you can reserve now. Lower a quantity to hold back stock;
+          whatever stays unreserved waits for more stock.
+        </p>
+      </div>
       <input type="hidden" name="requisitionId" value={requisitionId} />
       <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted text-left">
+      <div className="overflow-x-auto rounded-lg border bg-card">
+        <table className="data-table">
+          <thead>
             <tr>
               <th className="p-2 font-medium">Item</th>
               <th className="p-2 text-right font-medium">Needed</th>
@@ -74,14 +80,14 @@ export function ReserveForm({
             {lines.map((line) => (
               <tr key={line.requisitionLineId}>
                 <td className="p-2">
-                  {line.itemCode} · {line.itemName}{" "}
+                  <span className="font-medium">{line.itemCode}</span> {line.itemName}{" "}
                   <span className="text-muted-foreground">({line.unit})</span>
                 </td>
-                <td className="p-2 text-right tabular-nums">{formatQuantity(line.needQty)}</td>
+                <td className="p-2 text-right font-medium tabular-nums">{formatQuantity(line.needQty)}</td>
                 <td className="p-2 text-right tabular-nums">{formatQuantity(line.availableQty)}</td>
                 <td className="w-36 p-2 text-right">
                   {Number(line.maxQty) <= 0 ? (
-                    <span className="text-muted-foreground">None to reserve</span>
+                    <span className="text-sm text-muted-foreground">None to reserve</span>
                   ) : (
                     <Input
                       aria-label={`Quantity to reserve for ${line.itemName}`}

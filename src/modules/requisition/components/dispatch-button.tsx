@@ -16,12 +16,12 @@ export function DispatchButton({ requisitionId }: { requisitionId: number }) {
   const [result, formAction] = useActionState(dispatchRequisitionAction, null);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="font-medium">Dispatch</h2>
+    <form action={formAction} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+      <h2 className="text-lg font-semibold">Dispatch items</h2>
       <input type="hidden" name="requisitionId" value={requisitionId} />
       <p className="text-sm text-muted-foreground">
-        Releasing the dispatch deducts the sent quantities from stock and marks the request Out for
-        Delivery.
+        Dispatching deducts the prepared quantities from stock and marks the request Out for
+        Delivery. Do this when the items leave the stockroom.
       </p>
       <FormMessage result={result} />
       <div>

@@ -10,8 +10,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { approveRequisitionAction } from "../actions/action.approve-requisition";
 import { rejectRequisitionAction } from "../actions/action.reject-requisition";
 
-const textareaClass =
-  "min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const textareaClass = "field-control min-h-16 py-1.5";
 
 /** One line the approver decides, with the quantity they may reduce. */
 export type ApprovalLine = {
@@ -53,16 +52,21 @@ export function ApprovalDecision({
   }));
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border p-4">
-      <h2 className="font-medium">Decision</h2>
+    <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Your decision</h2>
+        <p className="text-sm text-muted-foreground">
+          Approve the quantities below, lowering any you can&apos;t justify, or reject the request with a reason.
+        </p>
+      </div>
 
       <form action={approveAction} className="flex flex-col gap-3">
         <input type="hidden" name="requisitionId" value={requisitionId} />
         <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left">
+        <div className="overflow-x-auto rounded-lg border bg-card">
+          <table className="data-table">
+            <thead>
               <tr>
                 <th className="p-2 font-medium">Item</th>
                 <th className="p-2 text-right font-medium">Requested</th>
@@ -73,7 +77,7 @@ export function ApprovalDecision({
               {lines.map((line) => (
                 <tr key={line.requisitionLineId}>
                   <td className="p-2">
-                    {line.itemCode} · {line.itemName}{" "}
+                    <span className="font-medium">{line.itemCode}</span> {line.itemName}{" "}
                     <span className="text-muted-foreground">({line.unit})</span>
                   </td>
                   <td className="p-2 text-right tabular-nums">
@@ -102,14 +106,14 @@ export function ApprovalDecision({
 
         <FormMessage result={approveResult} />
         <div>
-          <SubmitButton>Approve</SubmitButton>
+          <SubmitButton>Approve request</SubmitButton>
         </div>
       </form>
 
-      <form action={rejectAction} className="flex flex-col gap-3 border-t pt-3">
+      <form action={rejectAction} className="flex flex-col gap-3 border-t pt-4">
         <input type="hidden" name="requisitionId" value={requisitionId} />
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="reason">Reason</Label>
+          <Label htmlFor="reason">Reason for rejecting</Label>
           <textarea
             id="reason"
             name="reason"
@@ -117,12 +121,12 @@ export function ApprovalDecision({
             rows={2}
             maxLength={300}
             className={textareaClass}
-            placeholder="Why this request is rejected"
+            placeholder="What the requester needs to change"
           />
         </div>
         <FormMessage result={rejectResult} />
         <div>
-          <SubmitButton variant="destructive">Reject</SubmitButton>
+          <SubmitButton variant="destructive">Reject request</SubmitButton>
         </div>
       </form>
     </div>

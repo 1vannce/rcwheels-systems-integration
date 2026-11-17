@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listCompletedRequisitionsService as listCompletedRequisitions } from "@/modules/requisition";
 import { AllRequisitions } from "@/modules/requisition/components/all-requisitions";
@@ -12,12 +13,10 @@ export default async function CompletedRequisitionsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Completed Requests</h1>
-        <p className="text-sm text-muted-foreground">
-          Historical view of fulfilled, cancelled, and rejected requisitions.
-        </p>
-      </div>
+      <PageHeader
+        title="Completed requests"
+        description="Requests that are fulfilled, cancelled, or rejected. Open one to see its full history."
+      />
       <AllRequisitions requisitions={requisitions} mode="completed" />
     </>
   );

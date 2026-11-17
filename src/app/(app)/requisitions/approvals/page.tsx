@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import {
   listPendingApprovalsService as listPendingApprovals,
@@ -14,13 +15,10 @@ export default async function ApprovalQueuePage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Requisition Approvals</h1>
-        <p className="text-sm text-muted-foreground">
-          Urgent requests are ranked first. Approval never authorizes a
-          purchase — that stays with Accounting.
-        </p>
-      </div>
+      <PageHeader
+        title="Approval queue"
+        description="Requests assigned to you, urgent ones first. Approving a request never authorizes a purchase; Accounting decides that separately."
+      />
       <ApprovalQueue requisitions={requisitions} />
     </>
   );

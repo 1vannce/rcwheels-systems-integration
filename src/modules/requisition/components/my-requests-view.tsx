@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import { LayoutGrid, List, Eye, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { UrgentBadge } from "@/components/ui/status-badge";
 import type { RequisitionListItemDto, RequisitionStatus } from "../types/requisition.dto";
 import { formatRfNumber } from "../utils/rf-number.util";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
@@ -45,12 +47,12 @@ type TabDef = { id: TabId; label: string };
 
 const TABS: TabDef[] = [
   { id: "all", label: "All" },
-  { id: "pending_approval", label: "Pending Approval" },
+  { id: "pending_approval", label: "Pending approval" },
   { id: "approved", label: "Approved" },
-  { id: "awaiting_stock", label: "Awaiting Stock" },
-  { id: "for_delivery", label: "For Delivery" },
+  { id: "awaiting_stock", label: "Awaiting stock" },
+  { id: "for_delivery", label: "For delivery" },
   { id: "fulfilled", label: "Fulfilled" },
-  { id: "pending_resolution", label: "Pending Resolution" },
+  { id: "pending_resolution", label: "Pending resolution" },
   { id: "rejected", label: "Rejected" },
   { id: "cancelled", label: "Cancelled" },
 ];
@@ -77,25 +79,25 @@ type BoardColumn = {
 const BOARD_COLUMNS: BoardColumn[] = [
   {
     id: "pending",
-    label: "Pending Approval",
+    label: "Pending approval",
     dotClass: "bg-amber-500",
     statuses: ["pending_approval"],
   },
   {
     id: "approved",
     label: "Approved",
-    dotClass: "bg-sky-500",
+    dotClass: "bg-blue-600",
     statuses: ["approved", "awaiting_stock"],
   },
   {
     id: "delivery",
-    label: "For Delivery",
-    dotClass: "bg-sky-400",
+    label: "For delivery",
+    dotClass: "bg-blue-400",
     statuses: ["for_delivery", "out_for_delivery"],
   },
   {
     id: "attention",
-    label: "Needs Attention",
+    label: "Needs attention",
     dotClass: "bg-destructive",
     statuses: ["pending_resolution", "rejected"],
   },
@@ -126,11 +128,11 @@ function stockAllocationLabel(status: RequisitionStatus): string {
     case "out_for_delivery":
       return "Reserved";
     case "awaiting_stock":
-      return "Awaiting Stock (Shortfall PR issued)";
+      return "Awaiting stock, shortfall PR issued";
     case "pending_resolution":
       return "Discrepancy under review";
     case "fulfilled":
-      return "Issued & accepted";
+      return "Issued and accepted";
     case "rejected":
       return "No allocation";
     case "cancelled":
@@ -235,26 +237,27 @@ export function MyRequestsView({ requisitions }: MyRequestsViewProps) {
       {/* Top bar: search + controls */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
-        <div className="flex-1 min-w-48 max-w-xs">
+        <div className="min-w-48 max-w-xs flex-1">
           <Input
             type="search"
-            placeholder="Search RF number (RF-202611-001), requester, item..."
+            placeholder="Search RF number, requester, or purpose"
+            aria-label="Search requests"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 text-xs"
+            className="h-9"
           />
         </div>
 
         {/* Urgent Only toggle */}
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          {/* Simple toggle switch */}
+        <div className="flex items-center gap-2">
           <button
+            id="urgent-only"
             type="button"
             role="switch"
             aria-checked={urgentOnly}
             onClick={() => setUrgentOnly((v) => !v)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              urgentOnly ? "bg-primary" : "bg-input"
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              urgentOnly ? "bg-signal" : "bg-input"
             }`}
           >
             <span
@@ -263,57 +266,66 @@ export function MyRequestsView({ requisitions }: MyRequestsViewProps) {
               }`}
             />
           </button>
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Urgent Only</span>
-        </label>
+          <label
+            htmlFor="urgent-only"
+            className="cursor-pointer text-sm whitespace-nowrap text-muted-foreground select-none"
+          >
+            Urgent only
+          </label>
+        </div>
 
         {/* Date range */}
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <input
             type="date"
+            aria-label="Submitted from"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="h-9 rounded-md border border-input bg-transparent px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="field-control h-9 w-auto px-2"
           />
           <span className="text-xs">to</span>
           <input
             type="date"
+            aria-label="Submitted to"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="h-9 rounded-md border border-input bg-transparent px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="field-control h-9 w-auto px-2"
           />
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center rounded-md border border-input bg-transparent overflow-hidden ml-auto">
+        <div role="group" aria-label="Layout" className="ml-auto flex items-center overflow-hidden rounded-md border border-input bg-card">
           <button
             type="button"
             onClick={() => setView("board")}
-            className={`flex items-center gap-1.5 px-3 h-9 text-xs font-medium transition-colors ${
+            aria-pressed={view === "board"}
+            className={`flex h-9 items-center gap-1.5 px-3 text-sm font-medium transition-colors focus-visible:relative focus-visible:outline-2 focus-visible:outline-ring ${
               view === "board"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
+            <LayoutGrid aria-hidden="true" className="h-3.5 w-3.5" />
             Board
           </button>
           <button
             type="button"
             onClick={() => setView("list")}
-            className={`flex items-center gap-1.5 px-3 h-9 text-xs font-medium transition-colors ${
+            aria-pressed={view === "list"}
+            className={`flex h-9 items-center gap-1.5 px-3 text-sm font-medium transition-colors focus-visible:relative focus-visible:outline-2 focus-visible:outline-ring ${
               view === "list"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted"
             }`}
           >
-            <List className="h-3.5 w-3.5" />
+            <List aria-hidden="true" className="h-3.5 w-3.5" />
             List
           </button>
         </div>
       </div>
 
       {/* Status tabs */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div role="group" aria-label="Filter by status" className="flex flex-wrap items-center gap-1.5">
         {TABS.map((tab) => {
           const count = tabCount(tab.id);
           const isActive = selectedTab === tab.id;
@@ -322,7 +334,8 @@ export function MyRequestsView({ requisitions }: MyRequestsViewProps) {
               key={tab.id}
               type="button"
               onClick={() => setSelectedTab(tab.id)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              aria-pressed={isActive}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -360,25 +373,26 @@ export function MyRequestsView({ requisitions }: MyRequestsViewProps) {
 function ListView({ items }: { items: RequisitionListItemDto[] }) {
   if (items.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">
-        No requisitions match the selected filters.
-      </div>
+      <EmptyState
+        title="No requests match these filters"
+        description="Choose another status, clear the dates, or turn off urgent only."
+      />
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-muted text-xs font-medium text-muted-foreground">
+    <div className="overflow-x-auto rounded-lg border bg-card">
+      <table className="data-table">
+        <thead>
           <tr>
-            <th className="p-3 font-medium whitespace-nowrap">RF NUMBER</th>
-            <th className="p-3 font-medium whitespace-nowrap">DATE &amp; TIME SUBMITTED</th>
-            <th className="p-3 font-medium whitespace-nowrap">REQUESTER</th>
-            <th className="p-3 font-medium">ITEMS SUMMARY</th>
-            <th className="p-3 font-medium whitespace-nowrap">URGENCY</th>
-            <th className="p-3 font-medium whitespace-nowrap">STATUS</th>
-            <th className="p-3 font-medium whitespace-nowrap">STOCK ALLOCATION</th>
-            <th className="p-3 font-medium whitespace-nowrap text-right">ACTIONS</th>
+            <th className="p-3 font-medium whitespace-nowrap">RF number</th>
+            <th className="p-3 font-medium whitespace-nowrap">Submitted</th>
+            <th className="p-3 font-medium whitespace-nowrap">Requester</th>
+            <th className="p-3 font-medium">Items</th>
+            <th className="p-3 font-medium whitespace-nowrap">Priority</th>
+            <th className="p-3 font-medium whitespace-nowrap">Status</th>
+            <th className="p-3 font-medium whitespace-nowrap">Stock allocation</th>
+            <th className="p-3 font-medium whitespace-nowrap text-right">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -395,7 +409,7 @@ function ListView({ items }: { items: RequisitionListItemDto[] }) {
                 <td className="p-3 align-middle whitespace-nowrap">
                   <Link
                     href={`/requisitions/${req.requisitionId}`}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
                   >
                     {rfNumber}
                   </Link>
@@ -418,9 +432,9 @@ function ListView({ items }: { items: RequisitionListItemDto[] }) {
                 <td className="p-3 align-middle">
                   <p className="font-medium text-sm">{req.submittedByName}</p>
                   {isForSomeoneElse && (
-                    <span className="mt-0.5 inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      for {req.requesterName} [Mechanic]
-                    </span>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      for <span className="font-medium text-foreground">{req.requesterName}</span> (mechanic)
+                    </p>
                   )}
                 </td>
 
@@ -435,9 +449,7 @@ function ListView({ items }: { items: RequisitionListItemDto[] }) {
                 {/* Urgency */}
                 <td className="p-3 align-middle whitespace-nowrap">
                   {req.isUrgent ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-                      🔥 URGENT
-                    </span>
+                    <UrgentBadge />
                   ) : (
                     <span className="text-xs text-muted-foreground">Normal</span>
                   )}
@@ -459,10 +471,10 @@ function ListView({ items }: { items: RequisitionListItemDto[] }) {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 gap-1 text-xs"
+                      
                       render={<Link href={`/requisitions/${req.requisitionId}`} />}
                     >
-                      <Eye className="h-3 w-3" />
+                      <Eye aria-hidden="true" className="h-3 w-3" />
                       View
                     </Button>
 
@@ -492,7 +504,7 @@ function BoardView({ items }: { items: RequisitionListItemDto[] }) {
         return (
           <div
             key={col.id}
-            className="w-72 flex-shrink-0 rounded-xl border bg-muted/40"
+            className="w-72 flex-shrink-0 rounded-lg border bg-muted/50"
           >
             {/* Column header */}
             <div className="flex items-center justify-between px-3 py-2.5 border-b">
@@ -509,11 +521,11 @@ function BoardView({ items }: { items: RequisitionListItemDto[] }) {
             <div className="flex flex-col gap-2 p-2 max-h-[70vh] overflow-y-auto">
               {colItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-1.5 py-10 text-center">
-                  <FileText className="h-7 w-7 text-muted-foreground/40" />
-                  <p className="text-xs text-muted-foreground">Nothing here yet</p>
+                  <FileText aria-hidden="true" className="h-6 w-6 text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground">No requests</p>
                   {col.id === "delivery" && (
                     <p className="text-[10px] text-muted-foreground/70">
-                      Authorized and on the way to the shop
+                      Reserved stock with an AR, or already sent
                     </p>
                   )}
                   {col.id === "cancelled" && (
@@ -556,15 +568,13 @@ function BoardCard({ req }: { req: RequisitionListItemDto }) {
   return (
     <Link
       href={`/requisitions/${req.requisitionId}`}
-      className="block rounded-lg border bg-background p-3 hover:shadow-sm hover:border-primary/30 transition-all"
+      className="block rounded-md border bg-card p-3 transition-colors hover:border-primary/40"
     >
       {/* RF + urgency */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <span className="text-[11px] font-mono text-muted-foreground">{rfNumber}</span>
+        <span className="text-xs font-semibold text-primary">{rfNumber}</span>
         {req.isUrgent && (
-          <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
-            🔥 Urgent
-          </span>
+          <UrgentBadge />
         )}
       </div>
 
@@ -581,9 +591,7 @@ function BoardCard({ req }: { req: RequisitionListItemDto }) {
 
       {/* For mechanic tag */}
       {isForSomeoneElse && (
-        <span className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary mb-1.5">
-          for {req.requesterName}
-        </span>
+        <p className="mb-1.5 text-xs text-muted-foreground">for {req.requesterName}</p>
       )}
 
       {/* Status badge (for awaiting_stock, pending_resolution) */}
@@ -622,7 +630,7 @@ function BoardCard({ req }: { req: RequisitionListItemDto }) {
             req.status === "pending_resolution" ? "text-destructive" : "text-muted-foreground"
           }`}
         >
-          📅 {shortDateFormat.format(new Date(req.submittedAt))}
+          {shortDateFormat.format(new Date(req.submittedAt))}
         </span>
       </div>
     </Link>

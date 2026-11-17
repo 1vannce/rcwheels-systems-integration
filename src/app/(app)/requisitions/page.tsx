@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import PageHeader from "@/components/page-header";
 import { requireUser, roleCanAccessScreen } from "@/modules/core";
 import { listAllRequisitionsService as listAllRequisitions } from "@/modules/requisition";
 import { MyRequestsView } from "@/modules/requisition/components/my-requests-view";
@@ -17,12 +18,10 @@ export default async function AllRequisitionsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Material Requisitions</h1>
-        <p className="text-sm text-muted-foreground">
-          Digital Requisition Forms with live status and stock allocation.
-        </p>
-      </div>
+      <PageHeader
+        title="All requisitions"
+        description="Every requisition form with its current status and stock allocation."
+      />
       <MyRequestsView requisitions={requisitions} />
     </>
   );

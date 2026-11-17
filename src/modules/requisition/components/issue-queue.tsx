@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UrgentBadge } from "@/components/ui/status-badge";
 
 import type { RequisitionQueueItemDto } from "../types/requisition.dto";
 import { formatQuantity, compareQuantities } from "../utils/quantity.util";
@@ -65,12 +66,13 @@ export function IssueQueue({
       {/* Search and Filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search aria-hidden="true" className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search RF number, requester, or item..."
+            placeholder="Search RF number, requester, or item"
+            aria-label="Search requests"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 text-sm"
+            className="pl-8"
           />
         </div>
 
@@ -78,34 +80,34 @@ export function IssueQueue({
           <Button
             size="sm"
             variant={tab === "all" ? "default" : "outline"}
-            className="h-8 text-xs"
+            aria-pressed={tab === "all"}
             onClick={() => setTab("all")}
           >
-            All <span className="ml-1 opacity-70">({requisitions.length})</span>
+            All <span className="tabular-nums opacity-75">{requisitions.length}</span>
           </Button>
           <Button
             size="sm"
             variant={tab === "urgent" ? "default" : "outline"}
-            className="h-8 text-xs"
+            aria-pressed={tab === "urgent"}
             onClick={() => setTab("urgent")}
           >
-            Urgent <span className="ml-1 opacity-70">({urgentCount})</span>
+            Urgent <span className="tabular-nums opacity-75">{urgentCount}</span>
           </Button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-xs font-medium text-muted-foreground">
+      <div className="overflow-x-auto rounded-lg border bg-card">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="p-3 font-medium">RF NUMBER</th>
-              <th className="p-3 font-medium">PRIORITY</th>
-              <th className="p-3 font-medium">SUBMITTED</th>
-              <th className="p-3 font-medium">REQUESTER</th>
-              <th className="p-3 font-medium">ITEMS &amp; STOCK</th>
-              <th className="p-3 font-medium">STATUS</th>
-              <th className="p-3 text-right font-medium">ACTION</th>
+              <th className="p-3 font-medium">RF number</th>
+              <th className="p-3 font-medium">Priority</th>
+              <th className="p-3 font-medium">Submitted</th>
+              <th className="p-3 font-medium">Requester</th>
+              <th className="p-3 font-medium">Items and stock</th>
+              <th className="p-3 font-medium">Status</th>
+              <th className="p-3 text-right font-medium">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -113,7 +115,7 @@ export function IssueQueue({
               <tr>
                 <td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">
                   {requisitions.length === 0
-                    ? "No requests are waiting for a stock check."
+                    ? "No approved requests are waiting for a stock check. New ones appear here as soon as an approver signs off."
                     : "No requests match your current search or filter."}
                 </td>
               </tr>
@@ -129,7 +131,7 @@ export function IssueQueue({
                     <td className="p-3 align-top whitespace-nowrap">
                       <Link
                         href={`/requisitions/${req.requisitionId}`}
-                        className="font-medium underline underline-offset-4"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
                       >
                         {rfNumber}
                       </Link>
@@ -138,9 +140,7 @@ export function IssueQueue({
                     {/* Priority */}
                     <td className="p-3 align-top whitespace-nowrap">
                       {req.isUrgent ? (
-                        <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                          URGENT
-                        </span>
+                        <UrgentBadge />
                       ) : (
                         <span className="text-xs text-muted-foreground">Normal</span>
                       )}
@@ -156,7 +156,7 @@ export function IssueQueue({
                       <p className="font-medium">{req.submittedByName}</p>
                       {recipientIsDifferent ? (
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          for <span className="font-medium text-foreground">{req.requesterName}</span> [Mechanic]
+                          for <span className="font-medium text-foreground">{req.requesterName}</span> (mechanic)
                         </p>
                       ) : (
                         req.deliveryLocation && (
@@ -191,7 +191,7 @@ export function IssueQueue({
                                 <span className="font-medium">{l.itemCode}</span>
                                 <span>×{reqQty}</span>
                                 <span
-                                  className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                                  className={`rounded-full px-1.5 text-[11px] font-medium ${
                                     fullStock
                                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                                       : partialStock
@@ -200,10 +200,10 @@ export function IssueQueue({
                                   }`}
                                 >
                                   {fullStock
-                                    ? `avail: ${availQty}`
+                                    ? `${availQty} available`
                                     : partialStock
-                                      ? `partial: ${availQty}`
-                                      : "shortage"}
+                                      ? `only ${availQty} available`
+                                      : "out of stock"}
                                 </span>
                               </span>
                             );
@@ -222,11 +222,9 @@ export function IssueQueue({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 gap-1 text-xs"
                         render={<Link href={`/requisitions/${req.requisitionId}`} />}
                       >
-                        Check &amp; Reserve
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        Check stock
                       </Button>
                     </td>
                   </tr>
