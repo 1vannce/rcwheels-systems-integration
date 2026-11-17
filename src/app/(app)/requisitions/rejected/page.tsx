@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listRejectedRequisitionsService as listRejectedRequisitions } from "@/modules/requisition";
 import { AllRequisitions } from "@/modules/requisition/components/all-requisitions";
 
-export const metadata: Metadata = { title: "Rejected reviews | RCWheels" };
+export const metadata: Metadata = { title: "Rejected reviews" };
 
 export default async function RejectedReviewsPage() {
   await requireScreen("requisition-rejected-reviews");

@@ -9,7 +9,7 @@ import {
 } from "@/modules/requisition";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 
-export const metadata: Metadata = { title: "New requisition | RCWheels" };
+export const metadata: Metadata = { title: "New requisition" };
 
 export default async function NewRequisitionPage() {
   await requireScreen("requisition-new-rf");

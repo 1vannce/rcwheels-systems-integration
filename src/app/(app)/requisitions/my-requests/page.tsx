@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { listMyRequestsService as listMyRequests } from "@/modules/requisition";
 import { MyRequestsView } from "@/modules/requisition/components/my-requests-view";
 
-export const metadata: Metadata = { title: "My requests | RCWheels" };
+export const metadata: Metadata = { title: "My requests" };
 
 export default async function MyRequestsPage() {
   const user = await requireScreen("requisition-my-requests");

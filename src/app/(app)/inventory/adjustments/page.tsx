@@ -6,7 +6,7 @@ import { listAdjustments, listItemsWithStock } from "@/modules/inventory";
 import { AdjustmentForm } from "@/modules/inventory/components/adjustment-form";
 import { AdjustmentTable } from "@/modules/inventory/components/adjustment-table";
 
-export const metadata: Metadata = { title: "Adjustments | RCWheels" };
+export const metadata: Metadata = { title: "Adjustments" };
 
 export default async function AdjustmentsPage() {
   const user = await requireScreen("inventory-adjustments");

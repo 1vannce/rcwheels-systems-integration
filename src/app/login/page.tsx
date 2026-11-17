@@ -2,30 +2,19 @@ import type { Metadata } from "next"
 import Image from "next/image"
 
 import magsWallpeper from "@/assets/magswallpaper.jpg"
-import ubecmagsLogo from "@/assets/ubecmags.jpg"
+import wordmark from "@/assets/ubecmags-wordmark.png"
 import { LoginForm } from "@/components/login-form"
+import { brand } from "@/lib/brand"
 
-export const metadata: Metadata = { title: "Sign in | RCWheels" }
+export const metadata: Metadata = { title: "Sign in" }
 
 export default function LoginPage() {
   return (
     <div className="grid min-h-svh bg-background lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center overflow-hidden rounded-sm bg-primary">
-            <Image
-              src={ubecmagsLogo}
-              alt=""
-              className="size-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-lg font-semibold [font-stretch:85%]">RCWheels</span>
-            <span className="text-xs text-muted-foreground">
-              Stockroom and requisitions
-            </span>
-            <span aria-hidden="true" className="speed-stripe mt-1.5" />
-          </div>
+        <div className="flex flex-col gap-2">
+          <Image src={wordmark} alt={brand.name} priority className="h-11 w-auto self-start" />
+          <span className="text-xs text-muted-foreground">{brand.tagline}</span>
         </div>
         <div className="flex flex-1 items-center justify-center py-8">
           <div className="w-full max-w-sm">

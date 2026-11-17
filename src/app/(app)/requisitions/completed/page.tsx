@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listCompletedRequisitionsService as listCompletedRequisitions } from "@/modules/requisition";
 import { AllRequisitions } from "@/modules/requisition/components/all-requisitions";
 
-export const metadata: Metadata = { title: "Completed requests | RCWheels" };
+export const metadata: Metadata = { title: "Completed requests" };
 
 export default async function CompletedRequisitionsPage() {
   await requireScreen("requisition-completed");

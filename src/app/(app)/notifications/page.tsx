@@ -4,7 +4,7 @@ import PageHeader from "@/components/page-header";
 import { listNotifications, requireScreen } from "@/modules/core";
 import { NotificationList } from "@/modules/core/components/notification-list";
 
-export const metadata: Metadata = { title: "Notifications | RCWheels" };
+export const metadata: Metadata = { title: "Notifications" };
 
 export default async function NotificationsPage() {
   const user = await requireScreen("notifications");

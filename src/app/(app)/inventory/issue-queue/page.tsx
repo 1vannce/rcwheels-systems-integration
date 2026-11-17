@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listApprovedForIssueService as listApprovedForIssue } from "@/modules/requisition";
 import { IssueQueue } from "@/modules/requisition/components/issue-queue";
 
-export const metadata: Metadata = { title: "Issue queue | RCWheels" };
+export const metadata: Metadata = { title: "Issue queue" };
 
 export default async function IssueQueuePage() {
   await requireScreen("inventory-issue-queue");

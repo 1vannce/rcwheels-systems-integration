@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listReadyForArPreparationService as listReadyForArPreparation } from "@/modules/requisition";
 import { ArPreparationQueue } from "@/modules/requisition/components/ar-preparation-queue";
 
-export const metadata: Metadata = { title: "AR preparation | RCWheels" };
+export const metadata: Metadata = { title: "AR preparation" };
 
 export default async function ArPreparationPage() {
   await requireScreen("inventory-ar-preparation");

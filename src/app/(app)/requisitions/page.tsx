@@ -6,7 +6,7 @@ import { requireUser, roleCanAccessScreen } from "@/modules/core";
 import { listAllRequisitionsService as listAllRequisitions } from "@/modules/requisition";
 import { MyRequestsView } from "@/modules/requisition/components/my-requests-view";
 
-export const metadata: Metadata = { title: "Material Requisitions | RCWheels" };
+export const metadata: Metadata = { title: "Material Requisitions" };
 
 export default async function AllRequisitionsPage() {
   const user = await requireUser();

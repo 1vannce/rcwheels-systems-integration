@@ -11,7 +11,7 @@ import {
 import { SalesDeductionForm } from "@/modules/inventory/components/sales-deduction-form";
 import { SalesDeductionTable } from "@/modules/inventory/components/sales-deduction-table";
 
-export const metadata: Metadata = { title: "Sales deductions | RCWheels" };
+export const metadata: Metadata = { title: "Sales deductions" };
 
 export default async function SalesDeductionsPage() {
   await requireScreen("inventory-sales-deductions");

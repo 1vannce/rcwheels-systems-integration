@@ -5,7 +5,7 @@ import { requireScreen } from "@/modules/core";
 import { listReadyForDispatchService as listReadyForDispatch } from "@/modules/requisition";
 import { DispatchQueue } from "@/modules/requisition/components/dispatch-queue";
 
-export const metadata: Metadata = { title: "Dispatch | RCWheels" };
+export const metadata: Metadata = { title: "Dispatch" };
 
 export default async function DispatchPage() {
   await requireScreen("inventory-dispatch");

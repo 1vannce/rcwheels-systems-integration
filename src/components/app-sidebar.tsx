@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
+
+import wordmarkLight from "@/assets/ubecmags-wordmark-light.png";
+import { BrandMark } from "@/components/brand-mark";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -15,6 +19,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { brand } from "@/lib/brand";
 import type { NavigationGroup } from "@/modules/core";
 
 export function AppSidebar({
@@ -36,23 +41,19 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="RCWheels"
+              tooltip={brand.name}
+              className="h-auto py-2 group-data-[collapsible=icon]:py-0"
               render={<Link href="/dashboard" />}
             >
-              <div
-                aria-hidden="true"
-                className="flex aspect-square size-8 items-center justify-center rounded-sm bg-signal text-[0.8rem] font-bold tracking-tight text-white [font-stretch:80%]"
-              >
-                RC
-              </div>
-              <div className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-[0.95rem] font-semibold [font-stretch:85%]">
-                  RCWheels
-                </span>
-                <span className="truncate text-xs text-sidebar-foreground/60">
-                  Stockroom and requisitions
-                </span>
-                <span aria-hidden="true" className="speed-stripe mt-1.5" />
+              <BrandMark className="hidden group-data-[collapsible=icon]:block" />
+              <div className="flex flex-col gap-1.5 group-data-[collapsible=icon]:hidden">
+                <Image
+                  src={wordmarkLight}
+                  alt={brand.name}
+                  priority
+                  className="h-8 w-auto"
+                />
+                <span className="text-xs text-sidebar-foreground/60">{brand.tagline}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

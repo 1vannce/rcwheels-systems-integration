@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { IBM_Plex_Sans } from "next/font/google";
+import { brand } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 // One variable family. Body text uses the normal width; page titles and
@@ -12,8 +13,9 @@ const plexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "RCWheels",
-  description: "RCWheels Business Management System (prototype)",
+  // Pages set only their own name; the brand is added here once.
+  title: { template: `%s | ${brand.name}`, default: brand.name },
+  description: `${brand.name} business management system (prototype)`,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

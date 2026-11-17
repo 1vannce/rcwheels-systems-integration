@@ -168,22 +168,6 @@
 }
 
 @layer components {
-  /*
-   * The speed stripe from the logo: a red bar that breaks into three slanted
-   * cuts. Used once per surface, under the brand.
-   */
-  .speed-stripe {
-    height: 4px;
-    width: 4.5rem;
-    background:
-      linear-gradient(var(--signal), var(--signal)) left / 62% 100% no-repeat,
-      repeating-linear-gradient(
-          115deg,
-          transparent 0 3px,
-          var(--signal) 3px 7px
-        )
-        right / 34% 100% no-repeat;
-  }
 
   /*
    * Data tables. Headers are quiet sentence-case labels over a single rule;

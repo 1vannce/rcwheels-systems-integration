@@ -7,7 +7,7 @@ import {
 } from "@/modules/requisition";
 import { ApprovalQueue } from "@/modules/requisition/components/approval-queue";
 
-export const metadata: Metadata = { title: "Approval queue | RCWheels" };
+export const metadata: Metadata = { title: "Approval queue" };
 
 export default async function ApprovalQueuePage() {
   const user = await requireScreen("requisition-approval-queue");

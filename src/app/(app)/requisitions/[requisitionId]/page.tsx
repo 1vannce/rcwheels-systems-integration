@@ -16,7 +16,7 @@ import { RequisitionDetails } from "@/modules/requisition/components/requisition
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 import { ReserveForm } from "@/modules/requisition/components/reserve-form";
 
-export const metadata: Metadata = { title: "Request | RCWheels" };
+export const metadata: Metadata = { title: "Request" };
 
 export default async function RequisitionDetailPage({
   params,

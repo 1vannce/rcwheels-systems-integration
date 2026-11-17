@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { brand } from "@/lib/brand";
 import { usePathname } from "next/navigation";
 import { BellIcon } from "lucide-react";
 
@@ -59,7 +61,7 @@ export function AppShell({
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink render={<Link href="/dashboard" />}>
-                    RCWheels
+                    {brand.name}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />

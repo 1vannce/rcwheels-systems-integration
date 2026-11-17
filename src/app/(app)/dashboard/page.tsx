@@ -8,7 +8,7 @@ import {
   requireScreen,
 } from "@/modules/core";
 
-export const metadata: Metadata = { title: "Dashboard | RCWheels" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 // The dashboard reads the signed-in user at request time, so navigating here
 // waits for that data instead of showing an instant shell.
