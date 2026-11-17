@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listReturnLinesToInspect, listReturnsToReceive } from "@/modules/delivery";
 import {
@@ -18,13 +19,10 @@ export default async function ReturnInspectionPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Return inspection</h1>
-        <p className="text-sm text-muted-foreground">
-          Receive rejected items into held stock, then inspect them as usable, damaged, or
-          uncertain.
-        </p>
-      </div>
+      <PageHeader
+        title="Return inspection"
+        description={"Receive rejected items into held stock, then inspect them as usable, damaged, or uncertain."}
+      />
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">To receive</h2>
         <ReturnsToReceiveTable

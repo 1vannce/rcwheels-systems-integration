@@ -18,7 +18,7 @@ export function ReturnsToReceiveTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
+      <table className="data-table text-left">
         <thead className="bg-muted text-xs text-muted-foreground">
           <tr>
             <th className="p-3 font-medium">Request</th>
@@ -90,7 +90,7 @@ export function ReturnsToInspectTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
+      <table className="data-table text-left">
         <thead className="bg-muted text-xs text-muted-foreground">
           <tr>
             <th className="p-3 font-medium">Request</th>

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { UrgentBadge } from "@/components/ui/status-badge";
+
 import type { PendingDelivery } from "../types/delivery.type";
 import { formatDateTime } from "../utils/date.util";
 import { formatQuantity } from "../utils/quantity.util";
@@ -17,7 +19,7 @@ export function DeliveryQueueTable({
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-left text-sm">
+      <table className="data-table text-left">
         <thead className="bg-muted text-xs text-muted-foreground">
           <tr>
             <th className="p-3 font-medium">Request</th>
@@ -44,11 +46,7 @@ export function DeliveryQueueTable({
                   >
                     {delivery.rfNumber}
                   </Link>
-                  {delivery.isUrgent && (
-                    <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">
-                      Urgent
-                    </p>
-                  )}
+                  {delivery.isUrgent && <UrgentBadge className="mt-1" />}
                 </td>
                 <td className="p-3">
                   <p className="font-medium">{delivery.requesterName}</p>

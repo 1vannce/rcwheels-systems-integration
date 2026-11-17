@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { requireScreen } from "@/modules/core";
 import { listDeliveriesToAccept } from "@/modules/delivery";
 import { AcceptanceForm } from "@/modules/delivery/components/acceptance-form";
@@ -14,20 +16,20 @@ export default async function AcceptancePage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Acceptance and AR signing</h1>
-        <p className="text-sm text-muted-foreground">
-          {canSign
+      <PageHeader
+        title="Acceptance and AR signing"
+        description={
+          canSign
             ? "Check the items you received, accept what is right, and sign the acknowledgement receipt."
-            : "Deliveries waiting for the requester to accept and sign the acknowledgement receipt."}
-        </p>
-      </div>
+            : "Deliveries waiting for the requester to accept and sign the acknowledgement receipt."
+        }
+      />
       {canSign ? (
         deliveries.length === 0 ? (
-          <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-            No deliveries are waiting for you. Items on their way to you appear here once
-            dispatched.
-          </p>
+          <EmptyState
+            title="No deliveries are waiting for you"
+            description="Items on their way to you appear here once the stockroom dispatches them."
+          />
         ) : (
           <div className="flex flex-col gap-4">
             {deliveries.map((delivery) => (

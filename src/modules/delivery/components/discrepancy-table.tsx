@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
+
 import type { InternalDiscrepancy, InternalDiscrepancyStatus } from "../types/delivery.type";
 import { formatDateTime } from "../utils/date.util";
 import { formatQuantity } from "../utils/quantity.util";
@@ -11,11 +14,10 @@ const statusLabels: Record<InternalDiscrepancyStatus, string> = {
   cancelled: "Cancelled",
 };
 
-const statusTones: Record<InternalDiscrepancyStatus, string> = {
-  pending_resolution: "border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400",
-  replacement_approved:
-    "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  cancelled: "border-border bg-muted text-muted-foreground",
+const statusTones: Record<InternalDiscrepancyStatus, StatusTone> = {
+  pending_resolution: "review",
+  replacement_approved: "active",
+  cancelled: "closed",
 };
 
 /**
@@ -31,9 +33,10 @@ export function DiscrepancyTable({
 }) {
   if (discrepancies.length === 0) {
     return (
-      <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-        No discrepancy reports. Rejected items on a delivery show up here.
-      </p>
+      <EmptyState
+        title="No discrepancy reports"
+        description="Items a requester rejects on delivery show up here."
+      />
     );
   }
 
@@ -59,11 +62,7 @@ export function DiscrepancyTable({
                   Reported by {rdr.reportedByName}, {formatDateTime(rdr.reportedAt)}
                 </p>
               </div>
-              <span
-                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${statusTones[rdr.status]}`}
-              >
-                {statusLabels[rdr.status]}
-              </span>
+              <StatusBadge tone={statusTones[rdr.status]}>{statusLabels[rdr.status]}</StatusBadge>
             </div>
 
             <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
