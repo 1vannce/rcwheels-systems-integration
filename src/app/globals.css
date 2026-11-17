@@ -4,12 +4,28 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * RCWheels visual system
+ *
+ * Form paper   cool off-white page, white sheets for records
+ * Graphite     blue-grey ink for text, never pure black
+ * Ballpoint    the one action colour: links, primary buttons, focus
+ * Steel        sidebar and quiet surfaces (the parts cabinet)
+ * Signal       safety orange, reserved for urgent requests and the brand mark
+ *
+ * Type is one variable family (IBM Plex Sans). Page titles and document
+ * numbers use the condensed end of its width axis; everything else is the
+ * normal width. Quantities always use tabular figures.
+ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-heading);
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas, monospace;
+  --font-heading: var(--font-sans);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,72 +65,81 @@
 }
 
 :root {
+  /* Form paper #F6F7F9 and white record sheets */
+  --background: oklch(0.977 0.003 250);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.27 0.02 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.27 0.02 255);
+  /* Graphite ink #1F2937-ish */
+  --foreground: oklch(0.27 0.02 255);
+  /* Ballpoint blue #2C4DB3 */
+  --primary: oklch(0.47 0.16 266);
+  --primary-foreground: oklch(0.985 0.005 266);
+  --secondary: oklch(0.95 0.006 250);
+  --secondary-foreground: oklch(0.27 0.02 255);
+  --muted: oklch(0.955 0.005 250);
+  --muted-foreground: oklch(0.49 0.02 255);
+  --accent: oklch(0.945 0.025 266);
+  --accent-foreground: oklch(0.36 0.13 266);
+  --destructive: oklch(0.54 0.2 27);
+  --border: oklch(0.9 0.008 250);
+  --input: oklch(0.85 0.012 250);
+  --ring: oklch(0.55 0.16 266);
+  /* Signal orange #E35F12; text-strength variant for small type */
+  --signal: oklch(0.65 0.19 45);
+  --signal-foreground: oklch(0.5 0.15 42);
+  --chart-1: oklch(0.47 0.16 266);
+  --chart-2: oklch(0.6 0.13 160);
+  --chart-3: oklch(0.7 0.15 75);
+  --chart-4: oklch(0.65 0.19 45);
+  --chart-5: oklch(0.49 0.02 255);
+  --radius: 0.4rem;
+  /* Steel cabinet #E9EDF1 */
+  --sidebar: oklch(0.945 0.008 250);
+  --sidebar-foreground: oklch(0.3 0.02 255);
+  --sidebar-primary: oklch(0.47 0.16 266);
+  --sidebar-primary-foreground: oklch(0.985 0.005 266);
+  --sidebar-accent: oklch(0.985 0.003 250);
+  --sidebar-accent-foreground: oklch(0.36 0.13 266);
+  --sidebar-border: oklch(0.88 0.01 250);
+  --sidebar-ring: oklch(0.55 0.16 266);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.2 0.012 255);
+  --foreground: oklch(0.94 0.006 250);
+  --card: oklch(0.235 0.014 255);
+  --card-foreground: oklch(0.94 0.006 250);
+  --popover: oklch(0.25 0.014 255);
+  --popover-foreground: oklch(0.94 0.006 250);
+  --primary: oklch(0.74 0.12 266);
+  --primary-foreground: oklch(0.2 0.04 266);
+  --secondary: oklch(0.29 0.014 255);
+  --secondary-foreground: oklch(0.94 0.006 250);
+  --muted: oklch(0.28 0.013 255);
+  --muted-foreground: oklch(0.73 0.015 250);
+  --accent: oklch(0.31 0.04 266);
+  --accent-foreground: oklch(0.88 0.06 266);
+  --destructive: oklch(0.7 0.18 25);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 17%);
+  --ring: oklch(0.68 0.12 266);
+  --signal: oklch(0.72 0.17 50);
+  --signal-foreground: oklch(0.8 0.14 55);
+  --chart-1: oklch(0.74 0.12 266);
+  --chart-2: oklch(0.72 0.13 160);
+  --chart-3: oklch(0.8 0.14 80);
+  --chart-4: oklch(0.72 0.17 50);
+  --chart-5: oklch(0.73 0.015 250);
+  --sidebar: oklch(0.225 0.013 255);
+  --sidebar-foreground: oklch(0.9 0.006 250);
+  --sidebar-primary: oklch(0.74 0.12 266);
+  --sidebar-primary-foreground: oklch(0.2 0.04 266);
+  --sidebar-accent: oklch(0.29 0.02 260);
+  --sidebar-accent-foreground: oklch(0.94 0.03 266);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.68 0.12 266);
 }
 
 @layer base {
@@ -126,5 +151,88 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Titles use the condensed width of the same family, like a printed form heading. */
+  h1,
+  h2 {
+    font-stretch: 85%;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  a:focus-visible,
+  summary:focus-visible,
+  [role="switch"]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /*
+   * Data tables. Headers are quiet sentence-case labels over a single rule;
+   * rows separate with hairlines, and every cell uses tabular figures so
+   * quantities line up down a column.
+   */
+  .data-table {
+    width: 100%;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+  }
+  .data-table thead {
+    background: var(--muted);
+  }
+  .data-table th {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+    vertical-align: bottom;
+  }
+  .data-table tbody tr {
+    border-color: var(--border);
+  }
+  .data-table tbody tr:hover {
+    background: color-mix(in oklch, var(--muted) 55%, transparent);
+  }
+
+  /* Native select and textarea, matched to the Input primitive. */
+  .field-control {
+    width: 100%;
+    min-height: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--input);
+    background: var(--card);
+    padding: 0.25rem 0.625rem;
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 120ms, box-shadow 120ms;
+  }
+  .field-control::placeholder {
+    color: var(--muted-foreground);
+  }
+  .field-control:focus-visible {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 30%, transparent);
+  }
+  .field-control:disabled,
+  .field-control[readonly] {
+    cursor: not-allowed;
+    background: var(--muted);
+    color: var(--muted-foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
