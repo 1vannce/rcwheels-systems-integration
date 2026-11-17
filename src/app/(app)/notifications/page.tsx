@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { listNotifications, requireScreen } from "@/modules/core";
 import { NotificationList } from "@/modules/core/components/notification-list";
 
@@ -11,7 +12,10 @@ export default async function NotificationsPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Notifications</h1>
+      <PageHeader
+        title="Notifications"
+        description="Updates on your requests and on work waiting in your queues."
+      />
       <NotificationList notifications={notifications} />
     </>
   );

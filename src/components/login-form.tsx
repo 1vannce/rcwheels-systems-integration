@@ -8,6 +8,7 @@ import { FormMessage } from "@/components/ui/form-message"
 import { SubmitButton } from "@/components/ui/submit-button"
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
@@ -29,44 +30,43 @@ export function LoginForm({
       {...props}
     >
       <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Enter your email below to login to your account
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-[1.75rem] font-semibold leading-tight">Sign in</h1>
+          <p className="text-sm text-muted-foreground">
+            Use the work email and password the system administrator gave you.
           </p>
         </div>
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">Work email</FieldLabel>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder="name@rcwheels.example"
             autoComplete="username"
+            className="h-9"
             required
           />
         </Field>
         <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <a
-              href="#"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </a>
-          </div>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
           <Input
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
+            className="h-9"
             required
           />
+          <FieldDescription>
+            Forgot it? Ask the system administrator to reset your password.
+          </FieldDescription>
         </Field>
         <FormMessage result={result} />
         <Field>
-          <SubmitButton className="w-full">Login</SubmitButton>
+          <SubmitButton size="lg" className="w-full">
+            Sign in
+          </SubmitButton>
         </Field>
       </FieldGroup>
     </form>
