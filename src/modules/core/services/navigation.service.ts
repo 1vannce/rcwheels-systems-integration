@@ -30,6 +30,10 @@ const builtScreens: readonly AppScreen[] = [
   "inventory-dispatch",
   "inventory-adjustments",
   "inventory-sales-deductions",
+  "delivery-internal-delivery-queue",
+  "delivery-acceptance-and-ar-signing",
+  "delivery-rdr",
+  "delivery-return-inspection",
 ];
 
 const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {
