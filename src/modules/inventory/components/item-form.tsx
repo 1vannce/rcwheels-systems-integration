@@ -13,8 +13,14 @@ export function ItemForm() {
   const [result, formAction] = useActionState(createItemAction, null);
 
   return (
-    <form action={formAction} className="flex flex-col gap-3 rounded-lg border p-4">
-      <h2 className="font-medium">Add an item</h2>
+    <form action={formAction} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-semibold">Add an item</h2>
+        <p className="text-sm text-muted-foreground">
+          New items start with no stock. The reorder point is the available quantity that
+          triggers a low-stock review.
+        </p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="itemCode">Code</Label>

@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { TriangleAlertIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { UrgentBadge } from "@/components/ui/status-badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { PendingApprovalItemDto } from "../types/requisition.dto";
 import { formatRfNumber } from "../utils/rf-number.util";
 import {
@@ -42,9 +45,10 @@ export function ApprovalQueue({
 
   if (requisitions.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        No requests are waiting for your approval.
-      </div>
+      <EmptyState
+        title="No requests are waiting for your approval"
+        description="Requests assigned to you appear here when they are submitted. You'll also get a notification."
+      />
     );
   }
 
@@ -52,16 +56,14 @@ export function ApprovalQueue({
     <div className="flex flex-col gap-4">
       {/* Urgent alert banner */}
       {urgentCount > 0 && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200">
-          <span className="text-base text-amber-600 dark:text-amber-400" aria-hidden="true">
-            ⚠
-          </span>
+        <div className="flex items-start gap-3 rounded-md border border-signal/40 bg-signal/10 px-3 py-2.5 text-sm">
+          <TriangleAlertIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-signal-foreground" />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">
-              {urgentCount} urgent request{urgentCount !== 1 ? "s" : ""} need immediate review
+              {urgentCount} urgent request{urgentCount !== 1 ? "s" : ""} need review first
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300">
-              Fast-tracked requests bypass the standard queue.
+            <p className="text-xs text-muted-foreground">
+              They are listed at the top of the queue.
             </p>
           </div>
         </div>
@@ -73,7 +75,7 @@ export function ApprovalQueue({
           active={tab === "all"}
           onClick={() => setTab("all")}
           count={pendingCount}
-          label="Pending Approval"
+          label="Pending approval"
         />
         <TabButton
           active={tab === "urgent"}
@@ -84,15 +86,15 @@ export function ApprovalQueue({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-muted text-xs font-medium text-muted-foreground">
+      <div className="overflow-x-auto rounded-lg border bg-card">
+        <table className="data-table">
+          <thead>
             <tr>
-              <th className="p-3 font-medium">RF NUMBER</th>
-              <th className="p-3 font-medium">PRIORITY</th>
-              <th className="p-3 font-medium">SUBMITTED</th>
-              <th className="p-3 font-medium">REQUESTER</th>
-              <th className="p-3 font-medium">ITEMS &amp; STOCK PRE-CHECK</th>
+              <th className="p-3 font-medium">RF number</th>
+              <th className="p-3 font-medium">Priority</th>
+              <th className="p-3 font-medium">Submitted</th>
+              <th className="p-3 font-medium">Requester</th>
+              <th className="p-3 font-medium">Items and stock check</th>
               <th className="p-3 text-right font-medium">
                 <span className="sr-only">Action</span>
               </th>
@@ -119,7 +121,7 @@ export function ApprovalQueue({
                   <td className="p-3 align-top whitespace-nowrap">
                     <Link
                       href={`/requisitions/${req.requisitionId}`}
-                      className="font-medium underline underline-offset-4"
+                      className="font-medium text-primary underline-offset-4 hover:underline"
                     >
                       {rfNumber}
                     </Link>
@@ -128,9 +130,7 @@ export function ApprovalQueue({
                   {/* Priority */}
                   <td className="p-3 align-top whitespace-nowrap">
                     {req.isUrgent ? (
-                      <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                        URGENT
-                      </span>
+                      <UrgentBadge />
                     ) : (
                       <span className="text-xs text-muted-foreground">Normal</span>
                     )}
@@ -146,7 +146,7 @@ export function ApprovalQueue({
                     <p className="font-medium">{req.submittedByName}</p>
                     {recipientIsDifferent ? (
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        for <span className="font-medium text-foreground">{req.requesterName}</span> [Mechanic] · {req.deliveryLocation}
+                        for <span className="font-medium text-foreground">{req.requesterName}</span> (mechanic), {req.deliveryLocation}
                       </p>
                     ) : (
                       req.deliveryLocation && (
@@ -174,7 +174,7 @@ export function ApprovalQueue({
                               key={line.requisitionLineId}
                               className="inline-flex items-center gap-1.5 text-xs"
                             >
-                              <span className="font-medium">
+                              <span className="font-medium tabular-nums">
                                 {line.itemCode} ×{qty}
                               </span>
                               <span
@@ -184,7 +184,7 @@ export function ApprovalQueue({
                                     : "border-destructive/30 bg-destructive/10 text-destructive"
                                 }`}
                               >
-                                {avail > 0 ? `In stock (${availStock})` : "Out of stock"}
+                                {avail > 0 ? `${availStock} in stock` : "Out of stock"}
                               </span>
                             </span>
                           );
@@ -240,6 +240,7 @@ function TabButton({
       variant={active ? "default" : "outline"}
       size="sm"
       onClick={onClick}
+      aria-pressed={active}
       className="gap-2"
     >
       {label}

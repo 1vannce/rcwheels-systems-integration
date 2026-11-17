@@ -1,8 +1,9 @@
-import Link from "next/link";
-
+import PageHeader from "@/components/page-header";
+import { UrgentBadge } from "@/components/ui/status-badge";
 import { formatQuantity } from "@/modules/inventory";
 
 import type { RequisitionDetailDto } from "../types/requisition.dto";
+import { formatRfNumber } from "../utils/rf-number.util";
 import {
   RequisitionStatusBadge,
   requisitionStatusLabels,
@@ -38,56 +39,59 @@ export function RequisitionDetails({
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <Link href={backHref} className="text-sm underline underline-offset-4">
-          {backLabel}
-        </Link>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">
-            Requisition #{requisition.requisitionId}
-          </h1>
-          <RequisitionStatusBadge status={requisition.status} />
-          {requisition.isUrgent && (
-            <span className="text-xs font-medium text-destructive">Urgent</span>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        back={{ href: backHref, label: backLabel }}
+        title={
+          <>
+            <span className="sr-only">Requisition form </span>
+            <span className="text-3xl font-bold tabular-nums tracking-tight [font-stretch:75%] sm:text-4xl">
+              {formatRfNumber(requisition.requisitionId, requisition.submittedAt)}
+            </span>
+          </>
+        }
+        badges={
+          <>
+            <RequisitionStatusBadge status={requisition.status} />
+            {requisition.isUrgent && <UrgentBadge />}
+          </>
+        }
+      />
 
-      <dl className="grid gap-3 rounded-lg border p-4 text-sm sm:grid-cols-2">
+      <dl className="grid gap-x-6 gap-y-4 rounded-lg border bg-card p-4 text-sm sm:grid-cols-2 sm:p-5 lg:grid-cols-4">
         <div className="flex flex-col gap-0.5">
-          <dt className="text-muted-foreground">Submitted by</dt>
-          <dd>
-            {requisition.submittedByName} on{" "}
+          <dt className="text-xs text-muted-foreground">Submitted by</dt>
+          <dd className="font-medium">{requisition.submittedByName}</dd>
+          <dd className="text-xs text-muted-foreground tabular-nums">
             {dateFormat.format(requisition.submittedAt)}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5">
-          <dt className="text-muted-foreground">For</dt>
-          <dd>{requisition.requesterName}</dd>
+          <dt className="text-xs text-muted-foreground">For</dt>
+          <dd className="font-medium">{requisition.requesterName}</dd>
         </div>
         <div className="flex flex-col gap-0.5">
-          <dt className="text-muted-foreground">Delivery date</dt>
-          <dd>
+          <dt className="text-xs text-muted-foreground">Deliver by</dt>
+          <dd className="font-medium tabular-nums">
             {deliveryDateFormat.format(
               new Date(`${requisition.deliveryDate}T00:00:00Z`),
             )}
           </dd>
         </div>
         <div className="flex flex-col gap-0.5">
-          <dt className="text-muted-foreground">Delivery location</dt>
-          <dd>{requisition.deliveryLocation}</dd>
+          <dt className="text-xs text-muted-foreground">Deliver to</dt>
+          <dd className="font-medium">{requisition.deliveryLocation}</dd>
         </div>
-        <div className="flex flex-col gap-0.5 sm:col-span-2">
-          <dt className="text-muted-foreground">Purpose</dt>
-          <dd>{requisition.purpose}</dd>
+        <div className="flex flex-col gap-0.5 sm:col-span-2 lg:col-span-4">
+          <dt className="text-xs text-muted-foreground">Purpose</dt>
+          <dd className="max-w-[75ch]">{requisition.purpose}</dd>
         </div>
       </dl>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">Items</h2>
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-left">
+        <h2 className="text-lg font-semibold">Items</h2>
+        <div className="overflow-x-auto rounded-lg border bg-card">
+          <table className="data-table">
+            <thead>
               <tr>
                 <th className="p-2 font-medium">Item</th>
                 <th className="p-2 text-right font-medium">Requested</th>
@@ -105,7 +109,7 @@ export function RequisitionDetails({
               {lines.map((line) => (
                 <tr key={line.requisitionLineId}>
                   <td className="p-2">
-                    {line.itemCode} · {line.itemName}{" "}
+                    <span className="font-medium">{line.itemCode}</span> {line.itemName}{" "}
                     <span className="text-muted-foreground">({line.unit})</span>
                   </td>
                   <td className="p-2 text-right tabular-nums">
@@ -129,7 +133,7 @@ export function RequisitionDetails({
                   <td className="p-2 text-right tabular-nums">
                     {formatQuantity(line.returnedQty)}
                   </td>
-                  <td className="p-2 text-right tabular-nums">
+                  <td className="bg-accent/50 p-2 text-right font-semibold tabular-nums">
                     {formatQuantity(line.outstandingQty)}
                   </td>
                   <td className="p-2 text-right tabular-nums">
@@ -143,22 +147,23 @@ export function RequisitionDetails({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="font-medium">History</h2>
-        <ol className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">History</h2>
+        <ol className="flex flex-col border-l-2 pl-4">
           {history.map((entry) => (
-            <li key={entry.historyId} className="rounded-lg border p-3 text-sm">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">
-                  {entry.fromStatus
-                    ? `${requisitionStatusLabels[entry.fromStatus]} → ${requisitionStatusLabels[entry.toStatus]}`
-                    : `Submitted as ${requisitionStatusLabels[entry.toStatus]}`}
-                </span>
-                <span className="text-muted-foreground">
-                  {dateFormat.format(entry.changedAt)} · {entry.changedByName}
-                </span>
-              </div>
+            <li
+              key={entry.historyId}
+              className="relative flex flex-col gap-0.5 pb-4 text-sm last:pb-0 before:absolute before:top-1.5 before:-left-[21px] before:size-2 before:rounded-full before:bg-foreground/70"
+            >
+              <span className="font-medium">
+                {entry.fromStatus
+                  ? `${requisitionStatusLabels[entry.fromStatus]} to ${requisitionStatusLabels[entry.toStatus]}`
+                  : `Submitted as ${requisitionStatusLabels[entry.toStatus]}`}
+              </span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {entry.changedByName}, {dateFormat.format(entry.changedAt)}
+              </span>
               {entry.reason && (
-                <p className="text-muted-foreground">{entry.reason}</p>
+                <p className="mt-1 max-w-[75ch] rounded-md bg-muted px-3 py-2">{entry.reason}</p>
               )}
             </li>
           ))}

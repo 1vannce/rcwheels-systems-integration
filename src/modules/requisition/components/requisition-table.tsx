@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/ui/empty-state";
+
+import { UrgentBadge } from "@/components/ui/status-badge";
+
 import type { RequisitionListItemDto } from "../types/requisition.dto";
 import { RequisitionStatusBadge } from "./requisition-status-badge";
 
@@ -23,13 +27,18 @@ export function RequisitionTable({
   requisitions: RequisitionListItemDto[];
 }) {
   if (requisitions.length === 0) {
-    return <p className="text-sm text-muted-foreground">You have not submitted any requests yet.</p>;
+    return (
+      <EmptyState
+        title="You haven't submitted any requests yet"
+        description="Create a new requisition to ask the stockroom for parts."
+      />
+    );
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted text-left">
+    <div className="overflow-x-auto rounded-lg border bg-card">
+      <table className="data-table">
+        <thead>
           <tr>
             <th className="p-2 font-medium">Request</th>
             <th className="p-2 font-medium">Submitted</th>
@@ -45,12 +54,12 @@ export function RequisitionTable({
               <td className="p-2">
                 <Link
                   href={`/requisitions/${requisition.requisitionId}`}
-                  className="underline underline-offset-4"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   #{requisition.requisitionId}
                 </Link>
                 {requisition.isUrgent && (
-                  <span className="ml-2 text-xs font-medium text-destructive">Urgent</span>
+                  <UrgentBadge className="ml-2" />
                 )}
               </td>
               <td className="p-2">{dateFormat.format(requisition.submittedAt)}</td>

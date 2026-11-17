@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 
+import PageHeader from "@/components/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { findScreenByPath, requireScreen } from "@/modules/core";
 
 // Stands in for screens whose phase is not built yet. The role check is the
@@ -16,10 +18,11 @@ export default async function PlannedScreenPage({ params }: PageProps<"/[...path
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{planned.label}</h1>
-      <p className="text-sm text-muted-foreground">
-        This screen is built in a later phase of the project plan.
-      </p>
+      <PageHeader title={planned.label} />
+      <EmptyState
+        title="This screen isn't built yet"
+        description="It arrives in a later phase of the project plan. Your role will be able to use it here once it's ready."
+      />
     </>
   );
 }

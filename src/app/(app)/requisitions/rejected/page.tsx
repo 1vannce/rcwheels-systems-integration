@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
+import PageHeader from "@/components/page-header";
 import { requireScreen } from "@/modules/core";
 import { listRejectedRequisitionsService as listRejectedRequisitions } from "@/modules/requisition";
 import { AllRequisitions } from "@/modules/requisition/components/all-requisitions";
 
-export const metadata: Metadata = { title: "Rejected reviews | RCWheels" };
+export const metadata: Metadata = { title: "Rejected reviews" };
 
 export default async function RejectedReviewsPage() {
   await requireScreen("requisition-rejected-reviews");
@@ -12,12 +13,10 @@ export default async function RejectedReviewsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Rejected Reviews</h1>
-        <p className="text-sm text-muted-foreground">
-          Requisitions rejected during approval review or awaiting discrepancy resolution.
-        </p>
-      </div>
+      <PageHeader
+        title="Rejected reviews"
+        description="Requests rejected at approval, and delivered requests waiting for a discrepancy to be resolved."
+      />
       <AllRequisitions requisitions={requisitions} mode="rejected" />
     </>
   );

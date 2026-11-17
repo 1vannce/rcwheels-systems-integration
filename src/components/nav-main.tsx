@@ -89,6 +89,7 @@ export function NavMain({ groups }: { groups: NavigationGroup[] }) {
                 <SidebarMenuItem key={item.screen}>
                   <SidebarMenuButton
                     isActive={isCurrent}
+                    className="text-[0.8125rem] data-active:font-semibold data-active:shadow-[inset_3px_0_0_var(--sidebar-primary)]"
                     tooltip={item.label}
                     render={
                       <Link
@@ -101,7 +102,7 @@ export function NavMain({ groups }: { groups: NavigationGroup[] }) {
                     <span>{item.label}</span>
                   </SidebarMenuButton>
                   {!item.isBuilt && (
-                    <SidebarMenuBadge className="text-muted-foreground group-data-[collapsible=icon]:hidden">
+                    <SidebarMenuBadge className="font-normal text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
                       Later
                     </SidebarMenuBadge>
                   )}

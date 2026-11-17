@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
+import { PlusIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,14 +15,11 @@ import { resubmitRequisitionAction } from "../actions/action.resubmit-requisitio
 import { submitRequisitionAction } from "../actions/action.submit-requisition";
 import { formatRfNumber } from "../utils/rf-number.util";
 
-const selectClass =
-  "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+const selectClass = "field-control h-8";
 
-const textareaClass =
-  "min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+const textareaClass = "field-control min-h-20 py-2";
 
-const readonlyInputClass =
-  "h-9 w-full rounded-md border border-input bg-muted/50 px-3 py-1 text-sm text-muted-foreground shadow-sm cursor-not-allowed";
+const readonlyInputClass = "field-control h-8";
 
 /** One item the requester may choose, with the quantity still available. */
 export type RequisitionFormItem = {
@@ -134,9 +133,10 @@ export function RequisitionForm({
 
   if (items.length === 0) {
     return (
-      <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-        No items exist yet. Ask the Inventory Custodian to add items before requesting stock.
-      </p>
+      <EmptyState
+        title="There are no items to request yet"
+        description="Ask the Inventory Custodian to add items, then come back to file your request."
+      />
     );
   }
 
@@ -150,7 +150,7 @@ export function RequisitionForm({
     : "EMP-0003";
 
   return (
-    <form action={formAction} className="flex flex-col gap-6 rounded-lg border bg-card p-6 shadow-sm">
+    <form action={formAction} className="flex flex-col gap-6 rounded-lg border bg-card p-4 sm:p-6">
       {mode === "resubmit" && <input type="hidden" name="requisitionId" value={requisitionId} />}
       <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
@@ -165,14 +165,14 @@ export function RequisitionForm({
             id="rf-no"
             readOnly
             value={displayRfNumber}
-            className={`${readonlyInputClass} font-mono font-medium text-foreground`}
+            className={`${readonlyInputClass} text-base font-bold tabular-nums text-foreground [font-stretch:75%]`}
           />
         </div>
 
-        {/* Date (date of requisition) */}
+        {/* Requisition date */}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="requisition-date" className="text-xs font-medium text-muted-foreground">
-            Date (date of requisition)
+            Requisition date
           </Label>
           <input
             id="requisition-date"
@@ -204,7 +204,7 @@ export function RequisitionForm({
             id="employee-id"
             readOnly
             value={employeeId}
-            className={`${readonlyInputClass} font-mono`}
+            className={`${readonlyInputClass} tabular-nums`}
           />
         </div>
 
@@ -235,10 +235,10 @@ export function RequisitionForm({
             name="isUrgent"
             type="checkbox"
             defaultChecked={initial?.isUrgent ?? false}
-            className="size-4 rounded border-input text-primary focus:ring-primary"
+            className="size-4 accent-primary"
           />
           <Label htmlFor="isUrgent" className="cursor-pointer text-sm font-normal">
-            Mark as urgent (fast-tracks to approver)
+            Mark as urgent (goes to the top of the approver&apos;s queue)
           </Label>
         </div>
 
@@ -276,7 +276,7 @@ export function RequisitionForm({
       {/* Remarks / Purpose */}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="purpose" className="text-xs font-medium text-muted-foreground">
-          Remarks / Purpose <span className="text-destructive">*</span>
+          Purpose <span className="text-destructive">*</span>
         </Label>
         <textarea
           id="purpose"
@@ -292,18 +292,18 @@ export function RequisitionForm({
 
       {/* ── Items Table Section ── */}
       <div className="flex flex-col gap-3">
-        <Label className="text-sm font-semibold">Items</Label>
+        <h2 className="text-lg font-semibold">Items</h2>
 
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="overflow-x-auto rounded-lg border bg-card">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="px-4 py-3">ITEM</th>
-                <th className="px-4 py-3 text-right">SHOP AVAILABLE</th>
-                <th className="px-4 py-3 text-right">ROP</th>
-                <th className="px-4 py-3 text-right">SUGGESTED QTY</th>
-                <th className="px-4 py-3 text-right">QTY REQUESTED</th>
-                <th className="px-4 py-3 text-center">ACTION</th>
+                <th className="px-4 py-3">Item</th>
+                <th className="px-4 py-3 text-right">Available</th>
+                <th className="px-4 py-3 text-right">Reorder point</th>
+                <th className="px-4 py-3 text-right">Suggested</th>
+                <th className="px-4 py-3 text-right">Quantity</th>
+                <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -333,11 +333,9 @@ export function RequisitionForm({
                         ))}
                       </select>
                       {item && (
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="font-mono">{item.itemCode}</span>
-                          <span>·</span>
-                          <span>Unit: {item.unit}</span>
-                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {item.itemCode}, unit {item.unit}
+                        </p>
                       )}
                     </td>
 
@@ -346,7 +344,7 @@ export function RequisitionForm({
                       <span
                         className={
                           availNum <= 0
-                            ? "text-destructive font-semibold"
+                            ? "font-semibold text-destructive"
                             : "text-foreground"
                         }
                       >
@@ -362,7 +360,7 @@ export function RequisitionForm({
                     {/* Suggested Qty */}
                     <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
                       {suggestedQty > 0 ? (
-                        <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        <span className="font-medium text-amber-700 dark:text-amber-300">
                           {suggestedQty} {item?.unit}
                         </span>
                       ) : (
@@ -371,7 +369,7 @@ export function RequisitionForm({
                     </td>
 
                     {/* Qty Requested input */}
-                    <td className="w-36 px-4 py-3 text-right">
+                    <td className="w-28 px-4 py-3 text-right">
                       <Input
                         value={line.requestedQty}
                         onChange={(event) =>
@@ -406,7 +404,8 @@ export function RequisitionForm({
 
         <div>
           <Button type="button" variant="outline" size="sm" onClick={addLine}>
-            + Add item
+            <PlusIcon aria-hidden="true" />
+            Add item
           </Button>
         </div>
       </div>
@@ -416,19 +415,14 @@ export function RequisitionForm({
       {/* ── Form Actions ── */}
       {result?.ok ? (
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <Link
-            href="/requisitions/my-requests"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
-          >
-            View in My requests →
-          </Link>
+          <Button render={<Link href="/requisitions/my-requests" />}>View my requests</Button>
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => window.location.reload()}
           >
-            Create another request
+            Start another request
           </Button>
         </div>
       ) : (
@@ -439,7 +433,7 @@ export function RequisitionForm({
             variant="outline"
             render={<Link href="/requisitions/my-requests" />}
           >
-            Back
+            Cancel
           </Button>
         </div>
       )}

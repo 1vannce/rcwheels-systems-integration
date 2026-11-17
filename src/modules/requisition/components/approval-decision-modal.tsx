@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { FormMessage } from "@/components/ui/form-message";
 import { Input } from "@/components/ui/input";
+import { UrgentBadge } from "@/components/ui/status-badge";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 
@@ -22,8 +23,7 @@ import { approveRequisitionAction } from "../actions/action.approve-requisition"
 import { rejectRequisitionAction } from "../actions/action.reject-requisition";
 import type { RequisitionLineDto } from "../types/requisition.dto";
 
-const textareaClass =
-  "min-h-20 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const textareaClass = "field-control min-h-20 py-2";
 
 /** Drops trailing zeros for display. */
 function fmt(value: string): string {
@@ -91,21 +91,17 @@ export function ApprovalDecisionModal({
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button size="sm" />}>
-        Review &amp; Decide
-      </DialogTrigger>
+      <DialogTrigger render={<Button size="sm" />}>Review</DialogTrigger>
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-4 sm:p-6">
         {/* Header */}
         <DialogHeader className="gap-1 border-b pb-4">
-          <div className="flex items-center gap-2">
-            <DialogTitle className="text-lg font-semibold">
-              Review &amp; Decide · {rfNumber}
+          <div className="flex flex-wrap items-center gap-2">
+            <DialogTitle className="text-xl font-semibold [font-stretch:85%]">
+              Review {rfNumber}
             </DialogTitle>
             {isUrgent && (
-              <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
-                URGENT
-              </span>
+              <UrgentBadge />
             )}
           </div>
           <DialogDescription className="text-xs text-muted-foreground">
@@ -115,10 +111,10 @@ export function ApprovalDecisionModal({
               <>
                 {" "}for{" "}
                 <span className="font-medium text-foreground">{recipientName}</span>{" "}
-                [Mechanic] · {deliveryLocation}
+                (mechanic), delivered to {deliveryLocation}
               </>
             ) : (
-              deliveryLocation && <> · {deliveryLocation}</>
+              deliveryLocation && <>, delivered to {deliveryLocation}</>
             )}
           </DialogDescription>
         </DialogHeader>
@@ -131,15 +127,15 @@ export function ApprovalDecisionModal({
               <input type="hidden" name="requisitionId" value={requisitionId} />
               <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-              <div className="overflow-x-auto rounded-lg border">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-muted text-xs font-medium text-muted-foreground">
+              <div className="overflow-x-auto rounded-lg border bg-card">
+                <table className="data-table">
+                  <thead>
                     <tr>
-                      <th className="p-3">ITEM</th>
-                      <th className="p-3 text-right">REQUESTED</th>
-                      <th className="p-3 text-center">APPROVE</th>
-                      <th className="p-3 text-right">AVAILABLE</th>
-                      <th className="p-3">PURPOSE</th>
+                      <th className="p-3">Item</th>
+                      <th className="p-3 text-right">Requested</th>
+                      <th className="p-3 text-center">Approve</th>
+                      <th className="p-3 text-right">Available</th>
+                      <th className="p-3">Purpose</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -152,7 +148,7 @@ export function ApprovalDecisionModal({
                         <tr key={line.requisitionLineId}>
                           <td className="p-3 align-middle">
                             <p className="font-medium text-foreground">{line.itemCode}</p>
-                            <p className="text-muted-foreground text-xs line-clamp-1">
+                            <p className="line-clamp-1 text-xs text-muted-foreground">
                               {line.itemName}
                             </p>
                           </td>
@@ -176,7 +172,7 @@ export function ApprovalDecisionModal({
                           </td>
                           <td className="p-3 align-middle text-right whitespace-nowrap">
                             <span
-                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums ${
                                 avail > 0
                                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                   : "border-destructive/30 bg-destructive/10 text-destructive"
@@ -216,7 +212,7 @@ export function ApprovalDecisionModal({
                     Reject
                   </Button>
                   <SubmitButton size="sm">
-                    Approve Requisition
+                    Approve request
                   </SubmitButton>
                 </div>
               </DialogFooter>
@@ -227,15 +223,15 @@ export function ApprovalDecisionModal({
               <input type="hidden" name="requisitionId" value={requisitionId} />
 
               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-1">
                   <Label
                     htmlFor={`reason-${requisitionId}`}
                     className="text-xs font-medium text-destructive"
                   >
-                    Reason for Rejection <span aria-hidden="true">*</span>
+                    Reason for rejecting <span aria-hidden="true">*</span>
                   </Label>
                   <span className="text-[11px] text-muted-foreground">
-                    Required for the requester to make corrections
+                    The requester sees this and can correct the request
                   </span>
                 </div>
                 <textarea
@@ -245,22 +241,13 @@ export function ApprovalDecisionModal({
                   rows={3}
                   maxLength={300}
                   className={textareaClass}
-                  placeholder="Explain why this request is being rejected so the requester can correct it..."
+                  placeholder="What the requester needs to change"
                 />
               </div>
 
               <FormMessage result={rejectResult} />
 
               <DialogFooter className="pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsRejecting(false)}
-                >
-                  ← Back to approval
-                </Button>
-
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -271,7 +258,7 @@ export function ApprovalDecisionModal({
                     Cancel
                   </Button>
                   <SubmitButton variant="destructive" size="sm">
-                    Confirm Rejection
+                    Reject request
                   </SubmitButton>
                 </div>
               </DialogFooter>
