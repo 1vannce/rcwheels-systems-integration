@@ -25,7 +25,8 @@ const dateFormat = new Intl.DateTimeFormat("en-PH", {
 
 /**
  * The Custodian's issue queue. Each row links to the request detail, where the
- * custodian checks stock, reserves available quantities, or notes shortages.
+ * custodian checks stock, reserves available quantities, and raises a purchase
+ * request for any uncovered remainder.
  */
 export function IssueQueue({
   requisitions,

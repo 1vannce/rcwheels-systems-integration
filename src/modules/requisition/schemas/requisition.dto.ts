@@ -149,6 +149,16 @@ export const ReserveRequisitionDto = z.object({
 
 export type ReserveRequisitionDto = z.infer<typeof ReserveRequisitionDto>;
 
+/**
+ * Records a stock check where nothing can be reserved. The request moves to
+ * Awaiting Stock so the custodian can raise a purchase request for the need.
+ */
+export const MarkAwaitingStockDto = z.object({
+  requisitionId: id,
+});
+
+export type MarkAwaitingStockDto = z.infer<typeof MarkAwaitingStockDto>;
+
 /** One line of a dispatch, at most the quantity reserved for it. */
 export const PrepareAcknowledgementReceiptLineDto = z.object({
   requisitionLineId: id,

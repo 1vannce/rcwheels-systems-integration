@@ -15,7 +15,7 @@ export default async function IssueQueuePage() {
     <>
       <PageHeader
         title="Issue queue"
-        description="Approved requests waiting for a stock check. Open one to reserve what is available."
+        description="Approved requests waiting for a stock check. Reserve what is available, then raise a purchase request for the rest."
       />
       <IssueQueue requisitions={requisitions} />
     </>

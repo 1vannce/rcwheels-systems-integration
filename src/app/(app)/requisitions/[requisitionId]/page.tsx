@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "@/modules/core";
 import { compareQuantities, listItemsWithStock, todayInManila } from "@/modules/inventory";
+import { getPurchaseRequestContextService } from "@/modules/purchasing";
+import { PurchaseRequestPanel } from "@/modules/purchasing/components/purchase-request-panel";
 import {
   getRequisitionDetailService as getRequisitionDetail,
   listActiveMechanicsService,
@@ -12,6 +14,7 @@ import { AR_PREPARABLE_STATUSES } from "@/modules/requisition/types/requisition.
 import { formatRfNumber } from "@/modules/requisition/utils/rf-number.util";
 import { ArPreparationForm } from "@/modules/requisition/components/ar-preparation-form";
 import { DispatchButton } from "@/modules/requisition/components/dispatch-button";
+import { MarkAwaitingStockButton } from "@/modules/requisition/components/mark-awaiting-stock-button";
 import { RequisitionDetails } from "@/modules/requisition/components/requisition-details";
 import { RequisitionForm } from "@/modules/requisition/components/requisition-form";
 import { ReserveForm } from "@/modules/requisition/components/reserve-form";
@@ -82,6 +85,18 @@ export default async function RequisitionDetailPage({
     };
   });
 
+  const nothingReservable = reserveLines.every(
+    (line) => compareQuantities(line.maxQty, "0") <= 0,
+  );
+  const canMarkAwaitingStock =
+    canReserve &&
+    detail.requisition.status === "approved" &&
+    nothingReservable;
+  const purchaseContext =
+    isCustodian && detail.requisition.status === "awaiting_stock"
+      ? await getPurchaseRequestContextService(user, requisitionId)
+      : null;
+
   const canPrepareAr =
     isCustodian &&
     (AR_PREPARABLE_STATUSES as readonly string[]).includes(detail.requisition.status) &&
@@ -120,8 +135,19 @@ export default async function RequisitionDetailPage({
           }))}
         />
       )}
-      {canReserve && (
-        <ReserveForm requisitionId={detail.requisition.requisitionId} lines={reserveLines} />
+      {canMarkAwaitingStock ? (
+        <MarkAwaitingStockButton requisitionId={detail.requisition.requisitionId} />
+      ) : (
+        canReserve &&
+        !nothingReservable && (
+          <ReserveForm requisitionId={detail.requisition.requisitionId} lines={reserveLines} />
+        )
+      )}
+      {purchaseContext && (
+        <PurchaseRequestPanel
+          requisitionId={detail.requisition.requisitionId}
+          context={purchaseContext}
+        />
       )}
       {canPrepareAr && (
         <ArPreparationForm requisitionId={detail.requisition.requisitionId} lines={arLines} />

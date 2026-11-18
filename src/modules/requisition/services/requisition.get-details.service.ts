@@ -1,11 +1,12 @@
 import "server-only";
 
-import { db } from "@/db";
+import { db, type Tx } from "@/db";
 import { recordBlockedAction, type AppUser } from "@/modules/core";
 import {
     findRequisitionById,
     findRequisitionHistory,
     findRequisitionLines,
+    lockRequisition,
 } from "../repositories/requisition.repository";
 import type { RequisitionDetailDto } from "../types/requisition.dto";
 import { canViewRequisitionUtil as canViewRequisition } from "./utils/requisition.can-view-requisition.util";
@@ -44,4 +45,30 @@ export async function getRequisitionDetailService(
   ]);
 
   return { requisition, lines, history };
+}
+
+/**
+ * Reads one request under a row lock for another module's business event.
+ * Purchasing uses this so a PR is never created from a request that changed
+ * status between the page load and the submit.
+ */
+export async function getRequisitionForPurchaseService(
+  tx: Tx,
+  requisitionId: number,
+): Promise<Pick<RequisitionDetailDto, "requisition" | "lines"> | null> {
+  const locked = await lockRequisition(tx, requisitionId);
+
+  if (!locked) {
+    return null;
+  }
+
+  const requisition = await findRequisitionById(tx, requisitionId);
+
+  if (!requisition) {
+    return null;
+  }
+
+  const lines = await findRequisitionLines(tx, requisitionId);
+
+  return { requisition, lines };
 }

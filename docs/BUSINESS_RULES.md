@@ -286,8 +286,8 @@ flowchart TD
 
 | ID | Rule | Basis | Status |
 | --- | --- | --- | --- |
-| BR-PU-01 | A PR is created only when the uncovered shortfall is above zero. Uncovered shortfall = approved - accepted - in transit - reserved - allocated outstanding PO quantity. | PLAN section 7 | Planned |
-| BR-PU-02 | A PR is either a shortage PR, linked to a requisition line, or a reorder PR, with no requisition line. A PR links to the PO lines that cover it, so demand is not counted twice. | ERD | Planned |
+| BR-PU-01 | A PR is created only when the uncovered shortfall is above zero. Uncovered shortfall = approved - accepted - in transit - reserved - allocated outstanding PO quantity. | PLAN section 7 | Built for shortage PRs |
+| BR-PU-02 | A PR is either a shortage PR, linked to a requisition line, or a reorder PR, with no requisition line. A PR links to the PO lines that cover it, so demand is not counted twice. | ERD | Built for shortage PRs; reorder PRs planned |
 | BR-PU-03 | A PR does not authorize a purchase. Only an approved PO does. | Plan rule 1 | Planned |
 | BR-PU-04 | Only Purchasing Staff maintain suppliers and prepare POs. A PO needs a supplier and at least one line with a quantity and a unit price above zero. | Proposal | Planned |
 | BR-PU-05 | A new PO starts as Pending Approval and goes to Accounting for review. | Proposal | Planned |
