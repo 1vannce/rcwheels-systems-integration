@@ -10,6 +10,7 @@
  */
 export { approveRequisitionAction } from "./actions/action.approve-requisition";
 export { dispatchRequisitionAction } from "./actions/action.dispatch-requisition";
+export { markAwaitingStockAction } from "./actions/action.mark-awaiting-stock";
 export { prepareAcknowledgementReceiptAction } from "./actions/action.prep-requisition-AR";
 export { rejectRequisitionAction } from "./actions/action.reject-requisition";
 export { reserveRequisitionAction } from "./actions/action.reserve-requisition";
@@ -34,7 +35,11 @@ export {
   dispatchRequisitionService, 
   listReadyForDispatchService 
 } from "./services/requisition.dispatch.service";
-export { getRequisitionDetailService } from "./services/requisition.get-details.service";
+export {
+  getRequisitionDetailService,
+  getRequisitionForPurchaseService,
+} from "./services/requisition.get-details.service";
+export { markAwaitingStockService } from "./services/requisition.mark-awaiting-stock.service";
 export { 
   prepareAcknowledgementReceiptService, 
   listReadyForArPreparationService 

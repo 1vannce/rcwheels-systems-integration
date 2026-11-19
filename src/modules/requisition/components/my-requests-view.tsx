@@ -128,7 +128,7 @@ function stockAllocationLabel(status: RequisitionStatus): string {
     case "out_for_delivery":
       return "Reserved";
     case "awaiting_stock":
-      return "Awaiting stock, shortfall PR issued";
+      return "Awaiting stock";
     case "pending_resolution":
       return "Discrepancy under review";
     case "fulfilled":

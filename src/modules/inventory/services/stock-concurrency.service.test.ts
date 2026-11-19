@@ -278,7 +278,9 @@ describeWithDatabase("stock posting concurrency", () => {
 
     expect(await onHand(itemId)).toBe("10.000");
     expect(
-      (await movements()).filter((movement) => movement.movementType === "sales_reversal"),
+      (await movements()).filter(
+        (movement) => movement.movementType === "sales_reversal",
+      ),
     ).toHaveLength(1);
   });
 
@@ -307,7 +309,9 @@ describeWithDatabase("stock posting concurrency", () => {
 
     expect(await onHand(itemId)).toBe("1.000");
     expect(
-      (await movements()).filter((movement) => movement.movementType === "sales_deduction"),
+      (await movements()).filter(
+        (movement) => movement.movementType === "sales_deduction",
+      ),
     ).toHaveLength(2);
   });
 
@@ -337,7 +341,9 @@ describeWithDatabase("stock posting concurrency", () => {
 
     expect(posted).toHaveLength(1);
     expect(refused).toHaveLength(1);
-    expect(refused[0].reason.message).toBe("Only 1 is in transit on this line.");
+    expect(refused[0].reason.message).toBe(
+      "Only 1 is in transit on this line.",
+    );
 
     const [line] = await db.select().from(dispatchLines);
 
