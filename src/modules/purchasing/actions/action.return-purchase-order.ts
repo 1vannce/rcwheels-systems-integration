@@ -1,0 +1,36 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { actionFailure, requireRole, type ActionResult } from "@/modules/core";
+
+import { ReturnPurchaseOrderDto } from "../schemas/purchase-order.dto";
+import { returnPurchaseOrderService } from "../services/purchase-order.review.service";
+import { textField } from "./utils/purchasing-action.form-data.util";
+
+/** Accounting returns the current PO version for revision. */
+export async function returnPurchaseOrderAction(
+  _previous: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    const user = await requireRole(["accounting_associate"], "purchase_order.return");
+    const parsed = ReturnPurchaseOrderDto.safeParse({
+      purchaseOrderId: textField(formData, "purchaseOrderId"),
+      reason: textField(formData, "reason"),
+    });
+
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0].message };
+    }
+
+    await returnPurchaseOrderService(user, parsed.data);
+  } catch (error) {
+    return actionFailure(error);
+  }
+
+  revalidatePath("/purchasing/accounting-review");
+  revalidatePath("/purchasing/orders");
+
+  return { ok: true, message: "Purchase order returned for revision." };
+}

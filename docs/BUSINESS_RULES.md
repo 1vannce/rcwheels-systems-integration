@@ -288,17 +288,17 @@ flowchart TD
 | --- | --- | --- | --- |
 | BR-PU-01 | A PR is created only when the uncovered shortfall is above zero. Uncovered shortfall = approved - accepted - in transit - reserved - allocated outstanding PO quantity. | PLAN section 7 | Built for shortage PRs |
 | BR-PU-02 | A PR is either a shortage PR, linked to a requisition line, or a reorder PR, with no requisition line. A PR links to the PO lines that cover it, so demand is not counted twice. | ERD | Built for shortage PRs; reorder PRs planned |
-| BR-PU-03 | A PR does not authorize a purchase. Only an approved PO does. | Plan rule 1 | Planned |
-| BR-PU-04 | Only Purchasing Staff maintain suppliers and prepare POs. A PO needs a supplier and at least one line with a quantity and a unit price above zero. | Proposal | Planned |
-| BR-PU-05 | A new PO starts as Pending Approval and goes to Accounting for review. | Proposal | Planned |
-| BR-PU-06 | Accounting decides yes or no on the budget and records a reason. There is no budget table. | Decision 7 | Planned |
-| BR-PU-07 | When Accounting returns a PO, it becomes For Revision. Purchasing Staff revise it and send it back to Accounting. | Test scenario 6 | Planned |
-| BR-PU-08 | A PO cannot be placed until Accounting approves that exact version. A change to supplier, item, quantity, or price after approval needs reapproval. | Plan rule 2 | Planned |
-| BR-PU-09 | Every PO version and its review are kept (`purchase_order_revisions`), including the earlier commitments. Nothing is overwritten. | ERD change 5 | Planned |
-| BR-PU-10 | Placing a PO sends it to the Supplier Receiving queue with its expected quantities (connector E). | Proposal | Planned |
+| BR-PU-03 | A PR does not authorize a purchase. Only an approved PO does. | Plan rule 1 | Built |
+| BR-PU-04 | Only Purchasing Staff maintain suppliers and prepare POs. A PO needs a supplier and at least one line with a quantity and a unit price above zero. | Proposal | Built for PO preparation; supplier maintenance planned |
+| BR-PU-05 | A new PO starts as Pending Approval and goes to Accounting for review. | Proposal | Built |
+| BR-PU-06 | Accounting decides yes or no on the budget and records a reason. There is no budget table. | Decision 7 | Built |
+| BR-PU-07 | When Accounting returns a PO, it becomes For Revision. Purchasing Staff revise it and send it back to Accounting. | Test scenario 6 | Built |
+| BR-PU-08 | A PO cannot be placed until Accounting approves that exact version. A change to supplier, item, quantity, or price after approval needs reapproval. | Plan rule 2 | Built |
+| BR-PU-09 | Every PO version and its review are kept (`purchase_order_revisions`), including the earlier commitments. Nothing is overwritten. | ERD change 5 | Built |
+| BR-PU-10 | Placing a PO sends it to the Supplier Receiving queue with its expected quantities (connector E). | Proposal | Built as a service handoff; receiving screen planned |
 | BR-PU-11 | A PO balance is cancelled only with Accounting authorization. Cancelling a PO does not cancel a requisition. A cancelled balance creates a demand review in Purchasing (connector G). The requisition stays open until it is covered or separately cancelled. | Plan rules 6; test scenario 7 | Planned |
-| BR-PU-12 | A user cannot approve a PO they prepared. | Plan rule 11 | Planned |
-| BR-PU-13 | Purchasing Staff follow up open POs, and the Accounting Associate can see them. | Proposal | Planned |
+| BR-PU-12 | A user cannot approve a PO they prepared. | Plan rule 11 | Built |
+| BR-PU-13 | Purchasing Staff follow up open POs, and the Accounting Associate can see them. | Proposal | Built for PO lists; follow-up tracking planned |
 
 ---
 

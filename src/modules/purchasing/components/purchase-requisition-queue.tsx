@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatQuantity } from "@/modules/inventory";
@@ -51,6 +54,7 @@ export function PurchaseRequisitionQueue({ requests }: { requests: PurchaseRequi
             <th className="p-3 font-medium">Source request</th>
             <th className="p-3 font-medium">Items</th>
             <th className="p-3 font-medium">Status</th>
+            <th className="p-3 text-right font-medium">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -100,6 +104,19 @@ export function PurchaseRequisitionQueue({ requests }: { requests: PurchaseRequi
                         ? "Covered"
                         : "Cancelled"}
                   </StatusBadge>
+                </td>
+                <td className="p-3 align-top text-right whitespace-nowrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    render={
+                      <Link
+                        href={`/purchasing/orders?purchaseRequisitionId=${request.purchaseRequisitionId}`}
+                      />
+                    }
+                  >
+                    Prepare PO
+                  </Button>
                 </td>
               </tr>
             );
