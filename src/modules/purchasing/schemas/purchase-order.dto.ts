@@ -71,9 +71,14 @@ export const UpdatePurchaseOrderDto = CreatePurchaseOrderDto.omit({
 
 export type UpdatePurchaseOrderDto = z.infer<typeof UpdatePurchaseOrderDto>;
 
-/** Accounting approves the exact current PO version. */
+/** Accounting approves the exact current PO version with a budget reason. */
 export const ApprovePurchaseOrderDto = z.object({
   purchaseOrderId: id,
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Give a reason for approving the purchase order.")
+    .max(300, "Use at most 300 characters for the reason."),
 });
 
 export type ApprovePurchaseOrderDto = z.infer<typeof ApprovePurchaseOrderDto>;
@@ -103,3 +108,17 @@ export const PlacePurchaseOrderDto = z.object({
 });
 
 export type PlacePurchaseOrderDto = z.infer<typeof PlacePurchaseOrderDto>;
+
+/** Accounting cancels the remaining balance of an approved or placed PO. */
+export const CancelPurchaseOrderBalanceDto = z.object({
+  purchaseOrderId: id,
+  reason: z
+    .string()
+    .trim()
+    .min(3, "Give a reason for cancelling the purchase order balance.")
+    .max(300, "Use at most 300 characters for the reason."),
+});
+
+export type CancelPurchaseOrderBalanceDto = z.infer<
+  typeof CancelPurchaseOrderBalanceDto
+>;

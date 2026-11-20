@@ -11,7 +11,8 @@ import { returnPurchaseOrderAction } from "../actions/action.return-purchase-ord
 
 /**
  * Accounting's decision on one pending PO. Approval authorizes the exact
- * current version; returning it sends the PO back to Purchasing with a reason.
+ * current version and records a budget reason; returning it sends the PO back
+ * to Purchasing with a reason.
  */
 export function PurchaseOrderReviewActions({
   purchaseOrderId,
@@ -33,9 +34,27 @@ export function PurchaseOrderReviewActions({
         <div>
           <h3 className="text-sm font-semibold">Approve this version</h3>
           <p className="text-xs text-muted-foreground">
-            Only the exact submitted version is approved. Placing the order is still a
-            separate Purchasing step.
+            Only the exact submitted version is approved. Placing the order is
+            still a separate Purchasing step.
           </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label
+            htmlFor={`approve-reason-${purchaseOrderId}`}
+            className="text-xs"
+          >
+            Budget decision note
+          </Label>
+          <textarea
+            id={`approve-reason-${purchaseOrderId}`}
+            name="reason"
+            required
+            minLength={3}
+            maxLength={300}
+            rows={2}
+            className="field-control min-h-16 py-2"
+            placeholder="Record why the budget is approved"
+          />
         </div>
         <input type="hidden" name="purchaseOrderId" value={purchaseOrderId} />
         <FormMessage result={approveResult} />

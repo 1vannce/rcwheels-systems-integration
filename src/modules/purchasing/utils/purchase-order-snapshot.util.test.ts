@@ -4,6 +4,7 @@ import type { PurchaseOrderSnapshotLine, SupplierDto } from "../types/purchasing
 import {
   buildPurchaseOrderSnapshot,
   serializePurchaseOrderSnapshot,
+  tryParsePurchaseOrderSnapshot,
 } from "./purchase-order-snapshot.util";
 
 const supplier: SupplierDto = {
@@ -77,4 +78,50 @@ it("does not mutate the caller's line array", () => {
   buildPurchaseOrderSnapshot({ supplier, deliveryTerms: null, lines });
 
   expect(lines.map((entry) => entry.purchaseRequisitionLineId)).toEqual([12, 10]);
+});
+
+it("parses a stored snapshot", () => {
+  const snapshot = serializePurchaseOrderSnapshot({
+    supplier,
+    deliveryTerms: null,
+    lines: [line(10)],
+  });
+
+  expect(tryParsePurchaseOrderSnapshot(snapshot)).toEqual(
+    JSON.parse(snapshot) as unknown,
+  );
+});
+
+it("returns null for malformed JSON", () => {
+  expect(tryParsePurchaseOrderSnapshot("{not json")).toBeNull();
+});
+
+it("returns null for JSON with an unexpected shape", () => {
+  expect(tryParsePurchaseOrderSnapshot(JSON.stringify({ lines: [] }))).toBeNull();
+  expect(
+    tryParsePurchaseOrderSnapshot(
+      JSON.stringify({ supplier: { supplierId: 4 }, deliveryTerms: null, lines: [] }),
+    ),
+  ).toBeNull();
+});
+
+it("returns null for snapshots with invalid quantities or prices", () => {
+  expect(
+    tryParsePurchaseOrderSnapshot(
+      JSON.stringify({
+        supplier,
+        deliveryTerms: null,
+        lines: [{ ...line(10), orderedQty: "not-a-quantity" }],
+      }),
+    ),
+  ).toBeNull();
+  expect(
+    tryParsePurchaseOrderSnapshot(
+      JSON.stringify({
+        supplier,
+        deliveryTerms: null,
+        lines: [{ ...line(10), unitPrice: "1.001" }],
+      }),
+    ),
+  ).toBeNull();
 });

@@ -94,6 +94,10 @@ export const purchaseOrders = pgTable(
     currentVersion: integer("current_version").notNull().default(1),
     deliveryTerms: text("delivery_terms"),
     supplierConfirmedAt: timestamp("supplier_confirmed_at", { withTimezone: true }),
+    // Set once when Accounting cancels the PO's remaining balance.
+    cancelledBy: integer("cancelled_by").references(() => users.userId),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    cancellationReason: text("cancellation_reason"),
   },
   (t) => [
     index("purchase_orders_supplier_idx").on(t.supplierId),

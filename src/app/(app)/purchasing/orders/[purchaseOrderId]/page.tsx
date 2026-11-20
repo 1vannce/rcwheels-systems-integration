@@ -122,7 +122,7 @@ export default async function PurchaseOrderDetailPage({
                 <th className="p-3 font-medium">Version</th>
                 <th className="p-3 font-medium">Changed by</th>
                 <th className="p-3 font-medium">Review</th>
-                <th className="p-3 font-medium">Reason</th>
+                <th className="p-3 font-medium">Budget note / reason</th>
                 <th className="p-3 font-medium">Reviewed</th>
               </tr>
             </thead>

@@ -6,6 +6,8 @@ import {
   purchaseOrders,
   purchaseRequisitionLines,
   purchaseRequisitions,
+  supplierReceiptLines,
+  supplierReceipts,
   suppliers,
 } from "@/db/schema";
 import type { AppRole, AppUser } from "@/modules/core";
@@ -240,5 +242,97 @@ describeWithDatabase("purchase order repository", () => {
       limit: 10,
     });
     expect(cancelled).toHaveLength(0);
+  });
+
+  it("reads accepted and outstanding quantities from supplier receipts", async () => {
+    const source = await setupOpenPr("10");
+    const purchaseOrderId = await insertPurchaseOrder(db, {
+      supplierId: source.supplier.supplierId,
+      preparedBy: people.purchasing_staff.userId,
+      deliveryTerms: null,
+    });
+    const [line] = await insertPurchaseOrderLines(db, purchaseOrderId, [
+      {
+        purchaseRequisitionLineId: source.purchaseRequisitionLineId,
+        orderedQty: "6",
+        unitPrice: "1500",
+      },
+    ]);
+    const [receipt] = await db
+      .insert(supplierReceipts)
+      .values({
+        purchaseOrderId,
+        receivedBy: people.inventory_custodian.userId,
+        deliveryReceiptNo: "DR-1001",
+      })
+      .returning();
+
+    await db.insert(supplierReceiptLines).values({
+      supplierReceiptId: receipt.supplierReceiptId,
+      purchaseOrderLineId: line.purchaseOrderLineId,
+      deliveredQty: "2",
+      acceptedQty: "2",
+      rejectedQty: "0",
+    });
+
+    const detail = await findPurchaseOrderById(db, purchaseOrderId);
+    expect(detail?.lines[0]).toMatchObject({
+      acceptedQty: "2.000",
+      outstandingQty: "4.000",
+    });
+
+    const [listed] = await findPurchaseOrders(db, { limit: 10 });
+    expect(listed.lines[0]).toMatchObject({
+      acceptedQty: "2.000",
+      outstandingQty: "4.000",
+    });
+  });
+
+  it("reads the cancellation fields and who cancelled", async () => {
+    const source = await setupOpenPr("10");
+    const purchaseOrderId = await insertPurchaseOrder(db, {
+      supplierId: source.supplier.supplierId,
+      preparedBy: people.purchasing_staff.userId,
+      deliveryTerms: null,
+    });
+    await insertPurchaseOrderLines(db, purchaseOrderId, [
+      {
+        purchaseRequisitionLineId: source.purchaseRequisitionLineId,
+        orderedQty: "2",
+        unitPrice: "1500",
+      },
+    ]);
+
+    const cancelledAt = new Date("2026-11-19T10:00:00.000Z");
+    await db
+      .update(purchaseOrders)
+      .set({
+        status: "cancelled",
+        cancelledBy: people.accounting_associate.userId,
+        cancelledAt,
+        cancellationReason: "Supplier cannot deliver the balance.",
+      })
+      .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+
+    const detail = await findPurchaseOrderById(db, purchaseOrderId);
+    expect(detail).toMatchObject({
+      status: "cancelled",
+      cancelledBy: people.accounting_associate.userId,
+      cancelledByName: people.accounting_associate.fullName,
+      cancelledAt,
+      cancellationReason: "Supplier cannot deliver the balance.",
+    });
+
+    const [listed] = await findPurchaseOrders(db, {
+      statuses: ["cancelled"],
+      limit: 10,
+    });
+    expect(listed).toMatchObject({
+      status: "cancelled",
+      cancelledBy: people.accounting_associate.userId,
+      cancelledByName: people.accounting_associate.fullName,
+      cancelledAt,
+      cancellationReason: "Supplier cannot deliver the balance.",
+    });
   });
 });

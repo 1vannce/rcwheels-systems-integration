@@ -5,11 +5,15 @@ import { db } from "@/db";
 import {
   auditLog,
   notifications,
+  purchaseOrderLines,
   purchaseOrderRevisions,
   purchaseOrders,
   purchaseRequisitionLines,
   purchaseRequisitions,
+  requisitions,
   stockMovements,
+  supplierReceiptLines,
+  supplierReceipts,
   suppliers,
 } from "@/db/schema";
 import type { AppRole, AppUser } from "@/modules/core";
@@ -21,8 +25,12 @@ import {
 } from "@/test/db";
 import { createItem, createRequisitionLine } from "@/test/stock-fixtures";
 
+import { cancelPurchaseOrderBalanceService } from "./purchase-order.cancel.service";
 import { createPurchaseOrderService } from "./purchase-order.create.service";
-import { listPurchaseOrdersForReceivingService } from "./purchase-order.lists.service";
+import {
+  getPurchaseOrderFormContextService,
+  listPurchaseOrdersForReceivingService,
+} from "./purchase-order.lists.service";
 import { placePurchaseOrderService } from "./purchase-order.place.service";
 import {
   approvePurchaseOrderService,
@@ -181,7 +189,10 @@ describeWithDatabase("purchase order lifecycle", () => {
     });
     expect(storedRevisions[1]).toMatchObject({ versionNo: 2, budgetOk: null });
 
-    await approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId });
+    await approvePurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId,
+      reason: "Budget approved.",
+    });
 
     const [approved] = await db
       .select()
@@ -238,5 +249,144 @@ describeWithDatabase("purchase order lifecycle", () => {
         expect.objectContaining({ action, entityType: expect.any(String) }),
       );
     }
+  });
+
+  it("cancels a partially received PO balance and reopens the source PR (scenario 7)", async () => {
+    const source = await setupShortagePr();
+
+    const { purchaseOrderId } = await createPurchaseOrderService(
+      people.purchasing_staff,
+      {
+        purchaseRequisitionId: source.purchaseRequisitionId,
+        supplierId: source.supplierId,
+        deliveryTerms: "Deliver to Bay 2",
+        lines: [
+          {
+            purchaseRequisitionLineId: source.purchaseRequisitionLineId,
+            orderedQty: "10",
+            unitPrice: "1500",
+          },
+        ],
+      },
+    );
+
+    await approvePurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId,
+      reason: "Budget approved.",
+    });
+    await placePurchaseOrderService(people.purchasing_staff, {
+      purchaseOrderId,
+    });
+
+    const [poLine] = await db
+      .select()
+      .from(purchaseOrderLines)
+      .where(eq(purchaseOrderLines.purchaseOrderId, purchaseOrderId));
+    const [receipt] = await db
+      .insert(supplierReceipts)
+      .values({
+        purchaseOrderId,
+        receivedBy: people.inventory_custodian.userId,
+        deliveryReceiptNo: "DR-SCENARIO-7",
+      })
+      .returning();
+
+    await db.insert(supplierReceiptLines).values({
+      supplierReceiptId: receipt.supplierReceiptId,
+      purchaseOrderLineId: poLine.purchaseOrderLineId,
+      deliveredQty: "6",
+      acceptedQty: "6",
+      rejectedQty: "0",
+    });
+
+    await db
+      .update(purchaseOrders)
+      .set({ status: "partially_received" })
+      .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+
+    const [requisitionBefore] = await db
+      .select({ status: requisitions.status })
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, source.requisitionId));
+    const movementsBefore = await db.select().from(stockMovements);
+
+    await cancelPurchaseOrderBalanceService(
+      people.accounting_associate,
+      {
+        purchaseOrderId,
+        reason: "Supplier cannot deliver the remaining four.",
+      },
+    );
+
+    const [closed] = await db
+      .select()
+      .from(purchaseOrders)
+      .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+    expect(closed).toMatchObject({
+      status: "closed",
+      cancelledBy: people.accounting_associate.userId,
+      cancellationReason: "Supplier cannot deliver the remaining four.",
+    });
+
+    const [cancelledLine] = await db
+      .select()
+      .from(purchaseOrderLines)
+      .where(
+        eq(
+          purchaseOrderLines.purchaseOrderLineId,
+          poLine.purchaseOrderLineId,
+        ),
+      );
+    expect(cancelledLine.cancelledQty).toBe("4.000");
+
+    const [pr] = await db
+      .select({ status: purchaseRequisitions.status })
+      .from(purchaseRequisitions)
+      .where(
+        eq(
+          purchaseRequisitions.purchaseRequisitionId,
+          source.purchaseRequisitionId,
+        ),
+      );
+    expect(pr.status).toBe("open");
+
+    const openRequests = await listOpenPurchaseRequisitionsService();
+    expect(openRequests.map((request) => request.purchaseRequisitionId)).toContain(
+      source.purchaseRequisitionId,
+    );
+
+    const context = await getPurchaseOrderFormContextService(
+      people.purchasing_staff,
+      source.purchaseRequisitionId,
+    );
+    expect(context?.lines[0]).toMatchObject({
+      requestedQty: "10.000",
+      allocatedQty: "6.000",
+      remainingQty: "4.000",
+    });
+
+    const [requisitionAfter] = await db
+      .select({ status: requisitions.status })
+      .from(requisitions)
+      .where(eq(requisitions.requisitionId, source.requisitionId));
+    expect(requisitionAfter.status).toBe(requisitionBefore.status);
+
+    expect(await db.select().from(stockMovements)).toHaveLength(
+      movementsBefore.length,
+    );
+
+    const audits = await db.select().from(auditLog);
+    expect(audits).toContainEqual(
+      expect.objectContaining({
+        action: "purchase_order.cancel_balance",
+        entityId: purchaseOrderId,
+      }),
+    );
+    expect(audits).toContainEqual(
+      expect.objectContaining({
+        action: "purchase_requisition.reopen",
+        entityId: source.purchaseRequisitionId,
+      }),
+    );
   });
 });

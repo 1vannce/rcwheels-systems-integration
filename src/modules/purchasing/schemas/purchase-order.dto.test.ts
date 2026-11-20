@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 
-import { CreatePurchaseOrderDto } from "./purchase-order.dto";
+import {
+  ApprovePurchaseOrderDto,
+  CancelPurchaseOrderBalanceDto,
+  CreatePurchaseOrderDto,
+} from "./purchase-order.dto";
 
 it("accepts a PO draft with unique lines and optional delivery terms", () => {
   const result = CreatePurchaseOrderDto.safeParse({
@@ -107,4 +111,57 @@ it("refuses an empty line list", () => {
   });
 
   expect(result.success).toBe(false);
+});
+
+it("requires a budget reason when approving a purchase order", () => {
+  expect(
+    ApprovePurchaseOrderDto.safeParse({ purchaseOrderId: "4" }).success,
+  ).toBe(false);
+  expect(
+    ApprovePurchaseOrderDto.safeParse({ purchaseOrderId: "4", reason: "  " })
+      .success,
+  ).toBe(false);
+  expect(
+    ApprovePurchaseOrderDto.safeParse({ purchaseOrderId: "4", reason: "no" })
+      .success,
+  ).toBe(false);
+});
+
+it("trims the approval budget reason", () => {
+  const result = ApprovePurchaseOrderDto.safeParse({
+    purchaseOrderId: "4",
+    reason: "  Budget approved for the quarter.  ",
+  });
+
+  expect(result.success).toBe(true);
+  expect(result.data?.reason).toBe("Budget approved for the quarter.");
+});
+
+it("refuses an approval reason over 300 characters", () => {
+  const result = ApprovePurchaseOrderDto.safeParse({
+    purchaseOrderId: "4",
+    reason: "a".repeat(301),
+  });
+
+  expect(result.success).toBe(false);
+});
+
+it("requires and trims a cancellation reason", () => {
+  expect(
+    CancelPurchaseOrderBalanceDto.safeParse({ purchaseOrderId: "4" }).success,
+  ).toBe(false);
+  expect(
+    CancelPurchaseOrderBalanceDto.safeParse({
+      purchaseOrderId: "4",
+      reason: "no",
+    }).success,
+  ).toBe(false);
+
+  const result = CancelPurchaseOrderBalanceDto.safeParse({
+    purchaseOrderId: "4",
+    reason: "  Supplier cannot deliver the balance.  ",
+  });
+
+  expect(result.success).toBe(true);
+  expect(result.data?.reason).toBe("Supplier cannot deliver the balance.");
 });

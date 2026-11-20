@@ -1,14 +1,17 @@
 // Public API of the purchasing module: export services and types only.
+export { cancelPurchaseOrderBalanceService } from "./services/purchase-order.cancel.service";
 export { createPurchaseOrderService } from "./services/purchase-order.create.service";
 export { discardPurchaseOrderDraftService } from "./services/purchase-order.discard.service";
 export {
   getPurchaseOrderEditContextService,
   getPurchaseOrderFormContextService,
+  listOpenPurchaseOrdersService,
   listPendingPurchaseOrdersService,
   listPurchaseOrdersForReceivingService,
   listPurchaseOrdersService,
 } from "./services/purchase-order.lists.service";
 export { placePurchaseOrderService } from "./services/purchase-order.place.service";
+export { getPurchaseOrderReviewContextService } from "./services/purchase-order.review-context.service";
 export {
   approvePurchaseOrderService,
   returnPurchaseOrderService,
@@ -31,9 +34,12 @@ export type {
   PurchaseOrderEditContextDto,
   PurchaseOrderFormContextDto,
   PurchaseOrderLineDto,
+  PurchaseOrderReviewContextDto,
   PurchaseOrderRevisionDto,
   PurchaseOrderSnapshot,
+  PurchaseOrderSnapshotDiff,
   PurchaseOrderSnapshotLine,
+  PurchaseOrderSnapshotLineChange,
   PurchaseOrderSourceLineDto,
   PurchaseOrderStatus,
   PurchaseRequisitionDto,

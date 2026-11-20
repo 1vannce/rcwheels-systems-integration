@@ -12,6 +12,7 @@ import {
   purchaseRequisitionLines,
   purchaseRequisitions,
   requisitionLines,
+  supplierReceiptLines,
   suppliers,
   users,
 } from "@/db/schema";
@@ -26,16 +27,22 @@ import type {
   PurchaseOrderStatus,
 } from "../types/purchasing.dto";
 
-/** PO states that still allocate demand against a PR line. */
-const ACTIVE_PURCHASE_ORDER_STATUSES = [
+/**
+ * PO states whose ordered quantity counts against a PR line's remaining
+ * orderable quantity. Closed POs count their accepted part, so a shortfall
+ * created by a cancelled balance is not ordered twice.
+ */
+const ORDERED_PURCHASE_ORDER_STATUSES = [
   "pending_approval",
   "for_revision",
   "approved",
   "placed",
   "partially_received",
+  "closed",
 ] as const satisfies readonly PurchaseOrderStatus[];
 
 const approver = alias(users, "purchase_order_approver");
+const canceller = alias(users, "purchase_order_canceller");
 const revisionReviewer = alias(users, "purchase_order_revision_reviewer");
 
 const purchaseOrderColumns = {
@@ -52,7 +59,25 @@ const purchaseOrderColumns = {
   currentVersion: purchaseOrders.currentVersion,
   deliveryTerms: purchaseOrders.deliveryTerms,
   supplierConfirmedAt: purchaseOrders.supplierConfirmedAt,
+  cancelledBy: purchaseOrders.cancelledBy,
+  cancelledByName: canceller.fullName,
+  cancelledAt: purchaseOrders.cancelledAt,
+  cancellationReason: purchaseOrders.cancellationReason,
 };
+
+/** Accepted quantity from supplier receipts; zero until receiving is built. */
+const acceptedQtyForLine = sql<string>`coalesce((
+  select sum(${supplierReceiptLines.acceptedQty})
+  from ${supplierReceiptLines}
+  where ${supplierReceiptLines.purchaseOrderLineId} = ${purchaseOrderLines.purchaseOrderLineId}
+), 0)::numeric(14, 3)`;
+
+const outstandingQtyForLine = sql<string>`greatest(
+  ${purchaseOrderLines.orderedQty}
+  - ${purchaseOrderLines.cancelledQty}
+  - ${acceptedQtyForLine},
+  0
+)::numeric(14, 3)`;
 
 /**
  * PR lines with the quantity already allocated to active PO drafts or POs.
@@ -83,7 +108,7 @@ export async function findPurchaseRequisitionLinesForOrder(
     inner join ${purchaseOrders}
       on ${purchaseOrders.purchaseOrderId} = ${purchaseOrderLines.purchaseOrderId}
     where ${purchaseOrderLines.purchaseRequisitionLineId} = ${purchaseRequisitionLines.purchaseRequisitionLineId}
-      and ${inArray(purchaseOrders.status, ACTIVE_PURCHASE_ORDER_STATUSES)}
+      and ${inArray(purchaseOrders.status, ORDERED_PURCHASE_ORDER_STATUSES)}
       ${excludePo}
   ), 0)::numeric(14, 3)`;
 
@@ -168,6 +193,7 @@ export async function lockPurchaseOrder(
   approvedBy: number | null;
   status: PurchaseOrderStatus;
   currentVersion: number;
+  cancelledAt: Date | null;
 } | null> {
   const [row] = await tx
     .select({
@@ -177,6 +203,7 @@ export async function lockPurchaseOrder(
       approvedBy: purchaseOrders.approvedBy,
       status: purchaseOrders.status,
       currentVersion: purchaseOrders.currentVersion,
+      cancelledAt: purchaseOrders.cancelledAt,
     })
     .from(purchaseOrders)
     .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId))
@@ -212,6 +239,54 @@ export async function markPurchaseOrderPlaced(
     .update(purchaseOrders)
     .set({ status: "placed", orderedAt })
     .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+}
+
+/**
+ * Replaces the cancelled quantity on each selected line. The caller passes
+ * lines whose remaining balance is above zero, so this is a one-time increase.
+ */
+export async function setPurchaseOrderLineCancelledQuantities(
+  tx: Tx,
+  purchaseOrderId: number,
+  lines: readonly { purchaseOrderLineId: number; cancelledQty: string }[],
+): Promise<void> {
+  for (const line of lines) {
+    await tx
+      .update(purchaseOrderLines)
+      .set({ cancelledQty: line.cancelledQty })
+      .where(
+        and(
+          eq(purchaseOrderLines.purchaseOrderId, purchaseOrderId),
+          eq(purchaseOrderLines.purchaseOrderLineId, line.purchaseOrderLineId),
+        ),
+      );
+  }
+}
+
+/**
+ * Records Accounting's cancellation on the header and sets the terminal status.
+ * A partially received PO becomes closed so its accepted quantity still counts
+ * toward PR coverage; an unreceived PO becomes cancelled.
+ */
+export async function markPurchaseOrderBalanceCancelled(
+  tx: Tx,
+  input: {
+    purchaseOrderId: number;
+    cancelledBy: number;
+    cancelledAt: Date;
+    cancellationReason: string;
+    status: "closed" | "cancelled";
+  },
+): Promise<void> {
+  await tx
+    .update(purchaseOrders)
+    .set({
+      status: input.status,
+      cancelledBy: input.cancelledBy,
+      cancelledAt: input.cancelledAt,
+      cancellationReason: input.cancellationReason,
+    })
+    .where(eq(purchaseOrders.purchaseOrderId, input.purchaseOrderId));
 }
 
 /** Marks an unapproved PO draft as cancelled so its lines stop allocating demand. */
@@ -425,6 +500,8 @@ export async function findPurchaseOrderLines(
       orderedQty: purchaseOrderLines.orderedQty,
       unitPrice: purchaseOrderLines.unitPrice,
       cancelledQty: purchaseOrderLines.cancelledQty,
+      acceptedQty: acceptedQtyForLine,
+      outstandingQty: outstandingQtyForLine,
     })
     .from(purchaseOrderLines)
     .innerJoin(
@@ -464,6 +541,8 @@ export async function findPurchaseOrderLinesFor(
       orderedQty: purchaseOrderLines.orderedQty,
       unitPrice: purchaseOrderLines.unitPrice,
       cancelledQty: purchaseOrderLines.cancelledQty,
+      acceptedQty: acceptedQtyForLine,
+      outstandingQty: outstandingQtyForLine,
     })
     .from(purchaseOrderLines)
     .innerJoin(
@@ -516,6 +595,7 @@ export async function findPurchaseOrderById(
     .innerJoin(suppliers, eq(suppliers.supplierId, purchaseOrders.supplierId))
     .innerJoin(users, eq(users.userId, purchaseOrders.preparedBy))
     .leftJoin(approver, eq(approver.userId, purchaseOrders.approvedBy))
+    .leftJoin(canceller, eq(canceller.userId, purchaseOrders.cancelledBy))
     .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId))
     .limit(1);
 
@@ -548,6 +628,7 @@ export async function findPurchaseOrders(
     .innerJoin(suppliers, eq(suppliers.supplierId, purchaseOrders.supplierId))
     .innerJoin(users, eq(users.userId, purchaseOrders.preparedBy))
     .leftJoin(approver, eq(approver.userId, purchaseOrders.approvedBy))
+    .leftJoin(canceller, eq(canceller.userId, purchaseOrders.cancelledBy))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(purchaseOrders.purchaseOrderId))
     .limit(options.limit);

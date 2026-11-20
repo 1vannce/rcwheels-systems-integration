@@ -82,13 +82,23 @@ export async function approvePurchaseOrderService(
       );
     }
 
+    const reason = dto.reason.trim();
+
+    if (reason.length < 3) {
+      throw blocked(
+        "Give a reason for approving the purchase order.",
+        "purchase_order.approve",
+        { purchaseOrderId: dto.purchaseOrderId },
+      );
+    }
+
     const reviewedAt = new Date();
     const reviewed = await reviewPurchaseOrderRevision(tx, {
       purchaseOrderId: dto.purchaseOrderId,
       versionNo: purchaseOrder.currentVersion,
       reviewedBy: actor.userId,
       budgetOk: true,
-      reviewReason: null,
+      reviewReason: reason,
       reviewedAt,
     });
 
@@ -122,6 +132,7 @@ export async function approvePurchaseOrderService(
       details: {
         versionNo: purchaseOrder.currentVersion,
         supplierId: purchaseOrder.supplierId,
+        reason,
       },
     });
 

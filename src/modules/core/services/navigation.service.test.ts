@@ -62,4 +62,34 @@ describe("navigation service", () => {
         ?.isBuilt,
     ).toBe(true);
   });
+
+  it("marks the built purchasing screens as available", () => {
+    const purchasingLinks = getNavigationForRole("purchasing_staff").flatMap(
+      (group) => group.items,
+    );
+    const accountingLinks = getNavigationForRole("accounting_associate").flatMap(
+      (group) => group.items,
+    );
+
+    expect(
+      purchasingLinks.find((item) => item.href === "/purchasing/requisitions")
+        ?.isBuilt,
+    ).toBe(true);
+    expect(
+      purchasingLinks.find((item) => item.href === "/purchasing/orders")?.isBuilt,
+    ).toBe(true);
+    expect(
+      purchasingLinks.find((item) => item.href === "/purchasing/suppliers")
+        ?.isBuilt,
+    ).toBe(false);
+    expect(
+      accountingLinks.find(
+        (item) => item.href === "/purchasing/accounting-review",
+      )?.isBuilt,
+    ).toBe(true);
+    expect(
+      accountingLinks.find((item) => item.href === "/purchasing/open-orders")
+        ?.isBuilt,
+    ).toBe(true);
+  });
 });

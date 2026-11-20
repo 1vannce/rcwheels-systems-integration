@@ -52,6 +52,10 @@ export type PurchaseOrderLineDto = {
   orderedQty: string;
   unitPrice: string;
   cancelledQty: string;
+  /** Accepted quantity from supplier receipts; zero until receiving is built. */
+  acceptedQty: string;
+  /** Ordered minus cancelled and accepted, clamped at zero. */
+  outstandingQty: string;
 };
 
 /** One immutable PO version snapshot. */
@@ -85,6 +89,10 @@ export type PurchaseOrderDto = {
   currentVersion: number;
   deliveryTerms: string | null;
   supplierConfirmedAt: Date | null;
+  cancelledBy: number | null;
+  cancelledByName: string | null;
+  cancelledAt: Date | null;
+  cancellationReason: string | null;
   lines: PurchaseOrderLineDto[];
 };
 
@@ -109,6 +117,31 @@ export type PurchaseOrderSnapshot = {
   supplier: SupplierDto;
   deliveryTerms: string | null;
   lines: PurchaseOrderSnapshotLine[];
+};
+
+/** One added, removed, or changed line between two PO versions. */
+export type PurchaseOrderSnapshotLineChange = {
+  purchaseRequisitionLineId: number;
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  change: "added" | "removed" | "changed";
+  previousOrderedQty: string | null;
+  orderedQty: string | null;
+  previousUnitPrice: string | null;
+  unitPrice: string | null;
+};
+
+/** What changed between the previous and current PO version. */
+export type PurchaseOrderSnapshotDiff = {
+  supplierChanged: boolean;
+  previousSupplierName: string;
+  supplierName: string;
+  deliveryTermsChanged: boolean;
+  previousDeliveryTerms: string | null;
+  deliveryTerms: string | null;
+  lineChanges: PurchaseOrderSnapshotLineChange[];
+  hasChanges: boolean;
 };
 
 /** Coverage of one PR line by PO lines, split by whether the PO is committed. */
@@ -161,7 +194,19 @@ export type PurchaseRequisitionSummaryDto = {
   purchaseRequisitionId: number;
   requestedByName: string;
   requestedAt: Date;
+  requestReason: PurchaseRequisitionReason;
   status: PurchaseRequisitionStatus;
+};
+
+/** Everything the Accounting review detail needs for one PO. */
+export type PurchaseOrderReviewContextDto = {
+  order: PurchaseOrderDetailDto;
+  supplier: SupplierDto | null;
+  sourcePurchaseRequisition: PurchaseRequisitionSummaryDto | null;
+  /** Null for version 1, or when a snapshot cannot be read. */
+  versionDiff: PurchaseOrderSnapshotDiff | null;
+  /** True when the current version snapshot is missing or malformed. */
+  snapshotUnavailable: boolean;
 };
 
 /** Everything the Purchasing Staff PO form needs for one open PR. */

@@ -34,7 +34,7 @@ Reading order that avoids confusion:
 | Login, roles, screens, audit, notifications, attachments | Done (Phase 1) | `src/modules/core/`, `src/app/login`, `src/app/(app)/layout.tsx` |
 | Inventory: items, stock, adjustments, sales deductions | Done (Phase 2), DB-backed tests exist | `src/modules/inventory/`, `src/app/(app)/inventory/`, `src/db/schema/inventory.ts` |
 | Requisition (RF, approval, reserve, AR, dispatch) | **Phase 3 built** — see [REQUISITION_MODULE.md](REQUISITION_MODULE.md) | `src/modules/requisition/`, screens under `src/app/(app)/requisitions/` and `.../inventory/` |
-| Purchasing | **Not started** | `src/modules/purchasing/index.ts` |
+| Purchasing | **Phase 5 built** — PR queue, PO editor, Accounting review, open PO follow-up | `src/modules/purchasing/`, screens under `src/app/(app)/purchasing/` |
 | Delivery / supplier receiving | **Not started** | `src/modules/delivery/index.ts` |
 | Dashboard, timeline, low-stock review | Dashboard exists; timeline is a placeholder | `src/app/(app)/dashboard/page.tsx`, `src/app/(app)/[...path]/page.tsx` |
 
@@ -229,7 +229,8 @@ The requisition module is built and documented in
 [REQUISITION_MODULE.md](REQUISITION_MODULE.md): submit → approve/reject →
 resubmit → reserve → AR preparation → dispatch, with DTOs, DB-backed tests, and
 screens under `src/app/(app)/requisitions/` and `src/app/(app)/inventory/`.
-Phases 4 (internal delivery, acceptance, returns) and 5 (purchasing) remain.
+Phase 5 (purchasing) is built. Phases 4 (internal delivery, acceptance, returns)
+and 6 (supplier receiving) remain.
 
 ### C. Finish the visibility work that is cheap now (small, parallel)
 
