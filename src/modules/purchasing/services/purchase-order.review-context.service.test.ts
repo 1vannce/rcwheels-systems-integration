@@ -178,7 +178,7 @@ describeWithDatabase("purchase order review context service", () => {
     });
     expect(context?.sourcePurchaseRequisition).toMatchObject({
       purchaseRequisitionId: source.purchaseRequisitionId,
-      requestedByName: "Test requester",
+      requestedByName: "Test inventory_custodian",
       requestReason: "shortage",
       status: "open",
     });

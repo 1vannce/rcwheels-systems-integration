@@ -116,8 +116,7 @@ export const ApproveRequisitionDto = z.object({
     .string()
     .trim()
     .max(300, "Keep the note under 300 characters.")
-    .optional()
-    .transform((v) => (v === "" ? undefined : v)),
+    .optional(),
 });
 
 export type ApproveRequisitionDto = z.infer<typeof ApproveRequisitionDto>;
