@@ -53,12 +53,15 @@ Unfinished issues:
 
 ## Phase 5 - Purchasing
 
-- [ ] Implement Connector B and uncovered-shortfall calculation
+- [x] Implement Connector B and uncovered-shortfall calculation
 - [ ] Implement suppliers and PR creation
-- [ ] Implement PO creation and Accounting review
-- [ ] Implement the PO revision loop and placement
-- [ ] Implement Connector E
-- [ ] Verify a shortage produces one approved PO with no duplicate demand
+- [x] Implement PO creation and Accounting review
+- [x] Implement the PO revision loop and placement
+- [x] Implement Connector E
+- [x] Verify a shortage produces one approved PO with no duplicate demand
+
+Open in Phase 5: supplier create/edit and evaluation are not built; the PO
+screens use the seeded suppliers.
 
 ## Phase 6 - Supplier receiving
 
@@ -90,6 +93,7 @@ Unfinished issues:
 - Progress updated 2026-11-11: foundation implementation and inventory-core implementation are present on `main`; phase exit criteria still need verification.
 - Progress updated 2026-11-13: #7, #8, #9, #32, #33, and #34 are closed. The Phase 3 exit path (approve, reserve, prepare AR, dispatch, stock deducted once, second dispatch refused) passes in `requisition.service.test.ts` against a local PostgreSQL 18 test database. Partial issue now lets the reserved remainder be prepared and dispatched later. Connector A and dispatch stay open until #30 is compared with the merged code.
 - Progress updated 2026-11-18 (Phase 5, branch `feat/purchasing-shortage-pr`): the Custodian can mark a fully out-of-stock request as Awaiting Stock, raise a shortage PR for the uncovered quantity, and Purchasing Staff have a PR queue at `/purchasing/requisitions`. Allocated outstanding PO quantity and open PRs are subtracted so the same demand is not requested twice. Still open: supplier management, PO creation and Accounting review, reorder PRs, and marking a PR covered when its PO is created.
+- Progress updated 2026-11-18 (Phase 5, branch `feat/purchasing-purchase-orders`): Purchasing Staff can prepare a PO from a shortage PR, Accounting can approve or return the exact submitted version, a revision creates a new version and a fresh review, and an approved current version can be placed. Placing a PO records the order date, notifies Delivery Operations, and exposes it through the Supplier Receiving handoff without posting stock. A PR is marked covered only when committed PO quantity reaches every line; unapproved drafts reserve quantity but do not cover, and discarding a draft releases it. The full lifecycle and role boundaries pass in `purchase-order.lifecycle.test.ts` and `purchase-order.roles.test.ts` against local PostgreSQL 18. Still open: supplier create/edit and evaluation, reorder PRs, PO balance cancellation, and the receiving screen.
 - Progress updated 2026-11-13 (Phase 3 close-out, branch `test/phase3-role-blocks`): a manual run of the local app with every seeded account confirmed each role's menu and that every other screen opened by URL ends at `/forbidden` with a `blocked:open-screen:*` audit row (Phase 1 item). Scenario 12 for reserve, prepare AR, and dispatch is covered by `requisition.actions.test.ts` (requester, mechanic, and approver blocked and audited; custodian passes). The manual run also covered scenario 1 (stock deducted once at dispatch), the partial issue and remainder (two dispatches, each deducting only its sent quantity), a double-clicked and a stale-tab dispatch (one deduction), and the screen states. #30 was compared with the merged code: dispatch and Connector A (an approved request appears in the issue queue and notifies the Custodian) are in place. Fixed on this branch: a prepared but unreleased AR was shown as dispatched and in transit. Still open: what the header status should read while a partial remainder waits for its next AR. Not yet run on the deployed site.
 - Keep this checklist synchronized with issue and pull request status.
 - Do not mark a phase complete until its PLAN.md exit criterion is verified.
