@@ -19,6 +19,7 @@ export {
   getPurchaseRequestContextService,
   listOpenPurchaseRequisitionsService,
 } from "./services/purchase-requisition.lists.service";
+export { formatPoNumber } from "./utils/po-number.util";
 export { listSuppliersService } from "./services/supplier.service";
 export {
   purchaseOrderStatuses,

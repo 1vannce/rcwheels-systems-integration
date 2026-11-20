@@ -30,6 +30,8 @@ export async function approvePurchaseOrderAction(
 
   revalidatePath("/purchasing/accounting-review");
   revalidatePath("/purchasing/orders");
+  revalidatePath("/purchasing/orders/[purchaseOrderId]", "page");
+  revalidatePath("/purchasing/requisitions");
 
   return { ok: true, message: "Purchase order approved." };
 }

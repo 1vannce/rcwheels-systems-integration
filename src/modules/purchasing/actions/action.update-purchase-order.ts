@@ -44,6 +44,7 @@ export async function updatePurchaseOrderAction(
   revalidatePath("/purchasing/orders");
   revalidatePath(`/purchasing/orders/${purchaseOrderId}`);
   revalidatePath("/purchasing/accounting-review");
+  revalidatePath("/purchasing/requisitions");
 
   return { ok: true, message };
 }

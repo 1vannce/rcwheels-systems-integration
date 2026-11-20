@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import PageHeader from "@/components/page-header";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { requireScreen, requireUser } from "@/modules/core";
-import { getPurchaseOrderEditContextService } from "@/modules/purchasing";
+import {
+  formatPoNumber,
+  getPurchaseOrderEditContextService,
+  type PurchaseOrderStatus,
+} from "@/modules/purchasing";
 import { EditPurchaseOrderForm } from "@/modules/purchasing/components/edit-purchase-order-form";
 import { DiscardPurchaseOrderDraftButton } from "@/modules/purchasing/components/discard-purchase-order-draft-button";
 import { PlacePurchaseOrderButton } from "@/modules/purchasing/components/place-purchase-order-button";
-import type { PurchaseOrderStatus } from "@/modules/purchasing/types/purchasing.dto";
-import { formatPoNumber } from "@/modules/purchasing/utils/po-number.util";
 
 export const metadata: Metadata = { title: "Purchase order" };
 
