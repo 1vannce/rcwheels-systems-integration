@@ -27,12 +27,13 @@ const CANCELLABLE_STATUSES: readonly PurchaseOrderStatus[] = [
 ];
 
 function blocked(
+  purchaseOrderId: number,
   message: string,
   details: Record<string, unknown>,
 ): BlockedActionError {
   return new BlockedActionError(message, {
     entityType: "purchase_orders",
-    entityId: 0,
+    entityId: purchaseOrderId,
     action: "purchase_order.cancel_balance",
     details,
   });
@@ -58,6 +59,7 @@ export async function cancelPurchaseOrderBalanceService(
   await runBusinessEvent(actor.userId, async (tx) => {
     if (actor.role !== "accounting_associate") {
       throw blocked(
+        dto.purchaseOrderId,
         "Only the Accounting Associate can cancel a purchase order balance.",
         { purchaseOrderId: dto.purchaseOrderId },
       );
@@ -66,13 +68,18 @@ export async function cancelPurchaseOrderBalanceService(
     const purchaseOrder = await lockPurchaseOrder(tx, dto.purchaseOrderId);
 
     if (!purchaseOrder) {
-      throw blocked("The purchase order no longer exists.", {
-        purchaseOrderId: dto.purchaseOrderId,
-      });
+      throw blocked(
+        dto.purchaseOrderId,
+        "The purchase order no longer exists.",
+        {
+          purchaseOrderId: dto.purchaseOrderId,
+        },
+      );
     }
 
     if (purchaseOrder.cancelledAt !== null) {
       throw blocked(
+        dto.purchaseOrderId,
         "The balance of this purchase order was already cancelled.",
         {
           purchaseOrderId: dto.purchaseOrderId,
@@ -86,6 +93,7 @@ export async function cancelPurchaseOrderBalanceService(
         purchaseOrder.status === "for_revision"
       ) {
         throw blocked(
+          dto.purchaseOrderId,
           "Only an approved, placed, or partially received purchase order can have its balance cancelled. Discard an unapproved draft instead.",
           {
             purchaseOrderId: dto.purchaseOrderId,
@@ -94,16 +102,21 @@ export async function cancelPurchaseOrderBalanceService(
         );
       }
 
-      throw blocked("This purchase order is already closed or cancelled.", {
-        purchaseOrderId: dto.purchaseOrderId,
-        status: purchaseOrder.status,
-      });
+      throw blocked(
+        dto.purchaseOrderId,
+        "This purchase order is already closed or cancelled.",
+        {
+          purchaseOrderId: dto.purchaseOrderId,
+          status: purchaseOrder.status,
+        },
+      );
     }
 
     const reason = dto.reason.trim();
 
     if (reason.length < 3) {
       throw blocked(
+        dto.purchaseOrderId,
         "Give a reason for cancelling the purchase order balance.",
         {
           purchaseOrderId: dto.purchaseOrderId,
@@ -117,9 +130,13 @@ export async function cancelPurchaseOrderBalanceService(
     );
 
     if (linesToCancel.length === 0) {
-      throw blocked("There is no remaining balance to cancel.", {
-        purchaseOrderId: dto.purchaseOrderId,
-      });
+      throw blocked(
+        dto.purchaseOrderId,
+        "There is no remaining balance to cancel.",
+        {
+          purchaseOrderId: dto.purchaseOrderId,
+        },
+      );
     }
 
     const cancelledAt = new Date();

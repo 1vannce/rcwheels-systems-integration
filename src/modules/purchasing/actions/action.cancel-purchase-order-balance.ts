@@ -39,6 +39,9 @@ export async function cancelPurchaseOrderBalanceAction(
   if (purchaseOrderId !== null) {
     revalidatePath(`/purchasing/accounting-review/${purchaseOrderId}`);
   }
+  if (purchaseOrderId !== null) {
+    revalidatePath(`/purchasing/orders/${purchaseOrderId}`);
+  }
   revalidatePath("/purchasing/open-orders");
   revalidatePath("/purchasing/orders");
   revalidatePath("/purchasing/requisitions");

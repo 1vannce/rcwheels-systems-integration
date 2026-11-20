@@ -229,7 +229,7 @@ export function PurchaseOrderReviewDetail({
                 <th className="p-3 text-right font-medium">Accepted</th>
                 <th className="p-3 text-right font-medium">Outstanding</th>
                 <th className="p-3 text-right font-medium">Unit price</th>
-                <th className="p-3 text-right font-medium">Line total</th>
+                <th className="p-3 text-right font-medium">Ordered line total</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -266,7 +266,7 @@ export function PurchaseOrderReviewDetail({
             <tfoot>
               <tr>
                 <td className="p-3 text-right font-medium" colSpan={6}>
-                  PO total
+                  Ordered total
                 </td>
                 <td className="p-3 text-right font-semibold tabular-nums">
                   {formatCents(totalCents)}
