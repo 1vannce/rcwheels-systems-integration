@@ -14,7 +14,7 @@ describe("getNotificationHref", () => {
         notificationType: "requisition.stock_shortage",
         message: "RF #40 approved with 1 out-of-stock item(s).",
       }),
-    ).toBe("/requisitions/40");
+    ).toBe("/requisitions/40?from=notifications");
   });
 
   it("extracts RF or Request number from message when requisitionId is null", () => {
@@ -24,7 +24,7 @@ describe("getNotificationHref", () => {
         notificationType: "requisition_awaiting_stock",
         message: "Request #35 has no stock available and is awaiting stock.",
       }),
-    ).toBe("/requisitions/35");
+    ).toBe("/requisitions/35?from=notifications");
 
     expect(
       getNotificationHref({
@@ -32,7 +32,7 @@ describe("getNotificationHref", () => {
         notificationType: "requisition.approved",
         message: "RF #12 is approved.",
       }),
-    ).toBe("/requisitions/12");
+    ).toBe("/requisitions/12?from=notifications");
   });
 
   it("routes stock count and adjustment notifications to adjustments page", () => {

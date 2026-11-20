@@ -62,13 +62,13 @@ export function getNotificationHref(
 ): string | null {
   // 1. Direct requisition ID link if recorded on the notification
   if (notification.requisitionId) {
-    return `/requisitions/${notification.requisitionId}`;
+    return `/requisitions/${notification.requisitionId}?from=notifications`;
   }
 
   // 2. Fallback: message contains an RF or Request number (e.g. "RF #40", "Request #35")
   const reqMatch = notification.message.match(/(?:RF|Request)\s*#(\d+)/i);
   if (reqMatch) {
-    return `/requisitions/${reqMatch[1]}`;
+    return `/requisitions/${reqMatch[1]}?from=notifications`;
   }
 
   // 3. Stock adjustments
