@@ -28,6 +28,7 @@ export async function approveRequisitionAction(
     const parsed = ApproveRequisitionDto.safeParse({
       requisitionId,
       lines: readLines(formData),
+      inventoryNote: textField(formData, "inventoryNote"),
     });
 
     if (!parsed.success) {

@@ -13,8 +13,11 @@ import { compareQuantities } from "@/modules/inventory";
 import { notifyUsers, notifyRoles } from "@/modules/core";
 import { actionBlockedUtil as blocked } from "./utils/requisition.action-blocker.util";
 
-/** Notification type recorded when a request enters the approval queue. */
+/** Notification type recorded when a request is approved. */
 const APPROVED_NOTIFICATION = "requisition.approved";
+
+/** Notification type fired when an approved request has one or more out-of-stock lines. */
+const SHORTAGE_NOTIFICATION = "requisition.stock_shortage";
 
 /**
  * Approves a request, possibly for less than the requested quantity.
@@ -23,6 +26,12 @@ const APPROVED_NOTIFICATION = "requisition.approved";
  * Approved, appends the history, notifies the requester, and alerts the
  * Inventory Custodian queue (connector A). Approving never authorizes a
  * purchase (BR-RQ-16).
+ *
+ * When one or more approved lines have zero available stock, the Inventory
+ * Manager is also notified so restocking can begin without waiting for the
+ * custodian's physical check. The optional `inventoryNote` from the approver
+ * is saved to `requisition_status_history.reason` (auditable, Option B) and
+ * appended to the shortage notification.
  */
 export async function approveRequisitionService(
   actor: AppUser,
@@ -60,13 +69,28 @@ export async function approveRequisitionService(
       await updateRequisitionLineApprovedQty(tx, line.requisitionLineId, line.approvedQty);
     }
 
+    // Identify lines with zero available stock so we can notify the Inventory
+    // Manager and record the approver's note.
+    const shortageLines = lines.filter(
+      (line) => compareQuantities(line.availableStock, "0") <= 0,
+    );
+    const hasShortage = shortageLines.length > 0;
+
+    // The status-history reason is the approver's note when provided, or a
+    // system-generated shortage notice, or null for a fully-stocked approval.
+    const historyReason = dto.inventoryNote
+      ? dto.inventoryNote
+      : hasShortage
+        ? `Approved with ${shortageLines.length} out-of-stock item(s): ${shortageLines.map((l) => l.itemCode).join(", ")}.`
+        : null;
+
     await updateRequisitionStatus(tx, dto.requisitionId, "approved");
     await insertRequisitionStatusHistory(tx, {
       requisitionId: dto.requisitionId,
       changedBy: actor.userId,
       fromStatus: "pending_approval",
       toStatus: "approved",
-      reason: null,
+      reason: historyReason,
     });
 
     await recordAudit(tx, {
@@ -74,7 +98,7 @@ export async function approveRequisitionService(
       entityType: "requisitions",
       entityId: dto.requisitionId,
       action: "requisition.approve",
-      details: { approvedLines: dto.lines },
+      details: { approvedLines: dto.lines, shortageLines: shortageLines.map((l) => l.itemCode) },
     });
 
     await notifyUsers(tx, [locked.submittedBy], {
@@ -93,5 +117,24 @@ export async function approveRequisitionService(
       },
       actor.userId,
     );
+
+    // Fire a high-priority shortage alert to the Inventory Manager so
+    // restocking can begin immediately — before the custodian's physical check.
+    if (hasShortage) {
+      const noteClause = dto.inventoryNote ? ` Note from approver: "${dto.inventoryNote}".` : "";
+      await notifyRoles(
+        tx,
+        ["inventory_manager"],
+        {
+          type: SHORTAGE_NOTIFICATION,
+          message:
+            `RF #${dto.requisitionId} approved with ${shortageLines.length} out-of-stock item(s)` +
+            ` — ${shortageLines.map((l) => `${l.itemCode} (0 available)`).join(", ")}.` +
+            ` Restock needed.${noteClause}`,
+          requisitionId: dto.requisitionId,
+        },
+        actor.userId,
+      );
+    }
   });
 }
