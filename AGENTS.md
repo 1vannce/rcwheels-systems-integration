@@ -14,6 +14,8 @@ Academic prototype: Next.js 16 App Router + TypeScript, Supabase Postgres/Auth, 
 
 Read [docs/PLAN.md](docs/PLAN.md) before changing behavior. It is the source of truth for scope, final decisions (section 3), structure (section 4), data model and stock events (section 7), and build phases (section 8). Do not ask the instructor or client to confirm anything; resolve gaps from the plan.
 
+Domain terms are in [GLOSSARY.md](GLOSSARY.md). Use its words in code, UI, and docs, and avoid the synonyms it lists.
+
 ## Commands
 
 - Install with `npm install`; npm is the package manager and `package-lock.json` is committed.
