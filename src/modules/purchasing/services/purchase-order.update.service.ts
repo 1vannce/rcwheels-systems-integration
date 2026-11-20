@@ -108,6 +108,13 @@ export async function updatePurchaseOrderService(
       });
     }
 
+    if (purchaseRequisition.status === "cancelled") {
+      throw blocked("The source purchase request was cancelled.", {
+        purchaseOrderId: dto.purchaseOrderId,
+        purchaseRequisitionId,
+      });
+    }
+
     const requestedLineIds = dto.lines.map((line) => line.purchaseRequisitionLineId);
     const uniqueLineIds = [...new Set(requestedLineIds)];
 

@@ -278,6 +278,24 @@ describeWithDatabase("purchase order update service", () => {
     ).rejects.toThrow("returned or approved");
   });
 
+  it("refuses to revise a PO whose purchase request was cancelled", async () => {
+    const source = await setupPendingPo();
+    await returnPurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId: source.purchaseOrderId,
+      reason: "Please revise.",
+    });
+    await db
+      .update(purchaseRequisitions)
+      .set({ status: "cancelled" })
+      .where(
+        eq(purchaseRequisitions.purchaseRequisitionId, source.purchaseRequisitionId),
+      );
+
+    await expect(
+      updatePurchaseOrderService(people.purchasing_staff, revisionInput(source, "7")),
+    ).rejects.toThrow("cancelled");
+  });
+
   it("blocks another role from revising", async () => {
     const source = await setupPendingPo();
     await returnPurchaseOrderService(people.accounting_associate, {

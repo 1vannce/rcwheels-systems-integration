@@ -33,6 +33,7 @@ const ACTIVE_PURCHASE_ORDER_STATUSES = [
   "approved",
   "placed",
   "partially_received",
+  "closed",
 ] as const satisfies readonly PurchaseOrderStatus[];
 
 const approver = alias(users, "purchase_order_approver");
