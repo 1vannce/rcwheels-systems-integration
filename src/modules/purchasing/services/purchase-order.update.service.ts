@@ -38,7 +38,7 @@ function blocked(message: string, details: Record<string, unknown>): BlockedActi
 }
 
 /**
- * Revises a PO that is awaiting Accounting or has been returned for revision.
+ * Revises a PO that has been returned for revision or approved but not yet placed.
  *
  * Every save creates a new version, stores a new snapshot, and resets the PO to
  * Pending Approval. The earlier revision rows and their reviews stay intact, so

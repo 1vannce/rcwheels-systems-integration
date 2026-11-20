@@ -31,6 +31,8 @@ export async function returnPurchaseOrderAction(
 
   revalidatePath("/purchasing/accounting-review");
   revalidatePath("/purchasing/orders");
+  revalidatePath("/purchasing/orders/[purchaseOrderId]", "page");
+  revalidatePath("/purchasing/requisitions");
 
   return { ok: true, message: "Purchase order returned for revision." };
 }
