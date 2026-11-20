@@ -213,6 +213,7 @@ describeWithDatabase("purchase order update service", () => {
     const source = await setupPendingPo();
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: source.purchaseOrderId,
+      reason: "Budget approved.",
     });
 
     await expect(
@@ -238,6 +239,7 @@ describeWithDatabase("purchase order update service", () => {
 
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: source.purchaseOrderId,
+      reason: "Budget approved.",
     });
     await expect(
       isPurchaseOrderCurrentVersionApproved(db, source.purchaseOrderId),

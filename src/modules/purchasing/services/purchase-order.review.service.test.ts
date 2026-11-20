@@ -104,7 +104,10 @@ describeWithDatabase("purchase order review service", () => {
   it("approves the current version and records the Accounting review", async () => {
     const { purchaseOrderId } = await setupPendingPo();
 
-    await approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId });
+    await approvePurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId,
+      reason: "Budget approved for this month.",
+    });
 
     const [header] = await db
       .select()
@@ -123,13 +126,17 @@ describeWithDatabase("purchase order review service", () => {
     expect(revision).toMatchObject({
       budgetOk: true,
       reviewedBy: people.accounting_associate.userId,
-      reviewReason: null,
+      reviewReason: "Budget approved for this month.",
     });
     expect(revision.reviewedAt).not.toBeNull();
 
     const audits = await db.select().from(auditLog);
     expect(audits).toContainEqual(
-      expect.objectContaining({ action: "purchase_order.approve", entityId: purchaseOrderId }),
+      expect.objectContaining({
+        action: "purchase_order.approve",
+        entityId: purchaseOrderId,
+        changeDetails: expect.stringContaining("Budget approved for this month."),
+      }),
     );
 
     const alerts = await db.select().from(notifications);
@@ -139,6 +146,17 @@ describeWithDatabase("purchase order review service", () => {
         notificationType: "purchase_order_approved",
       }),
     );
+  });
+
+  it("refuses an approval reason that is too short when called outside the DTO", async () => {
+    const { purchaseOrderId } = await setupPendingPo();
+
+    await expect(
+      approvePurchaseOrderService(people.accounting_associate, {
+        purchaseOrderId,
+        reason: "no",
+      }),
+    ).rejects.toThrow("Give a reason for approving");
   });
 
   it("returns the current version with a reason and notifies the preparer", async () => {
@@ -182,7 +200,10 @@ describeWithDatabase("purchase order review service", () => {
     const { purchaseOrderId } = await setupPendingPo(people.accounting_associate.userId);
 
     await expect(
-      approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId }),
+      approvePurchaseOrderService(people.accounting_associate, {
+        purchaseOrderId,
+        reason: "Budget approved.",
+      }),
     ).rejects.toThrow("cannot approve a purchase order you prepared");
 
     const audits = await db
@@ -194,7 +215,10 @@ describeWithDatabase("purchase order review service", () => {
 
   it("blocks a second review once the PO is no longer pending", async () => {
     const { purchaseOrderId } = await setupPendingPo();
-    await approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId });
+    await approvePurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId,
+      reason: "Budget approved.",
+    });
 
     await expect(
       returnPurchaseOrderService(people.accounting_associate, {
@@ -208,7 +232,10 @@ describeWithDatabase("purchase order review service", () => {
     const { purchaseOrderId } = await setupPendingPo();
 
     await expect(
-      approvePurchaseOrderService(people.purchasing_staff, { purchaseOrderId }),
+      approvePurchaseOrderService(people.purchasing_staff, {
+        purchaseOrderId,
+        reason: "Budget approved.",
+      }),
     ).rejects.toThrow("Only the Accounting Associate");
 
     const audits = await db

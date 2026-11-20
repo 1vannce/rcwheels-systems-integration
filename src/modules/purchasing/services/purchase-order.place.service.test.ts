@@ -98,7 +98,10 @@ describeWithDatabase("purchase order place service", () => {
       }),
     });
     if (options.approved !== false) {
-      await approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId });
+      await approvePurchaseOrderService(people.accounting_associate, {
+        purchaseOrderId,
+        reason: "Budget approved.",
+      });
     }
 
     return {

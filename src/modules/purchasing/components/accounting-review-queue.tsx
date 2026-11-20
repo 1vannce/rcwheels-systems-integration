@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatQuantity } from "@/modules/inventory";
@@ -39,7 +41,12 @@ export function AccountingReviewQueue({ orders }: { orders: PurchaseOrderDto[] }
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">
-                  {formatPoNumber(order.purchaseOrderId)}
+                  <Link
+                    href={`/purchasing/accounting-review/${order.purchaseOrderId}`}
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    {formatPoNumber(order.purchaseOrderId)}
+                  </Link>
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   {order.supplierName} · prepared by {order.preparedByName}

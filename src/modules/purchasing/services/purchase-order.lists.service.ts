@@ -27,6 +27,13 @@ const OPEN_PURCHASE_ORDER_STATUSES = [
   "partially_received",
 ] as const;
 
+/** POs whose commitments are still open after Accounting approval. */
+const OPEN_COMMITMENT_PURCHASE_ORDER_STATUSES = [
+  "approved",
+  "placed",
+  "partially_received",
+] as const;
+
 const PURCHASE_ORDER_LIST_LIMIT = 100;
 
 /** Active POs for the Purchasing Staff list, newest first. */
@@ -53,6 +60,28 @@ export async function listPendingPurchaseOrdersService(
 
   return findPurchaseOrders(db, {
     statuses: ["pending_approval"],
+    limit: PURCHASE_ORDER_LIST_LIMIT,
+  });
+}
+
+/**
+ * Approved, placed, and partially received POs for the open PO follow-up.
+ * Accounting uses it to see committed and outstanding value; Purchasing Staff
+ * use it to follow up deliveries.
+ */
+export async function listOpenPurchaseOrdersService(
+  actor: AppUser,
+): Promise<PurchaseOrderDto[]> {
+  if (
+    actor.role !== "purchasing_staff" &&
+    actor.role !== "accounting_associate" &&
+    actor.role !== "system_administrator"
+  ) {
+    return [];
+  }
+
+  return findPurchaseOrders(db, {
+    statuses: OPEN_COMMITMENT_PURCHASE_ORDER_STATUSES,
     limit: PURCHASE_ORDER_LIST_LIMIT,
   });
 }

@@ -14,6 +14,7 @@ Source: the "ERD" section of the team's FigJam board (SIA - flowchart, node `163
 | 4 | `stock_movements`: added `movement_type`, `unit_cost` and `reverses_movement_id` (self FK) | Distinguishes sales deductions, return inspections and supplier returns, which have no source line. `unit_cost` supports the value reversal. A sales reversal links to the movement it reverses, because history is append-only |
 | 5 | New `purchase_order_revisions`; `purchase_orders.revision_reason` replaced by `current_version` | Approved PO versions and earlier commitments must be kept (rule 2). Holds the Accounting yes/no budget decision with a reason (decision 7) |
 | 6 | `acknowledgement_receipts`: `signed_by_name` replaced by `signed_by` (FK to `users`) | Mechanics have their own accounts and sign their own ARs; the system stores the signed-in user and timestamp (decisions 2 and 3) |
+| 7 | `purchase_orders`: added `cancelled_by`, `cancelled_at` and `cancellation_reason` | Accounting authorization of a PO balance cancellation. One cancellation per PO is recorded on the header; accepted quantities and earlier revisions stay intact (BR-PU-11) |
 
 Left as the FigJam ERD has it, on purpose:
 
@@ -215,6 +216,9 @@ erDiagram
     int current_version
     string delivery_terms
     datetime supplier_confirmed_at "optional"
+    int cancelled_by FK "optional, Accounting"
+    datetime cancelled_at "optional"
+    string cancellation_reason "optional"
   }
   PURCHASE_ORDER_LINES {
     int purchase_order_line_id PK

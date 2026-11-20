@@ -17,6 +17,7 @@ import {
 } from "@/test/db";
 import { createItem, createRequisitionLine } from "@/test/stock-fixtures";
 
+import { cancelPurchaseOrderBalanceService } from "./purchase-order.cancel.service";
 import { createPurchaseOrderService } from "./purchase-order.create.service";
 import { discardPurchaseOrderDraftService } from "./purchase-order.discard.service";
 import { placePurchaseOrderService } from "./purchase-order.place.service";
@@ -99,7 +100,10 @@ describeWithDatabase("purchase order role boundaries", () => {
     const source = await setupOpenPr();
     const purchaseOrderId = await setupPendingPo(source);
 
-    await approvePurchaseOrderService(people.accounting_associate, { purchaseOrderId });
+    await approvePurchaseOrderService(people.accounting_associate, {
+      purchaseOrderId,
+      reason: "Budget approved.",
+    });
     await placePurchaseOrderService(people.purchasing_staff, { purchaseOrderId });
 
     const [header] = await db
@@ -187,18 +191,28 @@ describeWithDatabase("purchase order role boundaries", () => {
   );
 
   it.each(nonAccountingRoles)(
-    "blocks %s from approving or returning a PO",
+    "blocks %s from approving, returning, or cancelling a PO",
     async (role) => {
       const actor = people[role];
 
       await expect(
-        approvePurchaseOrderService(actor, { purchaseOrderId: 999999 }),
+        approvePurchaseOrderService(actor, {
+          purchaseOrderId: 999999,
+          reason: "Budget approved.",
+        }),
       ).rejects.toThrow("Only the Accounting Associate");
 
       await expect(
         returnPurchaseOrderService(actor, {
           purchaseOrderId: 999999,
           reason: "Not budgeted.",
+        }),
+      ).rejects.toThrow("Only the Accounting Associate");
+
+      await expect(
+        cancelPurchaseOrderBalanceService(actor, {
+          purchaseOrderId: 999999,
+          reason: "Not allowed.",
         }),
       ).rejects.toThrow("Only the Accounting Associate");
     },

@@ -17,6 +17,7 @@ export async function approvePurchaseOrderAction(
     const user = await requireRole(["accounting_associate"], "purchase_order.approve");
     const parsed = ApprovePurchaseOrderDto.safeParse({
       purchaseOrderId: textField(formData, "purchaseOrderId"),
+      reason: textField(formData, "reason"),
     });
 
     if (!parsed.success) {

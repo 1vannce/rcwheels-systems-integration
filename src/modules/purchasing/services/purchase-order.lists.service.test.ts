@@ -23,6 +23,7 @@ import {
 } from "../repositories/purchase-order.repository";
 import {
   getPurchaseOrderFormContextService,
+  listOpenPurchaseOrdersService,
   listPendingPurchaseOrdersService,
   listPurchaseOrdersService,
 } from "./purchase-order.lists.service";
@@ -164,5 +165,59 @@ describeWithDatabase("purchase order list services", () => {
     expect(orders.map((order) => order.purchaseOrderId)).toEqual([pendingId]);
 
     await expect(listPurchaseOrdersService(people.requester)).resolves.toEqual([]);
+  });
+
+  it("lists open commitments for Accounting, Purchasing, and the administrator", async () => {
+    const source = await setupOpenPr();
+    const approvedId = await createDraft(source);
+    const placedId = await createDraft(source);
+    const partiallyReceivedId = await createDraft(source);
+    await createDraft(source);
+    const closedId = await createDraft(source);
+    const cancelledId = await createDraft(source);
+
+    for (const [purchaseOrderId, status] of [
+      [approvedId, "approved"],
+      [placedId, "placed"],
+      [partiallyReceivedId, "partially_received"],
+      [closedId, "closed"],
+      [cancelledId, "cancelled"],
+    ] as const) {
+      await db
+        .update(purchaseOrders)
+        .set({ status })
+        .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+    }
+
+    const expected = [partiallyReceivedId, placedId, approvedId];
+
+    for (const actor of [
+      people.accounting_associate,
+      people.purchasing_staff,
+      people.system_administrator,
+    ]) {
+      const orders = await listOpenPurchaseOrdersService(actor);
+      expect(orders.map((order) => order.purchaseOrderId)).toEqual(expected);
+    }
+
+    const open = await listOpenPurchaseOrdersService(
+      people.accounting_associate,
+    );
+    expect(open[0].lines[0]).toMatchObject({
+      orderedQty: "4.000",
+      cancelledQty: "0.000",
+      acceptedQty: "0.000",
+      outstandingQty: "4.000",
+    });
+
+    await expect(listOpenPurchaseOrdersService(people.requester)).resolves.toEqual(
+      [],
+    );
+    await expect(
+      listOpenPurchaseOrdersService(people.inventory_custodian),
+    ).resolves.toEqual([]);
+    await expect(
+      listOpenPurchaseOrdersService(people.delivery_operations),
+    ).resolves.toEqual([]);
   });
 });

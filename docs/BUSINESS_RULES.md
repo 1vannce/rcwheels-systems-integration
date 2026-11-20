@@ -61,7 +61,7 @@ flowchart TD
 | BR-AC-03 | The server checks the role on every action. The browser's claim about who the user is, their role, or a stock figure is never trusted. | Proposal | Built |
 | BR-AC-04 | An action or screen refused for role reasons is blocked and written to the audit log. | Plan rule 12 | Built |
 | BR-AC-05 | Mechanics have their own accounts and sign their own Acknowledgement Receipts. | Decision 2 | Planned |
-| BR-AC-06 | A user cannot approve their own requisition, PO, or stock count. | Plan rule 11 | Built for stock counts; Planned for requisitions and POs |
+| BR-AC-06 | A user cannot approve their own requisition, PO, or stock count. | Plan rule 11 | Built for stock counts and POs; Planned for requisitions |
 | BR-AC-07 | Each requester has an assigned approver, and requests route to that person. The approver is a manager, department head, or boss. | Decision 6 | Planned |
 | BR-AC-08 | Only the system administrator creates accounts, assigns roles, and deactivates users. A deactivated user cannot sign in, and their history stays. | Proposed | Planned |
 | BR-AC-09 | Credentials are owned by Supabase Auth. The system stores no passwords. | Technical approach | Built |
@@ -291,14 +291,14 @@ flowchart TD
 | BR-PU-03 | A PR does not authorize a purchase. Only an approved PO does. | Plan rule 1 | Built |
 | BR-PU-04 | Only Purchasing Staff maintain suppliers and prepare POs. A PO needs a supplier and at least one line with a quantity and a unit price above zero. | Proposal | Built for PO preparation; supplier maintenance planned |
 | BR-PU-05 | A new PO starts as Pending Approval and goes to Accounting for review. | Proposal | Built |
-| BR-PU-06 | Accounting decides yes or no on the budget and records a reason. There is no budget table. | Decision 7 | Built |
+| BR-PU-06 | Accounting decides yes or no on the budget and records a reason. There is no budget table. | Decision 7 | Built; approval reason enforced |
 | BR-PU-07 | When Accounting returns a PO, it becomes For Revision. Purchasing Staff revise it and send it back to Accounting. | Test scenario 6 | Built |
 | BR-PU-08 | A PO cannot be placed until Accounting approves that exact version. A change to supplier, item, quantity, or price after approval needs reapproval. | Plan rule 2 | Built |
 | BR-PU-09 | Every PO version and its review are kept (`purchase_order_revisions`), including the earlier commitments. Nothing is overwritten. | ERD change 5 | Built |
 | BR-PU-10 | Placing a PO sends it to the Supplier Receiving queue with its expected quantities (connector E). | Proposal | Built as a service handoff; receiving screen planned |
-| BR-PU-11 | A PO balance is cancelled only with Accounting authorization. Cancelling a PO does not cancel a requisition. A cancelled balance creates a demand review in Purchasing (connector G). The requisition stays open until it is covered or separately cancelled. | Plan rules 6; test scenario 7 | Planned |
+| BR-PU-11 | A PO balance is cancelled only with Accounting authorization. Cancelling a PO does not cancel a requisition. A cancelled balance creates a demand review in Purchasing (connector G). The requisition stays open until it is covered or separately cancelled. | Plan rules 6; test scenario 7 | Built |
 | BR-PU-12 | A user cannot approve a PO they prepared. | Plan rule 11 | Built |
-| BR-PU-13 | Purchasing Staff follow up open POs, and the Accounting Associate can see them. | Proposal | Built for PO lists; follow-up tracking planned |
+| BR-PU-13 | Purchasing Staff follow up open POs, and the Accounting Associate can see them. | Proposal | Built |
 
 ---
 

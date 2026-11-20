@@ -71,6 +71,7 @@ export async function findPurchaseRequisitionSummary(
   purchaseRequisitionId: number;
   requestedByName: string;
   requestedAt: Date;
+  requestReason: PurchaseRequisitionReason;
   status: PurchaseRequisitionStatus;
 } | null> {
   const [row] = await tx
@@ -78,6 +79,7 @@ export async function findPurchaseRequisitionSummary(
       purchaseRequisitionId: purchaseRequisitions.purchaseRequisitionId,
       requestedByName: users.fullName,
       requestedAt: purchaseRequisitions.requestedAt,
+      requestReason: purchaseRequisitions.requestReason,
       status: purchaseRequisitions.status,
     })
     .from(purchaseRequisitions)
@@ -88,6 +90,31 @@ export async function findPurchaseRequisitionSummary(
     .limit(1);
 
   return row ?? null;
+}
+
+/** Current statuses for the PRs linked to a purchase order event. */
+export async function findPurchaseRequisitionStatuses(
+  tx: Tx,
+  purchaseRequisitionIds: readonly number[],
+): Promise<
+  {
+    purchaseRequisitionId: number;
+    status: PurchaseRequisitionStatus;
+  }[]
+> {
+  const ids = [...new Set(purchaseRequisitionIds)];
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  return tx
+    .select({
+      purchaseRequisitionId: purchaseRequisitions.purchaseRequisitionId,
+      status: purchaseRequisitions.status,
+    })
+    .from(purchaseRequisitions)
+    .where(inArray(purchaseRequisitions.purchaseRequisitionId, ids));
 }
 
 /** Inserts a purchase requisition header and returns its new ID. */

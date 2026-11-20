@@ -128,6 +128,7 @@ describeWithDatabase("purchase request coverage from purchase orders", () => {
     const firstPo = await createDraft(source, ["4", "0"]);
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: firstPo,
+      reason: "Budget approved.",
     });
 
     expect(await prStatus(source.purchaseRequisitionId)).toBe("open");
@@ -135,6 +136,7 @@ describeWithDatabase("purchase request coverage from purchase orders", () => {
     const secondPo = await createDraft(source, ["0", "6"]);
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: secondPo,
+      reason: "Budget approved.",
     });
 
     expect(await prStatus(source.purchaseRequisitionId)).toBe("covered");
@@ -165,6 +167,7 @@ describeWithDatabase("purchase request coverage from purchase orders", () => {
 
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: draft,
+      reason: "Budget approved.",
     });
     expect(await prStatus(source.purchaseRequisitionId)).toBe("covered");
   });
@@ -206,6 +209,7 @@ describeWithDatabase("purchase request coverage from purchase orders", () => {
     const draft = await createDraft(source, ["10"]);
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: draft,
+      reason: "Budget approved.",
     });
 
     await expect(
@@ -239,6 +243,7 @@ describeWithDatabase("purchase request coverage from purchase orders", () => {
     const draft = await createDraft(source, ["10"]);
     await approvePurchaseOrderService(people.accounting_associate, {
       purchaseOrderId: draft,
+      reason: "Budget approved.",
     });
     expect(await prStatus(source.purchaseRequisitionId)).toBe("covered");
 
