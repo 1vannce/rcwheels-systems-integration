@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getNotificationHref } from "./notification-href.util";
+import {
+  getNotificationActionLabel,
+  getNotificationHref,
+  isCountApprovalNotification,
+  isStockShortageNotification,
+} from "./notification-href.util";
 
 describe("getNotificationHref", () => {
   it("routes to the requisition page when requisitionId is provided", () => {
@@ -86,5 +91,80 @@ describe("getNotificationHref", () => {
         message: "System maintenance tonight at 11 PM.",
       }),
     ).toBeNull();
+  });
+});
+
+describe("isStockShortageNotification", () => {
+  it("identifies shortage notification types and messages", () => {
+    expect(
+      isStockShortageNotification({
+        notificationType: "requisition.stock_shortage",
+        message: "RF #40 approved with 1 out-of-stock item(s). Restock needed.",
+      }),
+    ).toBe(true);
+
+    expect(
+      isStockShortageNotification({
+        notificationType: "requisition_awaiting_stock",
+        message: "Request #35 has no stock available and is awaiting stock.",
+      }),
+    ).toBe(true);
+
+    expect(
+      isStockShortageNotification({
+        notificationType: "requisition.approved",
+        message: "Request #34 is fully reserved and ready for delivery.",
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("isCountApprovalNotification", () => {
+  it("identifies count adjustment notifications", () => {
+    expect(
+      isCountApprovalNotification({
+        notificationType: "adjustment.requested",
+        message: "Liza Cabrera recorded a stock count that needs your approval.",
+      }),
+    ).toBe(true);
+
+    expect(
+      isCountApprovalNotification({
+        notificationType: "requisition.approved",
+        message: "Request #34 is fully reserved and ready for delivery.",
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("getNotificationActionLabel", () => {
+  it("returns View Shortage for shortage alerts", () => {
+    expect(
+      getNotificationActionLabel({
+        requisitionId: 40,
+        notificationType: "requisition.stock_shortage",
+        message: "RF #40 approved with 1 out-of-stock item(s).",
+      }),
+    ).toBe("View Shortage");
+  });
+
+  it("returns Review Count for stock count approvals", () => {
+    expect(
+      getNotificationActionLabel({
+        requisitionId: null,
+        notificationType: "adjustment.requested",
+        message: "Liza Cabrera recorded a stock count that needs your approval.",
+      }),
+    ).toBe("Review Count");
+  });
+
+  it("returns View Request for other requisitions", () => {
+    expect(
+      getNotificationActionLabel({
+        requisitionId: 34,
+        notificationType: "requisition.reserved",
+        message: "Request #34 is fully reserved.",
+      }),
+    ).toBe("View Request");
   });
 });

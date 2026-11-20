@@ -1,6 +1,59 @@
 import type { AppNotification } from "../types/notification.type";
 
 /**
+ * Returns true if the notification is related to a stock shortage / awaiting stock.
+ */
+export function isStockShortageNotification(
+  notification: Pick<AppNotification, "notificationType" | "message">,
+): boolean {
+  if (
+    notification.notificationType === "requisition.stock_shortage" ||
+    notification.notificationType === "requisition_awaiting_stock"
+  ) {
+    return true;
+  }
+  const msg = notification.message.toLowerCase();
+  return (
+    msg.includes("out-of-stock") ||
+    msg.includes("awaiting stock") ||
+    msg.includes("no stock available") ||
+    msg.includes("restock needed") ||
+    msg.includes("shortage")
+  );
+}
+
+/**
+ * Returns true if the notification is related to a stock count / adjustment approval.
+ */
+export function isCountApprovalNotification(
+  notification: Pick<AppNotification, "notificationType" | "message">,
+): boolean {
+  if (notification.notificationType.startsWith("adjustment")) {
+    return true;
+  }
+  const msg = notification.message.toLowerCase();
+  return msg.includes("stock count") || msg.includes("adjustment");
+}
+
+/**
+ * Returns the primary action button label for the notification.
+ */
+export function getNotificationActionLabel(
+  notification: Pick<AppNotification, "requisitionId" | "notificationType" | "message">,
+): string {
+  if (isStockShortageNotification(notification)) {
+    return "View Shortage";
+  }
+  if (isCountApprovalNotification(notification)) {
+    return "Review Count";
+  }
+  if (notification.requisitionId || /(?:RF|Request)\s*#\d+/i.test(notification.message)) {
+    return "View Request";
+  }
+  return "View";
+}
+
+/**
  * Resolves the destination URL for an application notification so users can
  * click to inspect the underlying requisition, inventory adjustment, or order.
  */
