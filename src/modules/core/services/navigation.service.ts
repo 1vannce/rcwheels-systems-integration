@@ -30,6 +30,7 @@ const builtScreens: readonly AppScreen[] = [
   "inventory-dispatch",
   "inventory-adjustments",
   "inventory-sales-deductions",
+  "inventory-low-stock-review",
   "purchasing-pr-queue",
   "purchasing-po-editor",
   "purchasing-accounting-review",

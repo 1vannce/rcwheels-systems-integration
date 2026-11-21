@@ -25,9 +25,11 @@ export async function approveRequisitionAction(
   try {
     const user = await requireRole(["requisition_approver"], "requisition.approve");
 
+    const rawNote = textField(formData, "inventoryNote");
     const parsed = ApproveRequisitionDto.safeParse({
       requisitionId,
       lines: readLines(formData),
+      inventoryNote: rawNote ? rawNote.trim() || undefined : undefined,
     });
 
     if (!parsed.success) {

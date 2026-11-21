@@ -103,10 +103,20 @@ export type ApproveRequisitionLineDto = z.infer<typeof ApproveRequisitionLineDto
  * An approval decision. Every approved line carries its quantity; the service
  * checks each against the requested quantity under a row lock (BR-RQ-05). A
  * line left out is not approved.
+ *
+ * `inventoryNote` is an optional message from the approver to the Inventory
+ * Manager, surfaced when at least one line has zero available stock. It is
+ * saved to `requisition_status_history.reason` (Option B: auditable) and
+ * appended to the shortage notification payload.
  */
 export const ApproveRequisitionDto = z.object({
   requisitionId: id,
   lines: z.array(ApproveRequisitionLineDto).min(1, "Approve at least one line."),
+  inventoryNote: z
+    .string()
+    .trim()
+    .max(300, "Keep the note under 300 characters.")
+    .optional(),
 });
 
 export type ApproveRequisitionDto = z.infer<typeof ApproveRequisitionDto>;
