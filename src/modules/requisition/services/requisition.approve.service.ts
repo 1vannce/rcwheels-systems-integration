@@ -84,13 +84,13 @@ export async function approveRequisitionService(
     });
     const hasShortage = shortageLines.length > 0;
 
-    // The status-history reason is the approver's note when provided, or a
-    // system-generated shortage notice, or null for a fully-stocked approval.
-    const historyReason = dto.inventoryNote
-      ? dto.inventoryNote
-      : hasShortage
-        ? `Approved with ${shortageLines.length} out-of-stock item(s): ${shortageLines.map((l) => l.itemCode).join(", ")}.`
-        : null;
+    // The approver's note only matters when a shortage notice goes out, so it is
+    // kept only then. Otherwise a stale note from the form would sit in the audit
+    // trail without ever reaching anyone.
+    const historyReason = hasShortage
+      ? (dto.inventoryNote ??
+        `Approved with ${shortageLines.length} out-of-stock item(s): ${shortageLines.map((l) => l.itemCode).join(", ")}.`)
+      : null;
 
     await updateRequisitionStatus(tx, dto.requisitionId, "approved");
     await insertRequisitionStatusHistory(tx, {

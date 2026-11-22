@@ -183,3 +183,69 @@ describe("getNotificationActionLabel", () => {
     ).toBe("View Request");
   });
 });
+
+describe("notification classification order", () => {
+  it("keeps the requisition link when the approver note contains routing words", () => {
+    const shortage = {
+      requisitionId: 40,
+      notificationType: "requisition.stock_shortage",
+      message:
+        'RF #40 approved with 1 out-of-stock item(s). Restock needed. Note from approver: "need adjustment, see purchase request PO #9".',
+    };
+    expect(getNotificationHref(shortage)).toBe("/requisitions/40?from=notifications");
+    expect(getNotificationActionLabel(shortage)).toBe("View Shortage");
+    expect(isStockShortageNotification(shortage)).toBe(true);
+    expect(isCountApprovalNotification(shortage)).toBe(false);
+  });
+
+  it("keeps the requisition link for an RF type that mentions a purchase order", () => {
+    expect(
+      getNotificationHref({
+        requisitionId: 12,
+        notificationType: "requisition.approved",
+        message: "RF #12 is approved. Waiting on purchase order PO #3.",
+      }),
+    ).toBe("/requisitions/12?from=notifications");
+  });
+
+  it("does not throw and falls back to the message when the type is missing", () => {
+    const untyped = {
+      requisitionId: null,
+      notificationType: undefined as unknown as string,
+      message: "PR #5 was raised.",
+    };
+    expect(isCountApprovalNotification(untyped)).toBe(false);
+    expect(getNotificationHref(untyped)).toBe("/purchasing/requisitions");
+    expect(getNotificationActionLabel(untyped)).toBe("View PR");
+  });
+
+  it("classifies old rows by message when the type is generic", () => {
+    expect(
+      isStockShortageNotification({
+        notificationType: "system.info",
+        message: "Request #35 has no stock available and is awaiting stock.",
+      }),
+    ).toBe(true);
+  });
+
+  it("gives label, tab and link the same answer for purchasing notifications", () => {
+    const pr = {
+      requisitionId: null,
+      notificationType: "purchase_requisition_created",
+      message: "PR #3 created for shortage.",
+    };
+    expect(isStockShortageNotification(pr)).toBe(false);
+    expect(getNotificationActionLabel(pr)).toBe("View PR");
+    expect(getNotificationHref(pr)).toBe("/purchasing/requisitions");
+  });
+
+  it("labels purchase order notifications View PO", () => {
+    expect(
+      getNotificationActionLabel({
+        requisitionId: null,
+        notificationType: "purchase_order_approved",
+        message: "Purchase order #8 was approved.",
+      }),
+    ).toBe("View PO");
+  });
+});

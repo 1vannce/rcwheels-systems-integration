@@ -39,15 +39,17 @@ export function ApprovalQueue({
 
   const urgentCount = requisitions.filter((r) => r.isUrgent).length;
   const pendingCount = requisitions.length;
-  const outOfStockCount = requisitions.filter((r) =>
-    (r.lines ?? []).some((l) => Number(l.availableStock) <= 0),
-  ).length;
+  // Before approval nothing is approved yet, so this flags any request that has
+  // an out-of-stock line. The approval modal narrows it to the lines actually approved.
+  const hasOutOfStockLine = (r: PendingApprovalItemDto) =>
+    (r.lines ?? []).some((l) => Number(l.availableStock) <= 0);
+  const outOfStockCount = requisitions.filter(hasOutOfStockLine).length;
 
   const displayed =
     tab === "urgent"
       ? requisitions.filter((r) => r.isUrgent)
       : tab === "out_of_stock"
-        ? requisitions.filter((r) => (r.lines ?? []).some((l) => Number(l.availableStock) <= 0))
+        ? requisitions.filter(hasOutOfStockLine)
         : requisitions;
 
   if (requisitions.length === 0) {

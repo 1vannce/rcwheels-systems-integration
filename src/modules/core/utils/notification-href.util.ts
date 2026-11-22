@@ -1,146 +1,133 @@
 import type { AppNotification } from "../types/notification.type";
 
+type NotificationLike = Pick<AppNotification, "requisitionId" | "notificationType" | "message">;
+
+type NotificationKind =
+  | "shortage"
+  | "count"
+  | "purchase_requisition"
+  | "purchase_order"
+  | "requisition"
+  | "low_stock"
+  | "other";
+
+const SHORTAGE_TYPES = new Set(["requisition.stock_shortage", "requisition_awaiting_stock"]);
+
+const REQUISITION_REF = /(?<!Purchase\s+)(?:RF|Request)\s*#(\d+)/i;
+
 /**
- * Returns true if the notification is specifically a stock shortage / awaiting stock alert.
- * Classified primarily by notificationType to prevent overlap with purchasing notifications.
+ * Decides what a notification is about. The label, the tab and the link all
+ * come from this one answer so they cannot disagree.
+ *
+ * Order: the notification type first, then the recorded requisition id, and
+ * message text only for old or generic rows with no useful type. Message text
+ * can hold free text (for example the approver's note), so it never overrides
+ * a known type or a recorded requisition id.
  */
+function classifyNotification(notification: NotificationLike): NotificationKind {
+  const type = notification.notificationType ?? "";
+  const text = notification.message ?? "";
+  const msg = text.toLowerCase();
+
+  if (SHORTAGE_TYPES.has(type)) return "shortage";
+  if (type.startsWith("inventory.adjustment") || type.startsWith("adjustment")) return "count";
+  if (type.startsWith("purchase_requisition")) return "purchase_requisition";
+  if (type.startsWith("purchase_order")) return "purchase_order";
+
+  if (notification.requisitionId) return "requisition";
+  if (type.startsWith("requisition")) return "requisition";
+  if (type.startsWith("stock")) return "low_stock";
+
+  // Message fallback, only when the type says nothing.
+  if (!type || type === "system.info") {
+    if (msg.includes("purchase request") || msg.includes("purchase requisition") || msg.includes("pr #")) {
+      return "purchase_requisition";
+    }
+    if (msg.includes("purchase order") || msg.includes("po #")) return "purchase_order";
+    if (
+      msg.includes("out-of-stock") ||
+      msg.includes("awaiting stock") ||
+      msg.includes("no stock available") ||
+      msg.includes("restock needed")
+    ) {
+      return "shortage";
+    }
+    if (msg.includes("stock count") || msg.includes("adjustment")) return "count";
+    if (REQUISITION_REF.test(text)) return "requisition";
+    if (msg.includes("low stock")) return "low_stock";
+  }
+
+  return "other";
+}
+
+/** True if the notification is a stock shortage or awaiting stock alert. */
 export function isStockShortageNotification(
-  notification: Pick<AppNotification, "notificationType" | "message">,
+  notification: Pick<AppNotification, "notificationType" | "message"> & { requisitionId?: number | null },
 ): boolean {
-  if (
-    notification.notificationType === "requisition.stock_shortage" ||
-    notification.notificationType === "requisition_awaiting_stock" ||
-    notification.notificationType === "requisition.awaiting_stock"
-  ) {
-    return true;
-  }
-  // Safe fallback only if notificationType is generic or missing
-  if (!notification.notificationType || notification.notificationType === "system.info") {
-    const msg = notification.message.toLowerCase();
-    const isPr = msg.includes("purchase request") || msg.includes("purchase requisition");
-    return (
-      !isPr &&
-      (msg.includes("out-of-stock") ||
-        msg.includes("awaiting stock") ||
-        msg.includes("restock needed"))
-    );
-  }
-  return false;
+  return classifyNotification({ requisitionId: null, ...notification }) === "shortage";
 }
 
-/**
- * Returns true if the notification is related to a stock count / adjustment approval.
- * Classified primarily by notificationType.
- */
+/** True if the notification is a stock count or adjustment approval. */
 export function isCountApprovalNotification(
-  notification: Pick<AppNotification, "notificationType" | "message">,
+  notification: Pick<AppNotification, "notificationType" | "message"> & { requisitionId?: number | null },
 ): boolean {
-  if (
-    notification.notificationType.startsWith("inventory.adjustment") ||
-    notification.notificationType.startsWith("adjustment")
-  ) {
-    return true;
+  return classifyNotification({ requisitionId: null, ...notification }) === "count";
+}
+
+/** Returns the primary action button label for a notification. */
+export function getNotificationActionLabel(notification: NotificationLike): string {
+  switch (classifyNotification(notification)) {
+    case "shortage":
+      return "View Shortage";
+    case "count":
+      return "Review Count";
+    case "purchase_requisition":
+      return "View PR";
+    case "purchase_order":
+      return "View PO";
+    case "requisition":
+      return "View Request";
+    default:
+      return "View";
   }
-  if (!notification.notificationType || notification.notificationType === "system.info") {
-    const msg = notification.message.toLowerCase();
-    return msg.includes("stock count") || msg.includes("adjustment");
-  }
-  return false;
 }
 
 /**
- * Returns the primary action button label derived cleanly from notificationType and context.
+ * Resolves the destination URL for a notification so users can click through
+ * to the requisition, inventory adjustment, or order.
  */
-export function getNotificationActionLabel(
-  notification: Pick<AppNotification, "requisitionId" | "notificationType" | "message">,
-): string {
-  if (isStockShortageNotification(notification)) {
-    return "View Shortage";
-  }
-  if (isCountApprovalNotification(notification)) {
-    return "Review Count";
-  }
-  if (
-    notification.notificationType?.startsWith("purchase_requisition") ||
-    notification.message.toLowerCase().includes("purchase request")
-  ) {
-    return "View PR";
-  }
-  if (
-    notification.notificationType?.startsWith("purchase_order") ||
-    notification.message.toLowerCase().includes("purchase order")
-  ) {
-    return "View PO";
-  }
-  if (notification.requisitionId || /(?<!Purchase\s+)(?:RF|Request)\s*#\d+/i.test(notification.message)) {
-    return "View Request";
-  }
-  return "View";
-}
-
-/**
- * Resolves the destination URL for an application notification so users can
- * click to inspect the underlying requisition, inventory adjustment, or order.
- */
-export function getNotificationHref(
-  notification: Pick<AppNotification, "requisitionId" | "notificationType" | "message">,
-): string | null {
+export function getNotificationHref(notification: NotificationLike): string | null {
   const type = notification.notificationType ?? "";
   const msg = notification.message ?? "";
 
-  // 1. Purchase requisitions (check type and explicit PR phrases first so they don't get misrouted as RFs)
-  if (
-    type.startsWith("purchase_requisition") ||
-    msg.toLowerCase().includes("purchase request") ||
-    msg.includes("PR #")
-  ) {
-    return "/purchasing/requisitions";
-  }
+  switch (classifyNotification(notification)) {
+    case "purchase_requisition":
+      return "/purchasing/requisitions";
 
-  // 2. Purchase orders
-  if (
-    type.startsWith("purchase_order") ||
-    msg.toLowerCase().includes("purchase order") ||
-    msg.includes("PO #")
-  ) {
-    const poMatch =
-      msg.match(/Purchase order\s*#(\d+)/i) ??
-      msg.match(/PO\s*#(\d+)/i);
-
-    if (type === "purchase_order_pending_approval") {
-      return poMatch ? `/purchasing/accounting-review/${poMatch[1]}` : "/purchasing/accounting-review";
+    case "purchase_order": {
+      const poMatch = msg.match(/Purchase order\s*#(\d+)/i) ?? msg.match(/PO\s*#(\d+)/i);
+      if (type === "purchase_order_pending_approval") {
+        return poMatch ? `/purchasing/accounting-review/${poMatch[1]}` : "/purchasing/accounting-review";
+      }
+      return poMatch ? `/purchasing/orders/${poMatch[1]}` : "/purchasing/orders";
     }
-    return poMatch ? `/purchasing/orders/${poMatch[1]}` : "/purchasing/orders";
-  }
 
-  // 3. Stock count adjustments
-  if (
-    type.startsWith("inventory.adjustment") ||
-    type.startsWith("adjustment") ||
-    msg.toLowerCase().includes("stock count") ||
-    msg.toLowerCase().includes("adjustment")
-  ) {
-    return "/inventory/adjustments";
-  }
+    case "count":
+      return "/inventory/adjustments";
 
-  // 4. Requisitions: Direct ID if recorded on the notification
-  if (notification.requisitionId) {
-    return `/requisitions/${notification.requisitionId}?from=notifications`;
-  }
+    case "shortage":
+    case "requisition": {
+      if (notification.requisitionId) {
+        return `/requisitions/${notification.requisitionId}?from=notifications`;
+      }
+      const reqMatch = msg.match(REQUISITION_REF);
+      return reqMatch ? `/requisitions/${reqMatch[1]}?from=notifications` : null;
+    }
 
-  // 5. Requisitions fallback: message contains "RF #X" or "Request #X" (not "Purchase request #X")
-  const reqMatch = msg.match(/(?<!Purchase\s+)(?:RF|Request)\s*#(\d+)/i);
-  if (reqMatch) {
-    return `/requisitions/${reqMatch[1]}?from=notifications`;
-  }
+    case "low_stock":
+      return "/inventory/items";
 
-  // 6. Low stock review
-  if (
-    type.startsWith("stock") ||
-    msg.toLowerCase().includes("low stock")
-  ) {
-    return "/inventory/items";
+    default:
+      return null;
   }
-
-  return null;
 }
