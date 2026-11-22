@@ -69,11 +69,19 @@ export async function approveRequisitionService(
       await updateRequisitionLineApprovedQty(tx, line.requisitionLineId, line.approvedQty);
     }
 
-    // Identify lines with zero available stock so we can notify the Inventory
-    // Manager and record the approver's note.
-    const shortageLines = lines.filter(
-      (line) => compareQuantities(line.availableStock, "0") <= 0,
+    // Identify approved lines that have zero available stock so we can notify the
+    // Inventory Manager and record the approver's note. Lines where approvedQty is 0
+    // or omitted are not approved, so they do not trigger a shortage notice.
+    const approvedQtyByLine = new Map(
+      dto.lines.map((l) => [l.requisitionLineId, l.approvedQty]),
     );
+    const shortageLines = lines.filter((line) => {
+      const approvedQty = approvedQtyByLine.get(line.requisitionLineId) ?? "0";
+      return (
+        compareQuantities(approvedQty, "0") > 0 &&
+        compareQuantities(line.availableStock, "0") <= 0
+      );
+    });
     const hasShortage = shortageLines.length > 0;
 
     // The status-history reason is the approver's note when provided, or a

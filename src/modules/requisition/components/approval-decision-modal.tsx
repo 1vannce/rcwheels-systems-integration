@@ -64,7 +64,7 @@ export type ApprovalDecisionModalProps = {
  * "Review & Decide" quick-decision modal dialog styled with the system's shadcn design.
  *
  * When one or more lines have zero available stock the modal shows:
- *   • a ⚠️ stock alert banner naming each out-of-stock item
+ *   • a stock alert banner naming each out-of-stock item
  *   • an optional note field whose value goes to the Inventory Manager
  *   • the primary button relabelled "Approve & notify inventory"
  *
@@ -98,8 +98,11 @@ export function ApprovalDecisionModal({
 
   const recipientIsDifferent = recipientName !== submittedByName;
 
-  // Detect out-of-stock lines to drive the conditional UI.
-  const outOfStockLines = lines.filter((l) => Number(l.availableStock) <= 0);
+  // Detect out-of-stock lines being approved with a quantity > 0 to drive the conditional UI.
+  const outOfStockLines = lines.filter((l) => {
+    const qty = Number(quantities[l.requisitionLineId] ?? 0);
+    return Number(l.availableStock) <= 0 && qty > 0;
+  });
   const hasOutOfStock = outOfStockLines.length > 0;
 
   return (
@@ -140,7 +143,7 @@ export function ApprovalDecisionModal({
               <input type="hidden" name="requisitionId" value={requisitionId} />
               <input type="hidden" name="lines" value={JSON.stringify(payload)} />
 
-              {/* ⚠️ Out-of-stock alert banner — only shown when needed */}
+              {/* Out-of-stock alert banner — only shown when needed */}
               {hasOutOfStock && (
                 <div className="flex items-start gap-3 rounded-md border border-signal/40 bg-signal/10 px-3 py-2.5 text-sm">
                   <TriangleAlertIcon
@@ -332,4 +335,3 @@ export function ApprovalDecisionModal({
     </Dialog>
   );
 }
-

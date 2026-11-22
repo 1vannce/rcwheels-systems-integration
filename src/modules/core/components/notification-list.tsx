@@ -82,15 +82,12 @@ export function NotificationList({
 
         <Button
           type="button"
+          variant={tab === "shortages" ? "default" : "outline"}
           size="sm"
           onClick={() => setTab("shortages")}
-          className={`h-8 px-3 text-xs font-medium border transition-colors ${
-            tab === "shortages"
-              ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-              : "bg-card text-foreground border-input hover:bg-muted"
-          }`}
+          className="h-8 px-3 text-xs font-medium"
         >
-          {shortageCount > 0 ? `*Stock Shortages (${shortageCount})` : `Stock Shortages (${shortageCount})`}
+          Stock Shortages ({shortageCount})
         </Button>
 
         <Button
@@ -179,7 +176,7 @@ export function NotificationList({
                       disabled={!isUnread}
                       className="h-8 px-3 text-xs bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40"
                     >
-                      Dismiss
+                      Mark as read
                     </Button>
                   </form>
 

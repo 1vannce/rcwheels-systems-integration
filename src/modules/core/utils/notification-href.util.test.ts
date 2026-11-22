@@ -63,7 +63,15 @@ describe("getNotificationHref", () => {
     ).toBe("/purchasing/orders/8");
   });
 
-  it("routes purchase requisition notifications to purchasing PRs", () => {
+  it("routes purchase requisition notifications to purchasing PRs and does not misroute as a requisition", () => {
+    expect(
+      getNotificationHref({
+        requisitionId: null,
+        notificationType: "purchase_requisition_created",
+        message: "Purchase request #5 was raised for request #40.",
+      }),
+    ).toBe("/purchasing/requisitions");
+
     expect(
       getNotificationHref({
         requisitionId: null,
@@ -114,6 +122,13 @@ describe("isStockShortageNotification", () => {
       isStockShortageNotification({
         notificationType: "requisition.approved",
         message: "Request #34 is fully reserved and ready for delivery.",
+      }),
+    ).toBe(false);
+
+    expect(
+      isStockShortageNotification({
+        notificationType: "purchase_requisition_created",
+        message: "Purchase request PR #5 was raised for shortage on request #40.",
       }),
     ).toBe(false);
   });
