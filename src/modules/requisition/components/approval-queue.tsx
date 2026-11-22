@@ -25,7 +25,7 @@ function fmt(value: string): string {
   return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
 }
 
-type Tab = "all" | "urgent";
+type Tab = "all" | "urgent" | "out_of_stock";
 
 /**
  * The assigned approver's queue matching the application's shadcn/ui design system.
@@ -39,9 +39,18 @@ export function ApprovalQueue({
 
   const urgentCount = requisitions.filter((r) => r.isUrgent).length;
   const pendingCount = requisitions.length;
+  // Before approval nothing is approved yet, so this flags any request that has
+  // an out-of-stock line. The approval modal narrows it to the lines actually approved.
+  const hasOutOfStockLine = (r: PendingApprovalItemDto) =>
+    (r.lines ?? []).some((l) => Number(l.availableStock) <= 0);
+  const outOfStockCount = requisitions.filter(hasOutOfStockLine).length;
 
   const displayed =
-    tab === "urgent" ? requisitions.filter((r) => r.isUrgent) : requisitions;
+    tab === "urgent"
+      ? requisitions.filter((r) => r.isUrgent)
+      : tab === "out_of_stock"
+        ? requisitions.filter(hasOutOfStockLine)
+        : requisitions;
 
   if (requisitions.length === 0) {
     return (
@@ -82,6 +91,12 @@ export function ApprovalQueue({
           onClick={() => setTab("urgent")}
           count={urgentCount}
           label="Urgent"
+        />
+        <TabButton
+          active={tab === "out_of_stock"}
+          onClick={() => setTab("out_of_stock")}
+          count={outOfStockCount}
+          label="Out of stock"
         />
       </div>
 

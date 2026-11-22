@@ -23,11 +23,14 @@ export const metadata: Metadata = { title: "Request" };
 
 export default async function RequisitionDetailPage({
   params,
+  searchParams,
 }: PageProps<"/requisitions/[requisitionId]">) {
   // Any signed-in user may open the route; record access is decided by
   // getRequisitionDetail so the approver's queue can link into the same page.
   const user = await requireUser();
   const requisitionId = Number((await params).requisitionId);
+  const query = (await searchParams) ?? {};
+  const fromSource = Array.isArray(query.from) ? query.from[0] : query.from;
 
   if (!Number.isInteger(requisitionId) || requisitionId <= 0) {
     notFound();
@@ -53,20 +56,30 @@ export default async function RequisitionDetailPage({
     isCustodian &&
     (detail.requisition.status === "approved" || detail.requisition.status === "awaiting_stock");
 
-  const backHref = isApprover
-    ? "/requisitions/approvals"
-    : user.role === "inventory_custodian" || user.role === "inventory_manager"
-      ? detail.requisition.status === "for_delivery"
-        ? "/inventory/dispatch"
-        : "/inventory/issue-queue"
-      : "/requisitions/my-requests";
-  const backLabel = isApprover
-    ? "Back to approval queue"
-    : user.role === "inventory_custodian" || user.role === "inventory_manager"
-      ? detail.requisition.status === "for_delivery"
-        ? "Back to dispatch"
-        : "Back to issue queue"
-      : "Back to my requests";
+  const backHref =
+    fromSource === "notifications"
+      ? "/notifications"
+      : isApprover
+        ? "/requisitions/approvals"
+        : isCustodian
+          ? detail.requisition.status === "for_delivery"
+            ? "/inventory/dispatch"
+            : "/inventory/issue-queue"
+          : user.role === "inventory_manager" || user.role === "system_administrator"
+            ? "/requisitions"
+            : "/requisitions/my-requests";
+  const backLabel =
+    fromSource === "notifications"
+      ? "Back to notifications"
+      : isApprover
+        ? "Back to approval queue"
+        : isCustodian
+          ? detail.requisition.status === "for_delivery"
+            ? "Back to dispatch"
+            : "Back to issue queue"
+          : user.role === "inventory_manager" || user.role === "system_administrator"
+            ? "Back to all requisitions"
+            : "Back to my requests";
 
   const reserveLines = detail.lines.map((line) => {
     const available =

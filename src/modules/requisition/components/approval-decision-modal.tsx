@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { TriangleAlertIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,14 @@ export type ApprovalDecisionModalProps = {
 
 /**
  * "Review & Decide" quick-decision modal dialog styled with the system's shadcn design.
+ *
+ * When one or more lines have zero available stock the modal shows:
+ *   • a stock alert banner naming each out-of-stock item
+ *   • an optional note field whose value goes to the Inventory Manager
+ *   • the primary button relabelled "Approve & notify inventory"
+ *
+ * The Reject button is reserved for truly invalid requests and carries a
+ * helper hint so approvers don't use it as a workaround for zero stock.
  */
 export function ApprovalDecisionModal({
   requisitionId,
@@ -88,6 +97,13 @@ export function ApprovalDecisionModal({
   }));
 
   const recipientIsDifferent = recipientName !== submittedByName;
+
+  // Detect out-of-stock lines being approved with a quantity > 0 to drive the conditional UI.
+  const outOfStockLines = lines.filter((l) => {
+    const qty = Number(quantities[l.requisitionLineId] ?? 0);
+    return Number(l.availableStock) <= 0 && qty > 0;
+  });
+  const hasOutOfStock = outOfStockLines.length > 0;
 
   return (
     <Dialog>
@@ -126,6 +142,28 @@ export function ApprovalDecisionModal({
             <form action={approveAction} className="flex flex-col gap-4">
               <input type="hidden" name="requisitionId" value={requisitionId} />
               <input type="hidden" name="lines" value={JSON.stringify(payload)} />
+
+              {/* Out-of-stock alert banner — only shown when needed */}
+              {hasOutOfStock && (
+                <div className="flex items-start gap-3 rounded-md border border-signal/40 bg-signal/10 px-3 py-2.5 text-sm">
+                  <TriangleAlertIcon
+                    aria-hidden="true"
+                    className="mt-0.5 size-4 shrink-0 text-signal-foreground"
+                  />
+                  <div className="flex flex-col gap-0.5">
+                    <p className="font-medium">
+                      Out of stock —{" "}
+                      {outOfStockLines
+                        .map((l) => `${l.itemCode} (${fmt(l.availableStock)} available)`)
+                        .join(", ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Approving will place this request on Backorder and automatically
+                      notify the Inventory Manager to restock.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="overflow-x-auto rounded-lg border bg-card">
                 <table className="data-table">
@@ -192,6 +230,27 @@ export function ApprovalDecisionModal({
                 </table>
               </div>
 
+              {/* Optional note to Inventory Manager — only shown when out of stock */}
+              {hasOutOfStock && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor={`inventory-note-${requisitionId}`} className="text-xs font-medium">
+                    Note to Inventory Manager{" "}
+                    <span className="font-normal text-muted-foreground">(optional)</span>
+                  </Label>
+                  <textarea
+                    id={`inventory-note-${requisitionId}`}
+                    name="inventoryNote"
+                    rows={2}
+                    maxLength={300}
+                    className={textareaClass}
+                    placeholder="e.g. Needed urgently for bay 2 alignment job"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    This goes straight into the Inventory Manager&apos;s notification.
+                  </p>
+                </div>
+              )}
+
               <FormMessage result={approveResult} />
 
               <DialogFooter className="pt-2">
@@ -203,16 +262,23 @@ export function ApprovalDecisionModal({
                 </Link>
 
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsRejecting(true)}
-                  >
-                    Reject
-                  </Button>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsRejecting(true)}
+                    >
+                      Reject
+                    </Button>
+                    {hasOutOfStock && (
+                      <span className="text-[10px] text-muted-foreground">
+                        For invalid requests only
+                      </span>
+                    )}
+                  </div>
                   <SubmitButton size="sm">
-                    Approve request
+                    {hasOutOfStock ? "Approve & notify inventory" : "Approve request"}
                   </SubmitButton>
                 </div>
               </DialogFooter>
