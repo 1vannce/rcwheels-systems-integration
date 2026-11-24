@@ -34,6 +34,10 @@ const builtScreens: readonly AppScreen[] = [
   "purchasing-po-editor",
   "purchasing-accounting-review",
   "purchasing-open-po-follow-up",
+  "delivery-internal-delivery-queue",
+  "delivery-acceptance-and-ar-signing",
+  "delivery-rdr",
+  "delivery-return-inspection",
 ];
 
 const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {

@@ -7,6 +7,7 @@ import {
   acknowledgementReceipts,
   dispatches,
   dispatchLines,
+  internalDiscrepancies,
   items,
   requisitionLines,
   requisitions,
@@ -67,6 +68,8 @@ export type LockedRequisition = {
   submittedBy: number;
   /** The submitter's assigned approver, checked before a decision. */
   approverId: number | null;
+  /** The mechanic the request was filed for, who then signs its ARs. */
+  requestedForUserId: number | null;
   status: RequisitionStatus;
 };
 
@@ -128,12 +131,14 @@ const availableStock = sql<string>`(
   ), 0)
 )::numeric(14, 3)`;
 
-/** approved - cancelled - accepted - returned, the quantity still owed. */
+/**
+ * approved - cancelled - accepted, the quantity still owed. A returned item is
+ * still owed until it is replaced and accepted, or its quantity is cancelled.
+ */
 const outstandingQty = sql<string>`(
   ${requisitionLines.approvedQty}
   - ${requisitionLines.cancelledQty}
   - ${acceptedQty}
-  - ${returnedQty}
 )::numeric(14, 3)`;
 
 /**
@@ -342,6 +347,7 @@ export async function lockRequisition(
       requisitionId: requisitions.requisitionId,
       submittedBy: requisitions.submittedBy,
       approverId: users.approverId,
+      requestedForUserId: requisitions.requestedForUserId,
       status: requisitions.status,
     })
     .from(requisitions)
@@ -687,4 +693,41 @@ export async function findRequisitions(
     .where(and(...conditions))
     .orderBy(desc(requisitions.isUrgent), desc(requisitions.submittedAt))
     .limit(limit);
+}
+
+// Internal delivery follow-up (Phase 4).
+
+/** Open RDRs (Pending Resolution) on any dispatch line of this request. */
+export async function countOpenDiscrepancies(tx: Tx, requisitionId: number): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(internalDiscrepancies)
+    .innerJoin(
+      dispatchLines,
+      eq(dispatchLines.dispatchLineId, internalDiscrepancies.dispatchLineId),
+    )
+    .innerJoin(
+      requisitionLines,
+      eq(requisitionLines.requisitionLineId, dispatchLines.requisitionLineId),
+    )
+    .where(
+      and(
+        eq(requisitionLines.requisitionId, requisitionId),
+        eq(internalDiscrepancies.status, "pending_resolution"),
+      ),
+    );
+
+  return row?.count ?? 0;
+}
+
+/** Adds a separately cancelled quantity to one line. The caller checks the limit. */
+export async function addCancelledQty(
+  tx: Tx,
+  requisitionLineId: number,
+  quantity: string,
+): Promise<void> {
+  await tx
+    .update(requisitionLines)
+    .set({ cancelledQty: sql`${requisitionLines.cancelledQty} + ${quantity}::numeric` })
+    .where(eq(requisitionLines.requisitionLineId, requisitionLineId));
 }
