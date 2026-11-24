@@ -13,6 +13,7 @@ export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
   awaiting_stock: "Awaiting Stock",
   for_delivery: "For Delivery",
   out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
   pending_resolution: "Pending Resolution",
   fulfilled: "Fulfilled",
   cancelled: "Cancelled",
@@ -29,6 +30,8 @@ const statusTones: Record<RequisitionStatus, StatusTone> = {
   approved: "active",
   for_delivery: "active",
   out_for_delivery: "active",
+  // Everything accepted or cancelled; the approver still marks it Fulfilled.
+  delivered: "waiting",
   fulfilled: "done",
   rejected: "stopped",
   cancelled: "closed",

@@ -22,6 +22,13 @@ describe("role access service", () => {
     expect(roleCanAccessScreen("accounting_associate", "purchasing-po-editor")).toBe(false);
   });
 
+  it("lets the approver resolve RDRs but not sign ARs", () => {
+    expect(roleCanAccessScreen("requisition_approver", "delivery-rdr")).toBe(true);
+    expect(
+      roleCanAccessScreen("requisition_approver", "delivery-acceptance-and-ar-signing"),
+    ).toBe(false);
+  });
+
   it("gives system administrator all screens", () => {
     const adminScreens = getVisibleScreensForRole("system_administrator");
 

@@ -19,6 +19,7 @@ export const requisitionStatuses = [
   "awaiting_stock",
   "for_delivery",
   "out_for_delivery",
+  "delivered",
   "pending_resolution",
   "fulfilled",
   "cancelled",
@@ -84,7 +85,7 @@ export type RequisitionQueueItemDto = RequisitionListItemDto & {
  * - `reservedQty` is the sum of this line's active reservations.
  * - `dispatchedQty` sums dispatch lines of released (dispatched) dispatches only;
  *   `acceptedQty` and `returnedQty` come from dispatch lines.
- * - `outstandingQty` = approved - cancelled - accepted - returned.
+ * - `outstandingQty` = approved - cancelled - accepted.
  * - `unissuedQty` = approved - cancelled - in transit, where in transit is
  *   dispatched - accepted - returned.
  * - `reservableQty` = unissued - reserved (approved - cancelled - dispatched +

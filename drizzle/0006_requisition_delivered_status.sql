@@ -1,0 +1,1 @@
+ALTER TYPE "public"."requisition_status" ADD VALUE 'delivered' BEFORE 'pending_resolution';

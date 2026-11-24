@@ -250,7 +250,7 @@ Names in **bold** come from the proposal. The rest are proposed.
 
 | Record | Statuses |
 | --- | --- |
-| Requisition | Pending Approval, **Rejected**, Approved, **Awaiting Stock**, **For Delivery**, Out for Delivery, **Pending Resolution**, **Fulfilled**, **Cancelled** |
+| Requisition | Pending Approval, **Rejected**, Approved, **Awaiting Stock**, **For Delivery**, Out for Delivery, Delivered, **Pending Resolution**, **Fulfilled**, **Cancelled** |
 | PR | Open, Covered, Cancelled |
 | PO | Pending Approval, **For Revision**, Approved, Placed, Partially Received, Closed, Cancelled |
 | Supplier discrepancy | Open, Agreed, Resolved |

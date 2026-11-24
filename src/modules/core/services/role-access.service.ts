@@ -22,6 +22,8 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
     "requisition-rejected-reviews",
     "requisition-all",
     "requisition-completed",
+    // Decides replacement or cancellation on an RDR (BR-DL-10).
+    "delivery-rdr",
   ],
   inventory_custodian: [
     ...sharedScreens,

@@ -12,8 +12,10 @@ export {
   updateReorderPoint,
 } from "./services/item.service";
 export {
+  addQuantities,
   compareQuantities,
   formatQuantity,
+  isQuantity,
   subtractQuantities,
 } from "./services/quantity.service";
 export {
