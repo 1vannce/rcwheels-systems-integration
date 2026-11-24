@@ -70,6 +70,7 @@ These choices are final for the prototype. They are based on the project documen
 | 8 | Excess supplier quantities | Custodian holds them as disputed; Purchasing Staff record the resolution | The proposal requires an explicit decision but names no role |
 | 9 | Prototype data | Fictional seed data only | The client approved the case study and testing "with limits", and those limits are not defined |
 | 10 | Integration scope | Four internal modules only, with no third-party integration | The proposal's scope |
+| 11 | Header status while a partial remainder waits for its next AR | Out for Delivery (proposed, for team review) | It already matches the merged code, which keeps a partly dispatched request there and lets the Custodian prepare the remainder from it |
 
 ## 4. Technical approach
 
