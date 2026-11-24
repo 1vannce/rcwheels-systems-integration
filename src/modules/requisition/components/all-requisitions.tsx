@@ -97,6 +97,7 @@ export function AllRequisitions({ requisitions, mode = "all" }: AllRequisitionsP
           { id: "approved", label: "Approved", count: requisitions.filter((r) => r.status === "approved").length },
           { id: "awaiting_stock", label: "Awaiting stock", count: requisitions.filter((r) => r.status === "awaiting_stock").length },
           { id: "for_delivery_all", label: "For delivery", count: requisitions.filter((r) => r.status === "for_delivery" || r.status === "out_for_delivery").length },
+          { id: "delivered", label: "Delivered", count: requisitions.filter((r) => r.status === "delivered").length },
           { id: "completed_tab", label: "Completed", count: requisitions.filter((r) => ["fulfilled", "rejected", "cancelled"].includes(r.status)).length },
         ];
 

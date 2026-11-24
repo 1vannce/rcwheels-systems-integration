@@ -38,6 +38,7 @@ type TabId =
   | "approved"
   | "awaiting_stock"
   | "for_delivery"
+  | "delivered"
   | "fulfilled"
   | "pending_resolution"
   | "rejected"
@@ -51,6 +52,7 @@ const TABS: TabDef[] = [
   { id: "approved", label: "Approved" },
   { id: "awaiting_stock", label: "Awaiting stock" },
   { id: "for_delivery", label: "For delivery" },
+  { id: "delivered", label: "Delivered" },
   { id: "fulfilled", label: "Fulfilled" },
   { id: "pending_resolution", label: "Pending resolution" },
   { id: "rejected", label: "Rejected" },
@@ -96,6 +98,12 @@ const BOARD_COLUMNS: BoardColumn[] = [
     statuses: ["for_delivery", "out_for_delivery"],
   },
   {
+    id: "delivered",
+    label: "Delivered",
+    dotClass: "bg-sky-500",
+    statuses: ["delivered"],
+  },
+  {
     id: "attention",
     label: "Needs attention",
     dotClass: "bg-destructive",
@@ -131,6 +139,7 @@ function stockAllocationLabel(status: RequisitionStatus): string {
       return "Awaiting stock";
     case "pending_resolution":
       return "Discrepancy under review";
+    case "delivered":
     case "fulfilled":
       return "Issued and accepted";
     case "rejected":
@@ -152,6 +161,7 @@ function stockAllocationClass(status: RequisitionStatus): string {
       return "text-amber-700 dark:text-amber-400";
     case "pending_resolution":
       return "text-amber-700 dark:text-amber-400";
+    case "delivered":
     case "fulfilled":
       return "text-emerald-700 dark:text-emerald-400";
     case "rejected":

@@ -127,6 +127,9 @@ export async function cancelRequisitionLineBalance(
   tx: Tx,
   input: { requisitionId: number; requisitionLineId: number; quantity: string },
 ): Promise<void> {
+  // Serialise concurrent cancels on one request before reading the totals.
+  await lockRequisition(tx, input.requisitionId);
+
   const lines = await findRequisitionLines(tx, input.requisitionId);
   const line = lines.find((row) => row.requisitionLineId === input.requisitionLineId);
 
