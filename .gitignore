@@ -41,5 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# claude code
-.claude/
+# claude code: keep local files out, share the project hook
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
