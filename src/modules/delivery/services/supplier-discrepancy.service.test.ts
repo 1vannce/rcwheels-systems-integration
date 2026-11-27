@@ -562,6 +562,74 @@ describeWithDatabase("supplier discrepancy reports and connector D", () => {
     await expect(resolve(supplierDiscrepancyId)).rejects.toThrow("still due");
   });
 
+  it("lets an agreed cancel resolve when the goods arrive after all", async () => {
+    const order = await createPlacedOrder("SDR-ARRIVED");
+    const [supplierDiscrepancyId] = (await receive(order, "6")).supplierDiscrepancyIds;
+
+    await agree(supplierDiscrepancyId, "cancel", "4");
+    await receive(order, "4");
+    await resolve(supplierDiscrepancyId);
+
+    expect((await reports())[0].status).toBe("resolved");
+  });
+
+  it("lets a replacement be agreed for a follow-up that already arrived", async () => {
+    const order = await createPlacedOrder("SDR-EARLY");
+    const [supplierDiscrepancyId] = (await receive(order, "6")).supplierDiscrepancyIds;
+
+    await receive(order, "4");
+    await agree(supplierDiscrepancyId, "replace", "4");
+    await resolve(supplierDiscrepancyId);
+
+    expect((await reports())[0].status).toBe("resolved");
+  });
+
+  it("tells Purchasing when a follow-up delivery resolves a report", async () => {
+    const order = await createPlacedOrder("SDR-TOLD");
+    const [supplierDiscrepancyId] = (await receive(order, "6")).supplierDiscrepancyIds;
+
+    await agree(supplierDiscrepancyId, "replace", "2");
+    await receive(order, "2");
+
+    expect(await db.select().from(notifications)).toContainEqual(
+      expect.objectContaining({
+        recipientUserId: people.purchasing_staff.userId,
+        notificationType: "supplier_discrepancy_resolved",
+      }),
+    );
+  });
+
+  it("does not report a credited shortage again", async () => {
+    const order = await createPlacedOrder("SDR-CREDITED");
+    const [supplierDiscrepancyId] = (await receive(order, "6")).supplierDiscrepancyIds;
+
+    await agree(supplierDiscrepancyId, "credit", "4");
+    await resolve(supplierDiscrepancyId);
+
+    const next = await receive(order, "0", { qty: "1", deliveredQty: "1" });
+
+    // Only the rejected unit is new; the 4 credited are not short again.
+    expect(next.supplierDiscrepancyIds).toHaveLength(1);
+    expect((await reports())[1]).toMatchObject({ affectedQty: "1.000", status: "open" });
+  });
+
+  it("does not flag a request whose line for the item needs no more stock", async () => {
+    const order = await createPlacedOrder("SDR-COVERED");
+    const request = await createRequisitionLine(people.requester.userId, order.itemId, "10");
+
+    // Awaiting Stock for some other line: nothing is approved for this item.
+    await db
+      .update(requisitions)
+      .set({ status: "awaiting_stock" })
+      .where(eq(requisitions.requisitionId, request.requisitionId));
+    await db
+      .update(requisitionLines)
+      .set({ approvedQty: "0" })
+      .where(eq(requisitionLines.requisitionLineId, request.requisitionLineId));
+
+    expect((await receive(order, "10")).flaggedRequisitionIds).toEqual([]);
+  });
+
   it("lets the Custodian record an excess by hand without posting stock", async () => {
     const order = await createPlacedOrder("SDR-EXCESS");
 
@@ -575,6 +643,9 @@ describeWithDatabase("supplier discrepancy reports and connector D", () => {
     });
 
     await expect(agree(supplierDiscrepancyId, "cancel", "2")).rejects.toThrow("no balance");
+    await expect(agree(supplierDiscrepancyId, "replace", "2")).rejects.toThrow(
+      "nothing outstanding",
+    );
     expect(await listSupplierDiscrepancies(people.accounting_associate)).toEqual([
       expect.objectContaining({ supplierDiscrepancyId, commitment: null, status: "open" }),
     ]);

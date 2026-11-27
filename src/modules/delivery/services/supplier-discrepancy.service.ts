@@ -20,6 +20,7 @@ import {
   findDiscrepancyPurchaseOrderId,
   findSupplierCommitment,
   findSupplierDiscrepancies,
+  hasAcceptanceAfterReport,
   insertSupplierCommitment,
   insertSupplierDiscrepancy,
   lockSupplierDiscrepancy,
@@ -262,6 +263,18 @@ export async function agreeSupplierDiscrepancy(
       );
     }
 
+    // With nothing left on the line, "replace" only records a follow-up that
+    // already arrived. Anything else could never be received.
+    if (
+      input.agreedAction === "replace" &&
+      compareQuantities(line.outstandingQty, "0") === 0 &&
+      !(await hasAcceptanceAfterReport(tx, input.supplierDiscrepancyId))
+    ) {
+      throw refuse(
+        "This purchase order line has nothing outstanding, so no replacement can be received. Agree a credit instead.",
+      );
+    }
+
     if (
       input.agreedAction === "cancel" &&
       compareQuantities(line.outstandingQty, "0") === 0 &&
@@ -301,11 +314,11 @@ export async function agreeSupplierDiscrepancy(
 }
 
 /**
- * Closes an agreed report: Agreed becomes Resolved. A cancel commitment is
- * resolved only after Accounting cancelled the balance. A replacement is
- * resolved by hand only once nothing is left to deliver (an accepted follow-up
- * delivery resolves it in Supplier Receiving). A credit is resolved with the
- * note.
+ * Closes an agreed report: Agreed becomes Resolved. A replacement or a cancel
+ * commitment is resolved by hand only once nothing is left on the PO line:
+ * Accounting cancelled the balance, or the goods arrived after all. (An accepted
+ * follow-up delivery resolves a replacement in Supplier Receiving.) A credit is
+ * resolved with the note.
  */
 export async function resolveSupplierDiscrepancy(
   actor: AppUser,
@@ -335,16 +348,11 @@ export async function resolveSupplierDiscrepancy(
 
     const commitment = await findSupplierCommitment(tx, input.supplierDiscrepancyId);
 
-    if (
-      commitment?.agreedAction === "cancel" &&
-      !(purchaseOrder.cancelledAt && compareQuantities(line.cancelledQty, "0") > 0)
-    ) {
-      throw refuse("Accounting has not cancelled the purchase order balance yet.");
-    }
-
-    if (commitment?.agreedAction === "replace" && compareQuantities(line.outstandingQty, "0") > 0) {
+    if (commitment?.agreedAction !== "credit" && compareQuantities(line.outstandingQty, "0") > 0) {
       throw refuse(
-        "The replacement is still due. Receive the follow-up delivery, or have the balance cancelled first.",
+        commitment?.agreedAction === "cancel"
+          ? "Accounting has not cancelled the purchase order balance yet."
+          : "The replacement is still due. Receive the follow-up delivery, or have the balance cancelled first.",
       );
     }
 

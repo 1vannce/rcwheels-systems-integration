@@ -197,6 +197,63 @@ export async function findReceiptLinesAfterCommitments(tx: Tx, purchaseOrderLine
     .orderBy(asc(supplierReceiptLines.supplierReceiptLineId));
 }
 
+/**
+ * Whether quantity was accepted on the report's PO line after the report was
+ * opened. The receipt that opened it shares its transaction time, so it does
+ * not count.
+ */
+export async function hasAcceptanceAfterReport(
+  tx: Tx,
+  supplierDiscrepancyId: number,
+): Promise<boolean> {
+  const rows = await tx
+    .select({ id: supplierReceiptLines.supplierReceiptLineId })
+    .from(supplierDiscrepancies)
+    .innerJoin(
+      supplierReceiptLines,
+      and(
+        eq(supplierReceiptLines.purchaseOrderLineId, supplierDiscrepancies.purchaseOrderLineId),
+        gt(supplierReceiptLines.acceptedQty, "0"),
+      ),
+    )
+    .innerJoin(
+      supplierReceipts,
+      and(
+        eq(supplierReceipts.supplierReceiptId, supplierReceiptLines.supplierReceiptId),
+        gt(supplierReceipts.receivedAt, supplierDiscrepancies.reportedAt),
+      ),
+    )
+    .where(eq(supplierDiscrepancies.supplierDiscrepancyId, supplierDiscrepancyId))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+/** The quantities of the resolved credit commitments on these PO lines. */
+export async function findResolvedCredits(tx: Tx, purchaseOrderLineIds: readonly number[]) {
+  if (purchaseOrderLineIds.length === 0) {
+    return [];
+  }
+
+  return tx
+    .select({
+      purchaseOrderLineId: supplierDiscrepancies.purchaseOrderLineId,
+      committedQty: supplierCommitments.committedQty,
+    })
+    .from(supplierCommitments)
+    .innerJoin(
+      supplierDiscrepancies,
+      eq(supplierDiscrepancies.supplierDiscrepancyId, supplierCommitments.supplierDiscrepancyId),
+    )
+    .where(
+      and(
+        inArray(supplierDiscrepancies.purchaseOrderLineId, [...purchaseOrderLineIds]),
+        eq(supplierDiscrepancies.status, "resolved"),
+        eq(supplierCommitments.agreedAction, "credit"),
+      ),
+    );
+}
+
 /** Whether a receipt line belongs to the given PO line. */
 export async function receiptLineIsOnPurchaseOrderLine(
   tx: Tx,
@@ -281,7 +338,10 @@ export async function findSupplierDiscrepancies(
   return rows.map((row) => ({ ...row, commitment: row.commitment as SupplierCommitment | null }));
 }
 
-/** Requests in Awaiting Stock with a line for one of these items (connector D). */
+/**
+ * Requests in Awaiting Stock with a line for one of these items. These are only
+ * candidates: the requisition module says whether a line still needs stock.
+ */
 export async function findRequisitionsAwaitingItems(
   tx: Tx,
   itemIds: readonly number[],

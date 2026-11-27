@@ -4,12 +4,14 @@ import type { Tx } from "@/db";
 import { notifyRoles, recordAudit, type AppUser } from "@/modules/core";
 import { compareQuantities, formatQuantity, subtractQuantities } from "@/modules/inventory";
 import type { PurchaseOrderForReceivingDto } from "@/modules/purchasing";
+import { getRequisitionForPurchaseService } from "@/modules/requisition";
 
 import {
   findLineIdsWithUnresolvedDiscrepancy,
   findReceiptLinesAfterCommitments,
   findReplacementCommitments,
   findRequisitionsAwaitingItems,
+  findResolvedCredits,
   insertSupplierDiscrepancy,
   markSupplierCommitmentFulfilled,
   saveSupplierDiscrepancy,
@@ -102,6 +104,15 @@ async function resolveDeliveredReplacements(
           supplierReceiptId: receipt.supplierReceiptId,
         },
       });
+      await notifyRoles(
+        tx,
+        ["purchasing_staff"],
+        {
+          type: "supplier_discrepancy_resolved",
+          message: `Supplier discrepancy report #${commitment.supplierDiscrepancyId} (purchase order #${receipt.purchaseOrder.purchaseOrderId}) is resolved. ${note}`,
+        },
+        actor.userId,
+      );
     }
   }
 }
@@ -110,7 +121,8 @@ async function resolveDeliveredReplacements(
  * Opens SDRs for what this receipt shows is wrong (BR-SR-07): one per line with
  * rejected quantity, and one per PO line that arrived short or not at all. A
  * shortage opens no second report while the line has an unresolved one, so
- * follow-up deliveries do not repeat it.
+ * follow-up deliveries do not repeat it. Quantity the supplier already credited
+ * is not reported short again, although it stays on the PO balance.
  */
 async function openReceiptDiscrepancies(
   tx: Tx,
@@ -123,6 +135,10 @@ async function openReceiptDiscrepancies(
       tx,
       receipt.purchaseOrder.lines.map((line) => line.purchaseOrderLineId),
     ),
+  );
+  const credits = await findResolvedCredits(
+    tx,
+    receipt.purchaseOrder.lines.map((line) => line.purchaseOrderLineId),
   );
   const opened: number[] = [];
 
@@ -159,7 +175,12 @@ async function openReceiptDiscrepancies(
       });
     }
 
-    const shortQty = subtractQuantities(poLine.outstandingQty, line?.deliveredQty ?? "0");
+    const shortQty = credits
+      .filter((credit) => credit.purchaseOrderLineId === poLine.purchaseOrderLineId)
+      .reduce(
+        (remaining, credit) => subtractQuantities(remaining, credit.committedQty),
+        subtractQuantities(poLine.outstandingQty, line?.deliveredQty ?? "0"),
+      );
 
     if (compareQuantities(shortQty, "0") > 0 && !reported.has(poLine.purchaseOrderLineId)) {
       await open({
@@ -190,7 +211,8 @@ async function openReceiptDiscrepancies(
  * Connector D: tells the Custodian which requests awaiting stock can be checked
  * again because their item arrived (BR-SR-10). It only notifies: the receipt
  * already posted the stock, and a request moves when the Custodian reserves it.
- * The receiver is notified too, since they are usually who reserves.
+ * Only a request that can still reserve a received item is flagged. The
+ * receiver is notified too, since they are usually who reserves.
  */
 async function flagWaitingRequisitions(tx: Tx, receipt: Receipt): Promise<number[]> {
   const acceptedLineIds = new Set(
@@ -198,12 +220,23 @@ async function flagWaitingRequisitions(tx: Tx, receipt: Receipt): Promise<number
       .filter((line) => compareQuantities(line.acceptedQty, "0") > 0)
       .map((line) => line.purchaseOrderLineId),
   );
-  const requisitionIds = await findRequisitionsAwaitingItems(
-    tx,
+  const itemIds = new Set(
     receipt.purchaseOrder.lines
       .filter((line) => acceptedLineIds.has(line.purchaseOrderLineId))
       .map((line) => line.itemId),
   );
+  const requisitionIds: number[] = [];
+
+  for (const requisitionId of await findRequisitionsAwaitingItems(tx, [...itemIds])) {
+    const request = await getRequisitionForPurchaseService(tx, requisitionId);
+    const stillNeeded = request?.lines.some(
+      (line) => itemIds.has(line.itemId) && compareQuantities(line.reservableQty, "0") > 0,
+    );
+
+    if (stillNeeded) {
+      requisitionIds.push(requisitionId);
+    }
+  }
 
   for (const requisitionId of requisitionIds) {
     await notifyRoles(tx, ["inventory_custodian"], {
