@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import PageHeader from "@/components/page-header";
-import { requireScreen } from "@/modules/core";
+import { ForbiddenError, requireRole, requireScreen } from "@/modules/core";
 import { ReceiveDeliveryForm } from "@/modules/delivery/components/receive-delivery-form";
 import { compareQuantities } from "@/modules/inventory";
 import { formatPoNumber, listPurchaseOrdersForReceivingService } from "@/modules/purchasing";
@@ -17,8 +17,14 @@ export default async function ReceiveDeliveryPage({
 
   // Inspection is the Custodian's alone (BR-SR-03). The administrator can open
   // every screen, so it is turned away here.
-  if (user.role !== "inventory_custodian") {
-    redirect("/forbidden");
+  try {
+    await requireRole(["inventory_custodian"], "supplier_receipt.receive");
+  } catch (error) {
+    if (error instanceof ForbiddenError) {
+      redirect("/forbidden");
+    }
+
+    throw error;
   }
 
   const purchaseOrderId = Number((await params).purchaseOrderId);

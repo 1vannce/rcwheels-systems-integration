@@ -55,7 +55,13 @@ export async function receiveSupplierDeliveryAction(
           ? "closed"
           : "accepted";
   } catch (error) {
-    return actionFailure(error);
+    const failure = actionFailure(error);
+
+    // A refusal can mean the PO changed since the page loaded, so refresh the
+    // outstanding balances the form shows.
+    revalidatePath("/delivery", "layout");
+
+    return failure;
   }
 
   revalidatePath("/delivery", "layout");
