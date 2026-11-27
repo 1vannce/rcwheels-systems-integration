@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Tx } from "@/db";
-import { recordAudit } from "@/modules/core";
+import { notifyRoles, recordAudit } from "@/modules/core";
 import { compareQuantities } from "@/modules/inventory";
 
 import {
@@ -83,6 +83,18 @@ export async function settlePurchaseOrderAfterReceiptService(
         })),
       },
     });
+    await notifyRoles(
+      tx,
+      ["purchasing_staff"],
+      {
+        type: status === "closed" ? "purchase_order_closed" : "purchase_order_partially_received",
+        message:
+          status === "closed"
+            ? `Purchase order #${input.purchaseOrderId} is fully received and closed.`
+            : `Purchase order #${input.purchaseOrderId} is partially received. Follow up the outstanding balance.`,
+      },
+      input.actorUserId,
+    );
   }
 
   return { status };

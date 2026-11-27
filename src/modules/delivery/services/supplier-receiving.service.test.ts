@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
 import {
   auditLog,
+  notifications,
   purchaseOrderLines,
   purchaseOrders,
   purchaseRequisitionLines,
@@ -193,6 +194,30 @@ describeWithDatabase("supplier receiving", () => {
     expect(await auditActions()).toEqual(
       expect.arrayContaining(["supplier_receipt.receive", "purchase_order.close"]),
     );
+    expect(await db.select().from(notifications)).toContainEqual(
+      expect.objectContaining({
+        recipientUserId: people.purchasing_staff.userId,
+        notificationType: "purchase_order_closed",
+      }),
+    );
+  });
+
+  it("posts the lines in item ID order whatever order the form sends them", async () => {
+    const po = await createPurchaseOrder([
+      { itemCode: "SR-ORDER-A", orderedQty: "2", unitPrice: "100" },
+      { itemCode: "SR-ORDER-B", orderedQty: "3", unitPrice: "100" },
+    ]);
+    const [first, second] = po.lines;
+
+    await receiveSupplierDelivery(
+      people.inventory_custodian,
+      delivery(po.purchaseOrderId, [
+        line(second.purchaseOrderLineId, "3"),
+        line(first.purchaseOrderLineId, "2"),
+      ]),
+    );
+
+    expect((await movements()).map((row) => row.quantityDelta)).toEqual(["2.000", "3.000"]);
   });
 
   it("leaves 4 outstanding on a PO of 10 with 6 accepted and checks the next delivery against it (scenario 5)", async () => {
@@ -410,10 +435,33 @@ describeWithDatabase("supplier receiving", () => {
           await db
             .select()
             .from(auditLog)
-            .where(eq(auditLog.action, "blocked:supplier-receipt.receive")),
+            .where(eq(auditLog.action, "blocked:supplier_receipt.receive")),
         ).toHaveLength(1);
       },
     );
+
+    it("says nothing was added to stock when every item is rejected", async () => {
+      const po = await createPurchaseOrder([{ itemCode: "SR-A-REJ", orderedQty: "10", unitPrice: "100" }]);
+      await signInAs(people.inventory_custodian);
+      const data = form(po.purchaseOrderId, po.lines[0].purchaseOrderLineId);
+      data.set(
+        "lines",
+        JSON.stringify([
+          {
+            purchaseOrderLineId: po.lines[0].purchaseOrderLineId,
+            deliveredQty: "10",
+            acceptedQty: "0",
+            rejectedQty: "10",
+            inspectionNotes: "Wrong size",
+          },
+        ]),
+      );
+
+      const result = await receiveSupplierDeliveryAction(null, data);
+
+      expect(result).toMatchObject({ ok: true, message: expect.stringContaining("no stock") });
+      expect(await db.select().from(stockMovements)).toHaveLength(0);
+    });
 
     it.each(["inventory_custodian", "delivery_operations"] as const)(
       "lets the %s receive a delivery",

@@ -30,12 +30,12 @@ export async function receiveSupplierDeliveryAction(
   _previous: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  let closed = false;
+  let outcome: "closed" | "accepted" | "nothing-accepted" = "accepted";
 
   try {
     const user = await requireRole(
       ["inventory_custodian", "delivery_operations"],
-      "supplier-receipt.receive",
+      "supplier_receipt.receive",
     );
     const parsed = ReceiveSupplierDeliverySchema.safeParse({
       purchaseOrderId: text(formData, "purchaseOrderId"),
@@ -48,7 +48,14 @@ export async function receiveSupplierDeliveryAction(
       return { ok: false, error: parsed.error.issues[0].message };
     }
 
-    closed = (await receiveSupplierDelivery(user, parsed.data)).purchaseOrderStatus === "closed";
+    const result = await receiveSupplierDelivery(user, parsed.data);
+
+    outcome =
+      result.movementIds.length === 0
+        ? "nothing-accepted"
+        : result.purchaseOrderStatus === "closed"
+          ? "closed"
+          : "accepted";
   } catch (error) {
     return actionFailure(error);
   }
@@ -58,8 +65,10 @@ export async function receiveSupplierDeliveryAction(
 
   return {
     ok: true,
-    message: closed
-      ? "Delivery received. The purchase order is fully received and closed."
-      : "Delivery received. Accepted items were added to stock.",
+    message: {
+      closed: "Delivery received. The purchase order is fully received and closed.",
+      accepted: "Delivery received. Accepted items were added to stock.",
+      "nothing-accepted": "Delivery recorded. Nothing was accepted, so no stock was added.",
+    }[outcome],
   };
 }

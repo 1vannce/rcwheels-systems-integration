@@ -146,10 +146,18 @@ export async function receiveSupplierDelivery(
     );
 
     // Stock posts once per accepted receipt line; the stock service's event
-    // key refuses a second posting of the same line (BR-SR-05).
+    // key refuses a second posting of the same line (BR-SR-05). Lines post in
+    // item ID order so the balance locks cannot deadlock another event (PLAN
+    // rule 10).
     const movementIds: number[] = [];
+    const itemIdOf = (purchaseOrderLineId: number) => poLines.get(purchaseOrderLineId)?.itemId ?? 0;
+    const postingOrder = [...receiptLines].sort(
+      (a, b) =>
+        itemIdOf(a.purchaseOrderLineId) - itemIdOf(b.purchaseOrderLineId) ||
+        a.supplierReceiptLineId - b.supplierReceiptLineId,
+    );
 
-    for (const line of receiptLines) {
+    for (const line of postingOrder) {
       if (compareQuantities(line.acceptedQty, "0") > 0) {
         const { movementId } = await acceptSupplierReceipt(tx, {
           supplierReceiptLineId: line.supplierReceiptLineId,
