@@ -7,7 +7,7 @@ with [PLAN.md](PLAN.md) section 9 (end-to-end scenarios), [BUSINESS_RULES.md](BU
 The prototype uses **fictional data only**. Never put real client records,
 supplier documents, or personal information into the database.
 
-**Baseline:** `main` at `fcdc4ea` (2026-11-25). Update this line when the
+**Baseline:** `main` at `7da4ded` (2026-11-27). Update this line when the
 checklist is revised for a later commit.
 
 ## How to use this checklist
@@ -161,11 +161,11 @@ the later-phase screen.
 | --- | --- |
 | `requester@` | Requisition: New requisition, My requests. Delivery: Acceptance and AR signing, Requester discrepancies. |
 | `approver@`, `depthead@` | Requisition: Approval queue, Rejected reviews, All requisitions, Completed request. Delivery: Requester discrepancies. |
-| `custodian@` | Requisition: All requisitions. Inventory: Items, Issue queue, AR preparation, Dispatch, Adjustments, Sales deductions, Low-stock review (placeholder). Delivery: Receipt inspection (placeholder), Supplier discrepancies (placeholder), Return inspection. |
+| `custodian@` | Requisition: All requisitions. Inventory: Items, Issue queue, AR preparation, Dispatch, Adjustments, Sales deductions, Low-stock review (placeholder). Delivery: Receiving queue, Supplier discrepancies (placeholder), Return inspection. |
 | `invmanager@` | Requisition: All requisitions. Inventory: Items, Adjustments, Low-stock review (placeholder). |
 | `purchasing@` | Purchasing: Suppliers (placeholder), Purchase Requisition queue (shown as "PR queue"), Purchase orders, Open PO follow-up. |
 | `accounting@` | Purchasing: Accounting review, Open PO follow-up. |
-| `delivery@` | Delivery: Receiving queue (placeholder), Receipt inspection (placeholder), Internal delivery queue, Acceptance and AR signing, Return inspection. |
+| `delivery@` | Delivery: Receiving queue, Internal delivery queue, Acceptance and AR signing, Return inspection. |
 | `admin@` | Every screen above, including every placeholder. |
 
 - [ ] **QA-ACL-01** — Each seeded account sees exactly the menus in the table,
@@ -604,7 +604,7 @@ Use `custodian@` for the shortage, `purchasing@` for the Purchase Order, and
 - [ ] **QA-PU-23** — Accounting cancels the remaining balance only with a reason.
       An unreceived Purchase Order becomes **Cancelled**. If a partially
       received Purchase Order exists from a manual fixture, cancelling it makes
-      it **Closed**; otherwise leave that branch for Phase 6.
+      it **Closed** (receive part of it first, section 9.2).
 - [ ] **QA-PU-24** — Cancelling a balance creates connector G demand review in
       Purchasing and does not cancel the RF.
 - [ ] **QA-PU-25** — The RF stays **Awaiting Stock** until it is covered or
@@ -615,45 +615,79 @@ Use `custodian@` for the shortage, `purchasing@` for the Purchase Order, and
 
 ---
 
-## 9. Supplier receiving — not built (Phase 6)
+## 9. Supplier receiving
 
-Do not report the missing screens as new bugs. QA today only confirms they are
-cleanly deferred. The receiving queue, receipt inspection, and Supplier
-Discrepancy Report screens are placeholders.
+Use a **Placed** Purchase Order from section 8. Receiving and inspection belong to
+the Inventory Custodian. The Supplier Discrepancy Report (SDR) screen is not
+built yet.
 
-- [ ] **QA-SR-01** — `/delivery/receiving`, `/delivery/receipt-inspection`, and
-      `/delivery/sdr` show "This screen isn't built yet" for the roles that can
-      reach them.
-- [ ] **QA-SR-02** — Opening a receiving URL directly never 404s and never writes
-      stock.
-- [ ] **QA-SR-03** — Placing a Purchase Order notifies Delivery Operations and
-      leaves the order waiting for a future receiving screen; no stock is posted
-      at placement.
-- [ ] **QA-SR-04** — The existing stock service tests cover `supplier_receipt`
-      posting, but no UI can reach it yet. Confirm the automated test passes.
+### 9.1 Receiving queue
 
-**Deferred checks for when Phase 6 lands** (do not run yet):
+- [ ] **QA-SR-01** — `custodian@` and `delivery@` open `/delivery/receiving`. It
+      lists only Placed and Partially Received Purchase Orders, with supplier,
+      status, placed date, and the outstanding of ordered quantity per line.
+- [ ] **QA-SR-02** — Only the Custodian sees the **Receive** link. Delivery
+      Operations can view the queue and nothing more.
+- [ ] **QA-SR-03** — Placing a Purchase Order adds it to the queue, notifies
+      Delivery Operations, and posts no stock.
+- [ ] **QA-SR-04** — With nothing to receive, the queue shows its empty message.
 
-- Goods are received only against a Placed or Partially Received Purchase Order.
-- A receipt records delivery receipt number, invoice number, receiver, and
-  delivered quantity per line; Delivery Operations may assist.
-- Each line is inspected against the **outstanding** balance, not the original
-  ordered quantity. A Purchase Order of 10 with 6 accepted has 4 outstanding.
-- Partial acceptance is allowed. Accepted quantity posts usable stock once;
-  rejected quantity never enters stock.
-- Excess over the Purchase Order balance is held as disputed; Purchasing Staff
-  record the resolution.
-- A shortage, damage, wrong item, or excess creates a Supplier Discrepancy
-  Report with Open → Agreed → Resolved.
-- An agreed commitment stores quantity and expected date; the next delivery is
-  checked against it.
-- An accepted receipt flags waiting requests for recheck through connector D and
-  **does not post stock again**.
-- A Purchase Order is Partially Received until every line is fully received or
-  cancelled, then Closed.
-- Delivery receipts, invoices, and photos attach to the receipt or discrepancy.
-- A return to the supplier reverses stock and inventory value; it cannot exceed
-  the receipt line's posted quantity minus earlier returns.
+### 9.2 Receive page (Inventory Custodian only)
+
+- [ ] **QA-SR-05** — `/delivery/receiving/<id>` opens for the Custodian. Every
+      other role, including `delivery@` and `admin@`, ends at `/forbidden`.
+- [ ] **QA-SR-06** — **Record delivery** stays disabled until the entries are
+      valid: accepted plus rejected equals delivered, delivered is not above the
+      outstanding quantity, and a rejected quantity has a note. The delivery
+      receipt number is required; the invoice number is optional. A line left
+      blank is not recorded.
+- [ ] **QA-SR-07** — Accepting 6 of 10 posts 6 to usable stock once, leaves 4
+      outstanding, and makes the Purchase Order **Partially Received**. The next
+      delivery is checked against the 4.
+- [ ] **QA-SR-08** — Accepting the rest makes the Purchase Order **Closed**. It
+      leaves the queue and the page says it is not open for receiving.
+- [ ] **QA-SR-09** — Rejected quantity never enters stock and stays outstanding.
+      A delivery with everything rejected leaves the status unchanged.
+- [ ] **QA-SR-10** — A double click on **Record delivery** records one receipt
+      and one stock movement per accepted line.
+- [ ] **QA-SR-11** — A refused delivery shows the reason and keeps what was
+      typed.
+- [ ] **QA-SR-12** — An accepted delivery notifies the Custodian about each RF in
+      **Awaiting Stock** that can now reserve a received item (connector D). The
+      RF does not change and no second stock movement is posted.
+
+### 9.3 Supplier Discrepancy Report flow
+
+No screen exists, so only the effects of receiving can be checked by hand. Use
+`supplier-discrepancy.service.test.ts` (with `TEST_DATABASE_URL`) for agreeing,
+resolving, and recording a report by hand.
+
+- [ ] **QA-SR-13** — `/delivery/sdr` shows "This screen isn't built yet" to the
+      Custodian.
+- [ ] **QA-SR-14** — A delivery with rejected or short quantity opens a report for
+      each affected line and notifies Purchasing Staff. A line that already has
+      an unresolved report gets no second shortage report.
+- [ ] **QA-SR-15** — The automated tests pass: reports move only Open → Agreed
+      (Purchasing Staff) → Resolved, and wrong roles are blocked.
+- [ ] **QA-SR-16** — The automated tests pass: a follow-up delivery resolves an
+      agreed replacement, and a cancel commitment asks Accounting to cancel the
+      remaining balance (connector G). Agreeing alone changes no PO quantity.
+
+### 9.4 Reorder alert
+
+- [ ] **QA-SR-17** — A stock event that takes an item's available quantity from
+      above its reorder point to at or below it notifies the Custodian and the
+      Inventory Manager. Raising the reorder point past the available quantity
+      does the same.
+- [ ] **QA-SR-18** — The message gives the item, available quantity, reorder
+      point, and any open Purchase Order or Purchase Requisition coverage, or
+      says there is none. No Purchase Requisition is created (scenario 9).
+- [ ] **QA-SR-19** — Further deductions below the point send no new alert. After
+      stock rises above the point, the next crossing alerts again.
+- [ ] **QA-SR-20** — A reorder point of zero never alerts.
+
+**Not built yet** (do not run): attaching delivery receipts, invoices, or photos
+to a receipt or report.
 
 ---
 
@@ -689,12 +723,12 @@ is listed for information; it does not replace a manual run.
 | 1 | In stock, fully accepted | Requisition and internal-delivery DB tests; manually run locally | Ready |
 | 2 | Partial issue, then partial acceptance | Requisition and internal-delivery DB tests | Ready |
 | 3 | Rejected items; return usable, damaged, uncertain | Internal-delivery DB tests | Ready |
-| 4 | Shortage on an approved RF | Shortage Purchase Requisition, Purchase Order, Accounting review, placement built; supplier receipt missing | Partial — stop after placement |
-| 5 | Purchase Order of 10, 6 accepted | Supplier receiving not built | Not testable |
+| 4 | Shortage on an approved RF | Supplier discrepancy DB test (shortage to reservation) | Ready |
+| 5 | Purchase Order of 10, 6 accepted | Supplier receiving and discrepancy DB tests | Ready |
 | 6 | Accounting returns a Purchase Order; revision reapproved | Purchase Order lifecycle tests | Ready |
-| 7 | Purchase Order balance cancelled while RF still needs items | Cancellation and connector G built; receiving part missing | Partial |
+| 7 | Purchase Order balance cancelled while RF still needs items | Cancellation and discrepancy DB tests | Ready |
 | 8 | Two users reserve the last unit at the same time | Stock-concurrency DB test | Ready |
-| 9 | Stock at reorder point with a Purchase Order open | Reorder alerts and low-stock review not built | Not testable |
+| 9 | Stock at reorder point with a Purchase Order open | Reorder DB test; the low-stock review screen is not built | Ready (alert only) |
 | 10 | Same sales source line posted twice; late entry | Inventory DB tests | Ready |
 | 11 | Rejected RF corrected and resubmitted | Requisition DB tests | Ready |
 | 12 | User opens or calls another role's action | Authorization DB tests; manually run locally | Ready |
@@ -710,21 +744,21 @@ Checks:
 - [ ] **QA-E2E-03** — Scenario 3 passes: reject → RDR → return → inspect usable,
       damaged, and uncertain → replacement or cancellation → correct Held,
       usable, and damaged balances → Fulfilled when complete.
-- [ ] **QA-E2E-04** — Scenario 4 reaches an approved and placed Purchase Order
-      for the uncovered quantity only, with no duplicate demand. Mark the
-      receiving half blocked, not failed.
-- [ ] **QA-E2E-05** — Scenario 5 is recorded as not testable until the receiving
-      screens exist.
+- [ ] **QA-E2E-04** — Scenario 4 passes: an approved and placed Purchase Order
+      for the uncovered quantity only, with no duplicate demand → the Custodian
+      receives it → stock posts once → the waiting RF can be reserved.
+- [ ] **QA-E2E-05** — Scenario 5 passes: order 10, accept 6, 4 stay
+      outstanding, and the next delivery is checked against the 4.
 - [ ] **QA-E2E-06** — Scenario 6 passes: Accounting returns with a reason →
       Purchasing revises → Accounting approves the new version → placement is
       allowed only then.
-- [ ] **QA-E2E-07** — Scenario 7 passes for the cancellation and demand-review
-      half: closed/cancelled balance, RF still open, no duplicate demand. Record
-      the receiving dependency.
+- [ ] **QA-E2E-07** — Scenario 7 passes: partial receipt → Accounting cancels
+      the balance → Purchase Order **Closed**, RF still open, demand review in
+      Purchasing, no duplicate demand.
 - [ ] **QA-E2E-08** — Scenario 8 passes with two sessions; one reservation wins
       and the other is refused cleanly.
-- [ ] **QA-E2E-09** — Scenario 9 is recorded as not testable; reorder points are
-      editable but no alert or low-stock review exists.
+- [ ] **QA-E2E-09** — Scenario 9 passes: the alert names the open Purchase
+      Order and no new Purchase Requisition is created.
 - [ ] **QA-E2E-10** — Scenario 10 passes: duplicate sale refused; late sale flags
       incomplete; approved count clears it.
 - [ ] **QA-E2E-11** — Scenario 11 passes: rejection history and a fresh approval
@@ -741,9 +775,9 @@ built, move its checks into the relevant section and update the baseline.
 
 | Gap | Where documented |
 | --- | --- |
-| Supplier receiving: receiving queue, receipt inspection, Supplier Discrepancy Reports, follow-up deliveries, connector D flag, supplier returns | PLAN phase 6; PHASE_CHECKLIST |
+| Supplier Discrepancy Report screen (services and tests only) and supplier returns screen | PLAN phase 6; PHASE_CHECKLIST |
 | Supplier create/edit and supplier evaluation | PHASE_CHECKLIST phase 5 |
-| Reorder alerts and the low-stock review screen | PLAN phase 7; PHASE_CHECKLIST |
+| Low-stock review screen (reorder alerts are built) | PLAN phase 7; PHASE_CHECKLIST |
 | Request timeline and dashboard count cards | PLAN phase 7; NAVIGATION |
 | Document attachment upload UI (service and tests only) | Core module |
 | System administrator account and role management screen | BUSINESS_RULES BR-AC-08 |
