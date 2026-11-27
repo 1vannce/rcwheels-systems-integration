@@ -15,6 +15,21 @@ export {
 } from "./services/return.service";
 // Supplier receiving (Phase 6): inspect a delivery against the PO balance.
 export { receiveSupplierDelivery } from "./services/supplier-receiving.service";
+// Supplier Discrepancy Reports: what was wrong and what the supplier agreed to.
+export {
+  agreeSupplierDiscrepancy,
+  createSupplierDiscrepancy,
+  getSupplierDiscrepancy,
+  listSupplierDiscrepancies,
+  resolveSupplierDiscrepancy,
+  updateSupplierDiscrepancy,
+} from "./services/supplier-discrepancy.service";
+export type {
+  SupplierCommitment,
+  SupplierCommitmentAction,
+  SupplierDiscrepancy,
+  SupplierDiscrepancyStatus,
+} from "./types/supplier-discrepancy.type";
 export type {
   DeliveryLine,
   InternalDiscrepancy,

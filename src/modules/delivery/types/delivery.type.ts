@@ -93,4 +93,8 @@ export type SupplierReceiptResult = {
   supplierReceiptLineIds: number[];
   /** One stock movement per accepted receipt line. */
   movementIds: number[];
+  /** SDRs this receipt opened for rejected or short quantities. */
+  supplierDiscrepancyIds: number[];
+  /** Requests awaiting a received item, flagged for recheck (connector D). */
+  flaggedRequisitionIds: number[];
 };

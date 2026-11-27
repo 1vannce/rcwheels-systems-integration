@@ -25,6 +25,7 @@ import {
 } from "../repositories/supplier-receipt.repository";
 import type { ReceiveSupplierDeliveryInput } from "../schemas/delivery.schema";
 import type { SupplierReceiptResult } from "../types/delivery.type";
+import { followUpSupplierReceipt } from "./supplier-receipt-follow-up.service";
 
 const ACTION = "supplier_receipt.receive";
 
@@ -59,7 +60,9 @@ function blocked(
  * stock service (BR-SR-05); rejected quantity never enters stock. The PO then
  * moves to Partially Received or Closed (BR-SR-09). The receipt, its lines,
  * the stock movements, the status change and the audit entries commit
- * together or not at all.
+ * together or not at all. The same transaction resolves delivered
+ * replacements, opens SDRs for rejected or short quantities, and flags
+ * requests awaiting the items (connector D).
  */
 export async function receiveSupplierDelivery(
   actor: AppUser,
@@ -179,6 +182,18 @@ export async function receiveSupplierDelivery(
           ).status
         : purchaseOrder.status;
 
+    const followUp = await followUpSupplierReceipt(tx, actor, {
+      supplierReceiptId,
+      deliveryReceiptNo: input.deliveryReceiptNo,
+      purchaseOrder,
+      lines: input.lines.map((line) => ({
+        ...line,
+        supplierReceiptLineId: receiptLines.find(
+          (receiptLine) => receiptLine.purchaseOrderLineId === line.purchaseOrderLineId,
+        )!.supplierReceiptLineId,
+      })),
+    });
+
     await recordAudit(tx, {
       actorUserId: actor.userId,
       entityType: "supplier_receipts",
@@ -190,6 +205,7 @@ export async function receiveSupplierDelivery(
         invoiceNo: input.invoiceNo || null,
         previousStatus: purchaseOrder.status,
         purchaseOrderStatus,
+        ...followUp,
         lines: input.lines.map((line) => ({
           purchaseOrderLineId: line.purchaseOrderLineId,
           outstandingQty: poLines.get(line.purchaseOrderLineId)?.outstandingQty,
@@ -205,6 +221,7 @@ export async function receiveSupplierDelivery(
       purchaseOrderStatus,
       supplierReceiptLineIds: receiptLines.map((line) => line.supplierReceiptLineId),
       movementIds,
+      ...followUp,
     };
   });
 }
