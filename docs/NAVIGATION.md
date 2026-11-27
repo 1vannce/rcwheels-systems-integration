@@ -36,7 +36,7 @@ Reading order that avoids confusion:
 | Requisition (RF, approval, reserve, AR, dispatch) | **Phase 3 built** — see [REQUISITION_MODULE.md](REQUISITION_MODULE.md) | `src/modules/requisition/`, screens under `src/app/(app)/requisitions/` and `.../inventory/` |
 | Purchasing | **Phase 5 built** — PR queue, PO editor, Accounting review, open PO follow-up | `src/modules/purchasing/`, screens under `src/app/(app)/purchasing/` |
 | Delivery: internal delivery (acceptance, AR signing, RDR, returns) | **Phase 4 built** | `src/modules/delivery/`, screens under `src/app/(app)/delivery/` |
-| Delivery: supplier receiving | **Not started** (Phase 6) | `src/modules/delivery/index.ts` |
+| Delivery: supplier receiving | **Queue and receive screen built** (Phase 6); SDR and connector D pending. `/delivery/receiving` (Inventory Custodian and Delivery Operations view), `/delivery/receiving/[purchaseOrderId]` (inspect and record, Inventory Custodian only) | `src/modules/delivery/`, screens under `src/app/(app)/delivery/receiving/` |
 | Dashboard, timeline, low-stock review | Dashboard exists; timeline is a placeholder | `src/app/(app)/dashboard/page.tsx`, `src/app/(app)/[...path]/page.tsx` |
 
 Anything not built yet still has a route: `src/app/(app)/[...path]/page.tsx`
@@ -231,7 +231,7 @@ The requisition module is built and documented in
 resubmit → reserve → AR preparation → dispatch, with DTOs, DB-backed tests, and
 screens under `src/app/(app)/requisitions/` and `src/app/(app)/inventory/`.
 Phase 4 (internal delivery, acceptance, returns) is built in `src/modules/delivery/`, and Phase 5 (purchasing) is built.
-Phase 6 (supplier receiving) remains.
+In Phase 6 (supplier receiving), the receiving core and screens are built; SDR, commitments, and connector D remain.
 
 ### C. Finish the visibility work that is cheap now (small, parallel)
 
