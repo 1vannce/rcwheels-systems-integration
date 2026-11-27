@@ -49,8 +49,8 @@ function blocked(
  * the same transaction, and the reopened PR is connector G's demand review.
  * No stock is posted and no requisition is cancelled.
  *
- * The PO header lock serializes this with the other PO services. Receiving is
- * not built yet; when it is, it must use the same header lock or a line lock.
+ * The PO header lock serializes this with the other PO services, including
+ * Supplier Receiving.
  */
 export async function cancelPurchaseOrderBalanceService(
   actor: AppUser,

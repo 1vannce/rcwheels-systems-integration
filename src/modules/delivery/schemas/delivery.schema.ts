@@ -65,3 +65,31 @@ export const InspectReturnSchema = z.object({
 });
 
 export type InspectReturnInput = z.infer<typeof InspectReturnSchema>;
+
+/** One PO line as the Custodian inspects it on a supplier delivery (BR-SR-03). */
+export const ReceiveSupplierDeliveryLineSchema = z
+  .object({
+    purchaseOrderLineId: id,
+    deliveredQty: positiveQuantity,
+    acceptedQty: quantity,
+    rejectedQty: quantity,
+    inspectionNotes: z.string().trim().max(300).optional().default(""),
+  })
+  .refine((line) => Number(line.rejectedQty) === 0 || line.inspectionNotes.length >= 3, {
+    message: "Describe the problem with the rejected items.",
+    path: ["inspectionNotes"],
+  });
+
+/**
+ * A supplier delivery against a placed PO: the delivery receipt and invoice
+ * numbers and the inspected lines (BR-SR-02). The service checks every line
+ * against the PO's outstanding balance, never this input alone (BR-SR-04).
+ */
+export const ReceiveSupplierDeliverySchema = z.object({
+  purchaseOrderId: id,
+  deliveryReceiptNo: z.string().trim().min(1, "Enter the delivery receipt number.").max(60),
+  invoiceNo: z.string().trim().max(60).optional().default(""),
+  lines: z.array(ReceiveSupplierDeliveryLineSchema).min(1, "Record at least one delivered line."),
+});
+
+export type ReceiveSupplierDeliveryInput = z.infer<typeof ReceiveSupplierDeliverySchema>;

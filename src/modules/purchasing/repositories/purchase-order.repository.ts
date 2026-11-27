@@ -65,7 +65,7 @@ const purchaseOrderColumns = {
   cancellationReason: purchaseOrders.cancellationReason,
 };
 
-/** Accepted quantity from supplier receipts; zero until receiving is built. */
+/** Accepted quantity from supplier receipts. */
 const acceptedQtyForLine = sql<string>`coalesce((
   select sum(${supplierReceiptLines.acceptedQty})
   from ${supplierReceiptLines}
@@ -238,6 +238,18 @@ export async function markPurchaseOrderPlaced(
   await tx
     .update(purchaseOrders)
     .set({ status: "placed", orderedAt })
+    .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
+}
+
+/** Moves a PO to Partially Received or Closed after a supplier receipt. */
+export async function setPurchaseOrderReceivingStatus(
+  tx: Tx,
+  purchaseOrderId: number,
+  status: "partially_received" | "closed",
+): Promise<void> {
+  await tx
+    .update(purchaseOrders)
+    .set({ status })
     .where(eq(purchaseOrders.purchaseOrderId, purchaseOrderId));
 }
 
