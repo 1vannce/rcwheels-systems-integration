@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { requireUser } from "@/modules/core";
+import { getRequisitionTimeline, requireUser } from "@/modules/core";
+import { RequisitionTimeline } from "@/modules/core/components/requisition-timeline";
 import { compareQuantities, listItemsWithStock, todayInManila } from "@/modules/inventory";
 import { getPurchaseRequestContextService } from "@/modules/purchasing";
 import { PurchaseRequestPanel } from "@/modules/purchasing/components/purchase-request-panel";
@@ -44,6 +45,9 @@ export default async function RequisitionDetailPage({
   if (!detail) {
     notFound();
   }
+
+  // Loaded only after the record check above, so the same viewers see both.
+  const timeline = await getRequisitionTimeline(user, requisitionId);
 
   const isApprover = detail.requisition.approverId === user.userId;
   const canDecide = isApprover && detail.requisition.status === "pending_approval";
@@ -201,6 +205,7 @@ export default async function RequisitionDetailPage({
           }}
         />
       )}
+      <RequisitionTimeline events={timeline} />
     </>
   );
 }
