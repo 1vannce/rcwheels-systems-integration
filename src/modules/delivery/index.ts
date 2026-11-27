@@ -18,6 +18,7 @@ export { receiveSupplierDelivery } from "./services/supplier-receiving.service";
 // Supplier Discrepancy Reports: what was wrong and what the supplier agreed to.
 export {
   agreeSupplierDiscrepancy,
+  countUnresolvedSupplierDiscrepancies,
   createSupplierDiscrepancy,
   getSupplierDiscrepancy,
   listSupplierDiscrepancies,

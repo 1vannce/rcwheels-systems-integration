@@ -17,6 +17,7 @@ import {
 } from "@/modules/purchasing";
 
 import {
+  countUnresolvedSupplierDiscrepancyRows,
   findDiscrepancyPurchaseOrderId,
   findSupplierCommitment,
   findSupplierDiscrepancies,
@@ -78,6 +79,13 @@ export async function listSupplierDiscrepancies(actor: AppUser): Promise<Supplie
   assertViewer(actor);
 
   return db.transaction((tx) => findSupplierDiscrepancies(tx, {}, LIST_LIMIT));
+}
+
+/** Reports still Open or Agreed. */
+export async function countUnresolvedSupplierDiscrepancies(actor: AppUser): Promise<number> {
+  assertViewer(actor);
+
+  return db.transaction((tx) => countUnresolvedSupplierDiscrepancyRows(tx));
 }
 
 export async function getSupplierDiscrepancy(

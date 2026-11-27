@@ -4,9 +4,12 @@ import Link from "next/link";
 import PageHeader from "@/components/page-header";
 import {
   countUnreadNotifications,
+  getDashboardCards,
   getNavigationForRole,
   requireScreen,
 } from "@/modules/core";
+
+import { DashboardCards } from "./dashboard-cards";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -16,7 +19,10 @@ export const instant = false;
 
 export default async function DashboardPage() {
   const user = await requireScreen("dashboard");
-  const unreadCount = await countUnreadNotifications(user);
+  const [unreadCount, cards] = await Promise.all([
+    countUnreadNotifications(user),
+    getDashboardCards(user),
+  ]);
   const groups = getNavigationForRole(user.role).filter(
     (group) => group.title !== "Shared",
   );
@@ -39,6 +45,7 @@ export default async function DashboardPage() {
           )
         }
       />
+      <DashboardCards cards={cards} />
       <div className="grid items-start gap-x-8 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
         {groups.map((group) => (
           <section key={group.title} className="flex flex-col gap-1">

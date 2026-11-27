@@ -3,6 +3,7 @@ export { cancelPurchaseOrderBalanceService } from "./services/purchase-order.can
 export { createPurchaseOrderService } from "./services/purchase-order.create.service";
 export { discardPurchaseOrderDraftService } from "./services/purchase-order.discard.service";
 export {
+  countPurchaseOrdersService,
   getPurchaseOrderEditContextService,
   getPurchaseOrderFormContextService,
   listOpenPurchaseOrdersService,

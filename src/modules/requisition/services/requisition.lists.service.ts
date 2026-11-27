@@ -6,9 +6,11 @@ import { db } from "@/db";
 import { requisitions } from "@/db/schema";
 import { type AppUser } from "@/modules/core";
 import {
+  countRequisitions,
   findActiveMechanics,
   findRequisitionLinesFor,
   findRequisitions,
+  type RequisitionFilter,
 } from "../repositories/requisition.repository";
 import type {
   PendingApprovalItemDto,
@@ -109,6 +111,11 @@ export async function listRejectedRequisitionsService(): Promise<RequisitionList
     { statuses: ["rejected", "pending_resolution"] },
     REQUEST_LIST_LIMIT,
   );
+}
+
+/** Read-only count for the dashboard cards; the caller decides who may see it. */
+export async function countRequisitionsService(filter: RequisitionFilter): Promise<number> {
+  return countRequisitions(db, filter);
 }
 
 /** Predicts the automated RF number for the next requisition. */

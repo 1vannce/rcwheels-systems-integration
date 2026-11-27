@@ -621,6 +621,18 @@ export async function findPurchaseOrderById(
   return { ...header, lines, revisions };
 }
 
+export async function countPurchaseOrdersByStatus(
+  tx: Tx,
+  statuses: readonly PurchaseOrderStatus[],
+): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(purchaseOrders)
+    .where(inArray(purchaseOrders.status, [...statuses]));
+
+  return row?.count ?? 0;
+}
+
 /** POs for a purchasing screen, newest first. Optionally filtered by status. */
 export async function findPurchaseOrders(
   tx: Tx,

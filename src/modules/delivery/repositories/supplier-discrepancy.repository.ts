@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, gt, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import type { Tx } from "@/db";
 import {
@@ -271,6 +271,15 @@ export async function receiptLineIsOnPurchaseOrderLine(
     );
 
   return rows.length > 0;
+}
+
+export async function countUnresolvedSupplierDiscrepancyRows(tx: Tx): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(supplierDiscrepancies)
+    .where(ne(supplierDiscrepancies.status, "resolved"));
+
+  return row?.count ?? 0;
 }
 
 /** Reports with their PO, item, and commitment, newest first. */

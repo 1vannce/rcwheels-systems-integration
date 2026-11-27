@@ -64,6 +64,11 @@ function describeCoverage(coverage: ReorderCoverage, unit: string): string {
   return `Open coverage: ${parts.join("; ")}. Check it before raising a reorder purchase requisition.`;
 }
 
+/** At or below the reorder point. A point of zero means none is set. */
+export function isAtOrBelowReorderPoint(available: string, reorderPoint: string): boolean {
+  return compareQuantities(reorderPoint, ZERO) > 0 && compareQuantities(available, reorderPoint) <= 0;
+}
+
 /**
  * Runs after a stock event that can lower available stock, inside that event's
  * transaction and while it still holds the item's usable balance lock.
@@ -80,13 +85,7 @@ export async function checkReorder(
 ): Promise<ReorderCheckResult> {
   const item = await findItemForReorder(tx, input.itemId);
 
-  if (!item || compareQuantities(item.reorderPoint, ZERO) <= 0) {
-    return { alerted: false };
-  }
-
-  const isAtOrBelow = compareQuantities(input.availableAfter, item.reorderPoint) <= 0;
-
-  if (!isAtOrBelow) {
+  if (!item || !isAtOrBelowReorderPoint(input.availableAfter, item.reorderPoint)) {
     return { alerted: false };
   }
 

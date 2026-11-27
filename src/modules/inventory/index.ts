@@ -6,6 +6,7 @@ export {
   requestAdjustment,
 } from "./services/adjustment.service";
 export {
+  countItemsAtReorderPoint,
   createItem,
   getItemStockDetail,
   listItemsWithStock,

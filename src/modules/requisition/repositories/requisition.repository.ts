@@ -645,15 +645,7 @@ export async function findRequisitionHistory(
     .orderBy(asc(requisitionStatusHistory.historyId));
 }
 
-/**
- * Lists requests matching a filter, urgent first and then newest first. The
- * line count is read in the same query, so list screens need no second call.
- */
-export async function findRequisitions(
-  tx: Tx,
-  filter: RequisitionFilter,
-  limit: number,
-): Promise<RequisitionListItemDto[]> {
+function requisitionConditions(filter: RequisitionFilter): SQL[] {
   const conditions: SQL[] = [];
 
   if (filter.submitterOrRequesterUserId !== undefined) {
@@ -679,6 +671,29 @@ export async function findRequisitions(
     conditions.push(inArray(requisitions.status, [...filter.statuses]));
   }
 
+  return conditions;
+}
+
+/** How many requests match the filter, with no list limit. */
+export async function countRequisitions(tx: Tx, filter: RequisitionFilter): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(requisitions)
+    .innerJoin(users, eq(users.userId, requisitions.submittedBy))
+    .where(and(...requisitionConditions(filter)));
+
+  return row?.count ?? 0;
+}
+
+/**
+ * Lists requests matching a filter, urgent first and then newest first. The
+ * line count is read in the same query, so list screens need no second call.
+ */
+export async function findRequisitions(
+  tx: Tx,
+  filter: RequisitionFilter,
+  limit: number,
+): Promise<RequisitionListItemDto[]> {
   return tx
     .select({
       ...requisitionColumns,
@@ -690,7 +705,7 @@ export async function findRequisitions(
     })
     .from(requisitions)
     .innerJoin(users, eq(users.userId, requisitions.submittedBy))
-    .where(and(...conditions))
+    .where(and(...requisitionConditions(filter)))
     .orderBy(desc(requisitions.isUrgent), desc(requisitions.submittedAt))
     .limit(limit);
 }

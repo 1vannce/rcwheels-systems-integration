@@ -15,6 +15,8 @@ export {
   authorizeScreen,
   roleIsAllowed,
 } from "./services/authorization.service";
+export { getDashboardCards } from "./services/dashboard.service";
+export type { DashboardCard } from "./types/dashboard.type";
 export { findScreenByPath, getNavigationForRole } from "./services/navigation.service";
 export {
   countUnreadNotifications,

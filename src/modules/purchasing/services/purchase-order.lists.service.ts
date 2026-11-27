@@ -5,6 +5,7 @@ import { type AppUser } from "@/modules/core";
 import { compareQuantities } from "@/modules/inventory";
 
 import {
+  countPurchaseOrdersByStatus,
   findOpenPurchaseRequisitionLinesForOrder,
   findPurchaseOrderById,
   findPurchaseOrders,
@@ -17,6 +18,7 @@ import type {
   PurchaseOrderDto,
   PurchaseOrderEditContextDto,
   PurchaseOrderFormContextDto,
+  PurchaseOrderStatus,
 } from "../types/purchasing.dto";
 
 const OPEN_PURCHASE_ORDER_STATUSES = [
@@ -35,6 +37,13 @@ const OPEN_COMMITMENT_PURCHASE_ORDER_STATUSES = [
 ] as const;
 
 const PURCHASE_ORDER_LIST_LIMIT = 100;
+
+/** Read-only count for the dashboard cards; the caller decides who may see it. */
+export async function countPurchaseOrdersService(
+  statuses: readonly PurchaseOrderStatus[],
+): Promise<number> {
+  return countPurchaseOrdersByStatus(db, statuses);
+}
 
 /** Active POs for the Purchasing Staff list, newest first. */
 export async function listPurchaseOrdersService(

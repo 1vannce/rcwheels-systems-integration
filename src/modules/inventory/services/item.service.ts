@@ -23,7 +23,11 @@ import type {
   StockMovement,
 } from "../types/stock.type";
 import { addQuantities, subtractQuantities } from "./quantity.service";
-import { checkReorderAfterPointChange, lockForReorderPointChange } from "./reorder.service";
+import {
+  checkReorderAfterPointChange,
+  isAtOrBelowReorderPoint,
+  lockForReorderPointChange,
+} from "./reorder.service";
 import { openItemBalances } from "./stock.service";
 
 const MOVEMENT_LIST_LIMIT = 200;
@@ -68,6 +72,13 @@ async function listItemsWithAvailability(tx: typeof db, itemId?: number): Promis
 
 export async function listItemsWithStock(): Promise<ItemStock[]> {
   return listItemsWithAvailability(db);
+}
+
+/** How many items are at or below their reorder point right now. */
+export async function countItemsAtReorderPoint(): Promise<number> {
+  const stock = await listItemsWithAvailability(db);
+
+  return stock.filter((item) => isAtOrBelowReorderPoint(item.available, item.reorderPoint)).length;
 }
 
 export async function getItemStockDetail(

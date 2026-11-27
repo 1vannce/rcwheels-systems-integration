@@ -22,6 +22,7 @@ export { submitRequisitionAction } from "./actions/action.submit-requisition";
  * Service Exports
  */
 export {
+  countRequisitionsService,
   getNextRequisitionNumberService,
   listActiveMechanicsService,
   listAllRequisitionsService,
