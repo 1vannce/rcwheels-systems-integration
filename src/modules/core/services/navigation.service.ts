@@ -34,6 +34,8 @@ const builtScreens: readonly AppScreen[] = [
   "purchasing-po-editor",
   "purchasing-accounting-review",
   "purchasing-open-po-follow-up",
+  "delivery-receiving-queue",
+  "delivery-receipt-inspection",
   "delivery-internal-delivery-queue",
   "delivery-acceptance-and-ar-signing",
   "delivery-rdr",
@@ -160,8 +162,9 @@ const screenRoutes: Record<Exclude<AppScreen, "login">, ScreenRoute> = {
   },
   "delivery-receipt-inspection": {
     label: "Receipt inspection",
-    href: "/delivery/receipt-inspection",
+    href: "/delivery/receiving",
     group: "Delivery",
+    inMenu: false,
   },
   "delivery-sdr": {
     label: "Supplier discrepancies",

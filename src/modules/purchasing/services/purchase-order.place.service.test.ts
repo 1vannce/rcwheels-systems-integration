@@ -154,6 +154,9 @@ describeWithDatabase("purchase order place service", () => {
       source.purchaseOrderId,
     ]);
     await expect(
+      listPurchaseOrdersForReceivingService(people.inventory_custodian),
+    ).resolves.toHaveLength(1);
+    await expect(
       listPurchaseOrdersForReceivingService(people.purchasing_staff),
     ).resolves.toEqual([]);
   });

@@ -23,8 +23,9 @@ function lines(formData: FormData): unknown {
 }
 
 /**
- * Records and inspects a supplier delivery against a placed PO. Delivery
- * Operations assist receiving and the Custodian inspects (BR-SR-02, BR-SR-03).
+ * Records and inspects a supplier delivery against a placed PO. Recording
+ * accept or reject is the Custodian's inspection, so only the Custodian may
+ * call it (BR-SR-03).
  */
 export async function receiveSupplierDeliveryAction(
   _previous: ActionResult | null,
@@ -33,10 +34,7 @@ export async function receiveSupplierDeliveryAction(
   let outcome: "closed" | "accepted" | "nothing-accepted" = "accepted";
 
   try {
-    const user = await requireRole(
-      ["inventory_custodian", "delivery_operations"],
-      "supplier_receipt.receive",
-    );
+    const user = await requireRole(["inventory_custodian"], "supplier_receipt.receive");
     const parsed = ReceiveSupplierDeliverySchema.safeParse({
       purchaseOrderId: text(formData, "purchaseOrderId"),
       deliveryReceiptNo: text(formData, "deliveryReceiptNo"),
