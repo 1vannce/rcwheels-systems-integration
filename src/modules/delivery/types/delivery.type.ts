@@ -1,6 +1,8 @@
 // Internal delivery read shapes: deliveries waiting for the requester, RDRs,
 // and returns. Quantities travel as numeric(14, 3) decimal strings.
 
+import type { PurchaseOrderStatus } from "@/modules/purchasing";
+
 /** One dispatched line as the requester inspects it. */
 export type DeliveryLine = {
   dispatchLineId: number;
@@ -82,3 +84,13 @@ export type ReturnLineToInspect = {
 export const returnInspectionResults = ["usable", "damaged", "uncertain"] as const;
 
 export type ReturnInspectionResult = (typeof returnInspectionResults)[number];
+
+/** What a recorded supplier delivery produced (Supplier Receiving). */
+export type SupplierReceiptResult = {
+  supplierReceiptId: number;
+  /** The PO status after the receipt: unchanged when nothing was accepted. */
+  purchaseOrderStatus: PurchaseOrderStatus;
+  supplierReceiptLineIds: number[];
+  /** One stock movement per accepted receipt line. */
+  movementIds: number[];
+};

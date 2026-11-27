@@ -13,6 +13,8 @@ export {
   listReturnsToReceive,
   receiveReturn,
 } from "./services/return.service";
+// Supplier receiving (Phase 6): inspect a delivery against the PO balance.
+export { receiveSupplierDelivery } from "./services/supplier-receiving.service";
 export type {
   DeliveryLine,
   InternalDiscrepancy,
@@ -20,4 +22,5 @@ export type {
   PendingDelivery,
   ReturnInspectionResult,
   ReturnLineToInspect,
+  SupplierReceiptResult,
 } from "./types/delivery.type";

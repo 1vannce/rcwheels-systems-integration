@@ -52,10 +52,18 @@ export type PurchaseOrderLineDto = {
   orderedQty: string;
   unitPrice: string;
   cancelledQty: string;
-  /** Accepted quantity from supplier receipts; zero until receiving is built. */
+  /** Accepted quantity from supplier receipts. */
   acceptedQty: string;
   /** Ordered minus cancelled and accepted, clamped at zero. */
   outstandingQty: string;
+};
+
+/** A PO as Supplier Receiving sees it: header status and each line's balance. */
+export type PurchaseOrderForReceivingDto = {
+  purchaseOrderId: number;
+  status: PurchaseOrderStatus;
+  cancelledAt: Date | null;
+  lines: PurchaseOrderLineDto[];
 };
 
 /** One immutable PO version snapshot. */

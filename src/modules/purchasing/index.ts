@@ -11,6 +11,11 @@ export {
   listPurchaseOrdersService,
 } from "./services/purchase-order.lists.service";
 export { placePurchaseOrderService } from "./services/purchase-order.place.service";
+// Supplier Receiving (delivery module) calls these inside its own transaction.
+export {
+  lockPurchaseOrderForReceivingService,
+  settlePurchaseOrderAfterReceiptService,
+} from "./services/purchase-order.receiving.service";
 export { getPurchaseOrderReviewContextService } from "./services/purchase-order.review-context.service";
 export {
   approvePurchaseOrderService,
@@ -33,6 +38,7 @@ export type {
   PurchaseOrderDetailDto,
   PurchaseOrderDto,
   PurchaseOrderEditContextDto,
+  PurchaseOrderForReceivingDto,
   PurchaseOrderFormContextDto,
   PurchaseOrderLineDto,
   PurchaseOrderReviewContextDto,
