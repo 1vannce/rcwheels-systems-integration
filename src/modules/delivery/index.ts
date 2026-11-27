@@ -3,6 +3,7 @@
 // Internal delivery (Phase 4): acceptance and AR signing, RDRs, and returns.
 export {
   acceptDelivery,
+  countPendingDeliveries,
   listDeliveriesToAccept,
   listInternalDeliveryQueue,
 } from "./services/internal-delivery.service";

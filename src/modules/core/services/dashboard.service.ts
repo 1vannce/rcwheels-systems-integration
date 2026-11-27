@@ -1,15 +1,13 @@
 import "server-only";
 
 import {
+  countPendingDeliveries,
   countUnresolvedSupplierDiscrepancies,
-  listDeliveriesToAccept,
-  listInternalDeliveryQueue,
 } from "@/modules/delivery";
 import { countItemsAtReorderPoint } from "@/modules/inventory";
 import {
+  countOpenPurchaseRequisitionsService,
   countPurchaseOrdersService,
-  listOpenPurchaseRequisitionsService,
-  listPurchaseOrdersForReceivingService,
 } from "@/modules/purchasing";
 import { countRequisitionsService, requisitionStatuses } from "@/modules/requisition";
 
@@ -19,7 +17,9 @@ import type { AppUser } from "../types/user.type";
 
 // Read-only counts for the role-based dashboard (PLAN section 2). Unlike the
 // rest of core, this service reads from the modules above it, only through
-// their index.ts exports. A card links to a screen its role can open.
+// their index.ts exports. That closes an import cycle, so call those exports
+// only inside a card's count function, never while this file loads.
+// A card links only to a built screen its role can open.
 
 type CardLoader = (user: AppUser) => Promise<DashboardCard>;
 
@@ -40,17 +40,12 @@ const awaitingStock = (href: string) =>
     countRequisitionsService({ statuses: ["awaiting_stock"] }),
   );
 
-// The queue lists below stop at 100 rows, so their counts do too.
-const openPurchaseRequests = card(
-  "Open purchase requests",
-  "/purchasing/requisitions",
-  async () => (await listOpenPurchaseRequisitionsService()).length,
+const openPurchaseRequests = card("Open purchase requests", "/purchasing/requisitions", () =>
+  countOpenPurchaseRequisitionsService(),
 );
 
-const receivingQueue = card(
-  "Purchase orders waiting for receiving",
-  "/delivery/receiving",
-  async (user) => (await listPurchaseOrdersForReceivingService(user)).length,
+const receivingQueue = card("Purchase orders waiting for receiving", "/delivery/receiving", () =>
+  countPurchaseOrdersService(["placed", "partially_received"]),
 );
 
 const ordersAwaitingReview = card(
@@ -59,8 +54,11 @@ const ordersAwaitingReview = card(
   () => countPurchaseOrdersService(["pending_approval"]),
 );
 
-const unresolvedSdrs = (href: string | null) =>
-  card("Unresolved supplier discrepancies", href, countUnresolvedSupplierDiscrepancies);
+// No link yet: the supplier discrepancy screen is not built, and Purchasing
+// cannot open it.
+const unresolvedSdrs = card("Unresolved supplier discrepancies", null, (user) =>
+  countUnresolvedSupplierDiscrepancies(user),
+);
 
 const cardsByRole: Record<AppRole, readonly CardLoader[]> = {
   requester: [
@@ -72,10 +70,8 @@ const cardsByRole: Record<AppRole, readonly CardLoader[]> = {
         ),
       }),
     ),
-    card(
-      "Deliveries awaiting my acceptance",
-      "/delivery/acceptance",
-      async (user) => (await listDeliveriesToAccept(user)).length,
+    card("Deliveries awaiting my acceptance", "/delivery/acceptance", (user) =>
+      countPendingDeliveries({ recipientUserId: user.userId }),
     ),
   ],
   requisition_approver: [
@@ -90,7 +86,7 @@ const cardsByRole: Record<AppRole, readonly CardLoader[]> = {
     itemsToReorder,
     awaitingStock("/inventory/issue-queue"),
     receivingQueue,
-    unresolvedSdrs("/delivery/sdr"),
+    unresolvedSdrs,
   ],
   // The Manager has no receiving or SDR screen, so those counts are left out.
   inventory_manager: [itemsToReorder, awaitingStock("/requisitions")],
@@ -100,15 +96,12 @@ const cardsByRole: Record<AppRole, readonly CardLoader[]> = {
     card("Purchase orders returned by Accounting", "/purchasing/orders", () =>
       countPurchaseOrdersService(["for_revision"]),
     ),
-    // Purchasing has no supplier discrepancy screen to link to.
-    unresolvedSdrs(null),
+    unresolvedSdrs,
   ],
   accounting_associate: [ordersAwaitingReview],
   delivery_operations: [
-    card(
-      "Internal deliveries not yet signed",
-      "/delivery/internal",
-      async () => (await listInternalDeliveryQueue()).length,
+    card("Internal deliveries not yet signed", "/delivery/internal", () =>
+      countPendingDeliveries(),
     ),
     receivingQueue,
   ],

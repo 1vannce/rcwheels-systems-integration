@@ -41,15 +41,7 @@ const discrepancyReturnedQty = sql<string>`coalesce((
 
 // Deliveries and acknowledgement receipts.
 
-/**
- * Released dispatches whose AR is not signed yet, urgent first and then oldest
- * first. With a recipient, only that person's deliveries.
- */
-export async function findPendingDeliveries(
-  tx: Tx,
-  filter: { recipientUserId?: number },
-  limit: number,
-) {
+function pendingDeliveryConditions(filter: { recipientUserId?: number }): SQL[] {
   const conditions: SQL[] = [
     eq(dispatches.status, "dispatched"),
     isNull(acknowledgementReceipts.signedAt),
@@ -59,6 +51,35 @@ export async function findPendingDeliveries(
     conditions.push(sql`${recipientUserId} = ${filter.recipientUserId}`);
   }
 
+  return conditions;
+}
+
+export async function countPendingDeliveryRows(
+  tx: Tx,
+  filter: { recipientUserId?: number },
+): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(dispatches)
+    .innerJoin(
+      acknowledgementReceipts,
+      eq(acknowledgementReceipts.dispatchId, dispatches.dispatchId),
+    )
+    .innerJoin(requisitions, eq(requisitions.requisitionId, dispatches.requisitionId))
+    .where(and(...pendingDeliveryConditions(filter)));
+
+  return row?.count ?? 0;
+}
+
+/**
+ * Released dispatches whose AR is not signed yet, urgent first and then oldest
+ * first. With a recipient, only that person's deliveries.
+ */
+export async function findPendingDeliveries(
+  tx: Tx,
+  filter: { recipientUserId?: number },
+  limit: number,
+) {
   return tx
     .select({
       dispatchId: dispatches.dispatchId,
@@ -78,7 +99,7 @@ export async function findPendingDeliveries(
       eq(acknowledgementReceipts.dispatchId, dispatches.dispatchId),
     )
     .innerJoin(requisitions, eq(requisitions.requisitionId, dispatches.requisitionId))
-    .where(and(...conditions))
+    .where(and(...pendingDeliveryConditions(filter)))
     .orderBy(desc(requisitions.isUrgent), asc(dispatches.dispatchedAt))
     .limit(limit);
 }

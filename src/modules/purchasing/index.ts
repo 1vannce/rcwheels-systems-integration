@@ -25,6 +25,7 @@ export {
 export { updatePurchaseOrderService } from "./services/purchase-order.update.service";
 export { createShortagePurchaseRequisitionService } from "./services/purchase-requisition.create.service";
 export {
+  countOpenPurchaseRequisitionsService,
   getPurchaseRequestContextService,
   listOpenPurchaseRequisitionsService,
 } from "./services/purchase-requisition.lists.service";

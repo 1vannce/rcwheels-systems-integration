@@ -6,6 +6,7 @@ import { compareQuantities } from "@/modules/inventory";
 import { getRequisitionDetailService } from "@/modules/requisition";
 
 import {
+  countOpenPurchaseRequisitionRows,
   findAllocatedPurchaseQuantities,
   findOpenPurchaseRequisitionForRequisition,
   findOpenPurchaseRequisitionLines,
@@ -19,6 +20,11 @@ import { calculateUncoveredShortfall } from "./purchase-requisition.shortfall";
 
 const ZERO = "0.000";
 const PURCHASE_REQUISITION_LIST_LIMIT = 100;
+
+/** Read-only count for the dashboard cards; the caller decides who may see it. */
+export async function countOpenPurchaseRequisitionsService(): Promise<number> {
+  return countOpenPurchaseRequisitionRows(db);
+}
 
 /** Open shortage and reorder PRs, oldest first. */
 export async function listOpenPurchaseRequisitionsService(): Promise<PurchaseRequisitionDto[]> {

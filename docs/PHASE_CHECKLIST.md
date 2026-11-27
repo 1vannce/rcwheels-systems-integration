@@ -81,7 +81,7 @@ waits for a configured `TEST_DATABASE_URL`.
 ## Phase 7 - Visibility
 
 - [x] Implement reorder alerts (2026-11-27, `feat/reorder-alert`: `checkReorder` runs after stock events that lower available stock and alerts the Custodian and Inventory Manager once per crossing, with open PO and PR coverage and no PR created; `reorder.service.test.ts` passes against local PostgreSQL 18, full suite 318 passed vs 308 on main)
-- [x] Implement the dashboard (2026-11-27, `feat/dashboard-cards`: read-only role-based count cards on `/dashboard`, linked to the matching list; `dashboard.service.test.ts` passes against local PostgreSQL 18, full suite 379 passed vs 369 on main; not clicked through in a browser)
+- [x] Implement the dashboard (2026-11-27, `feat/dashboard-cards`: read-only role-based count cards on `/dashboard`, linked to the matching list where the role has a built screen (the SDR count has no link yet); `dashboard.service.test.ts` passes against local PostgreSQL 18, full suite 379 passed vs 369 on main; not clicked through in a browser)
 - [ ] Implement the linked-record timeline for a requisition
 - [ ] Verify scenario 9 and end-to-end traceability
 

@@ -391,6 +391,15 @@ export async function findOpenPurchaseRequisitionForRequisition(
   return row ?? null;
 }
 
+export async function countOpenPurchaseRequisitionRows(tx: Tx): Promise<number> {
+  const [row] = await tx
+    .select({ count: sql<number>`count(*)::int` })
+    .from(purchaseRequisitions)
+    .where(eq(purchaseRequisitions.status, "open"));
+
+  return row?.count ?? 0;
+}
+
 /** Open PRs with their lines, oldest first, for the purchasing queue. */
 export async function findOpenPurchaseRequisitions(
   tx: Tx,

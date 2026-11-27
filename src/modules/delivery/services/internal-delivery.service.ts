@@ -19,6 +19,7 @@ import {
 import { formatRfNumber, settleRequisitionAfterDelivery } from "@/modules/requisition";
 
 import {
+  countPendingDeliveryRows,
   findDeliveryLines,
   findDispatchContext,
   findPendingDeliveries,
@@ -73,6 +74,13 @@ async function withLines(
  */
 export async function listInternalDeliveryQueue(): Promise<PendingDelivery[]> {
   return withLines(await findPendingDeliveries(db, {}, QUEUE_LIMIT));
+}
+
+/** Unsigned deliveries, all of them or one recipient's, with no list limit. */
+export async function countPendingDeliveries(
+  filter: { recipientUserId?: number } = {},
+): Promise<number> {
+  return countPendingDeliveryRows(db, filter);
 }
 
 /**

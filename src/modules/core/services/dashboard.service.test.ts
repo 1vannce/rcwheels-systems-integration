@@ -1,8 +1,14 @@
+// Loads delivery before core on purpose: the dashboard service closes an import
+// cycle, so it must not read another module's export while it is still loading.
+import "@/modules/delivery";
+
 import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, expect, it } from "vitest";
 
 import { db } from "@/db";
 import {
+  acknowledgementReceipts,
+  dispatches,
   items,
   purchaseOrderLines,
   purchaseOrders,
@@ -18,6 +24,7 @@ import {
   resetDatabase,
 } from "@/test/db";
 import {
+  createDispatchLine,
   createItem,
   createRequisitionLine,
   createSupplierReceiptLine,
@@ -26,8 +33,7 @@ import {
 import { appRoles, type AppRole } from "../types/role.type";
 import type { AppUser } from "../types/user.type";
 import { getDashboardCards } from "./dashboard.service";
-import { findScreenByPath } from "./navigation.service";
-import { roleCanAccessScreen } from "./role-access.service";
+import { getNavigationForRole } from "./navigation.service";
 
 const SDR = "Unresolved supplier discrepancies";
 
@@ -143,17 +149,21 @@ describeWithDatabase("dashboard cards", () => {
     );
   }
 
-  it.each(appRoles)("gives the %s only its own cards, linked to screens it can open", async (role) => {
+  it.each(appRoles)("gives the %s only its own cards, linked to built screens it can open", async (role) => {
     const cards = await getDashboardCards(people[role]);
 
     expect(cards.map((card) => card.label)).toEqual(expectedLabels[role]);
+
+    const openable = getNavigationForRole(role)
+      .flatMap((group) => group.items)
+      .filter((item) => item.isBuilt)
+      .map((item) => item.href);
 
     for (const card of cards) {
       expect(card.count).toBe(0);
 
       if (card.href !== null) {
-        const screen = findScreenByPath(card.href);
-        expect(screen && roleCanAccessScreen(role, screen.screen)).toBe(true);
+        expect(openable).toContain(card.href);
       }
     }
   });
@@ -177,5 +187,32 @@ describeWithDatabase("dashboard cards", () => {
       "Purchase orders returned by Accounting": 3,
       [SDR]: 2,
     });
+  });
+
+  it("counts unsigned deliveries, and only their own for a requester", async () => {
+    const itemId = await createItem("DB-DEL", "10");
+
+    // Two for the requester (one already signed) and one for someone else.
+    for (const [role, signed] of [
+      ["requester", false],
+      ["requester", true],
+      ["requisition_approver", false],
+    ] as const) {
+      const line = await createRequisitionLine(people[role].userId, itemId, "1");
+      await createDispatchLine(people.inventory_custodian.userId, line, "1");
+      const [dispatch] = await db
+        .update(dispatches)
+        .set({ status: "dispatched" })
+        .where(eq(dispatches.requisitionId, line.requisitionId))
+        .returning();
+      await db.insert(acknowledgementReceipts).values({
+        dispatchId: dispatch.dispatchId,
+        preparedBy: people.inventory_custodian.userId,
+        signedAt: signed ? new Date() : null,
+      });
+    }
+
+    expect((await counts("requester"))["Deliveries awaiting my acceptance"]).toBe(1);
+    expect((await counts("delivery_operations"))["Internal deliveries not yet signed"]).toBe(2);
   });
 });
