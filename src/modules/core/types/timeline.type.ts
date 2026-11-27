@@ -17,6 +17,7 @@ export type TimelineEventKind =
   | "po_partially_received"
   | "po_closed"
   | "sdr_opened"
+  | "sdr_updated"
   | "sdr_agreed"
   | "sdr_resolved"
   | "stock_arrived"

@@ -14,12 +14,26 @@ import {
   findTimelineSupplierReceipts,
 } from "../repositories/timeline.repository";
 import type { TimelineEvent, TimelineEventKind, TimelineRecord } from "../types/timeline.type";
+import type { AppRole } from "../types/role.type";
 import type { AppUser } from "../types/user.type";
 import { roleCanAccessScreen } from "./role-access.service";
 
 // The linked-record timeline of one requisition (BR-GN-07). It only reads: the
 // status history gives the request's own decisions, and the audit log gives
 // what happened to every record linked to it.
+
+// The timeline must not show text the viewer cannot read on the record's own
+// screens. These match the SDR viewer roles and the roles with a PO page.
+const SDR_NOTE_ROLES: readonly AppRole[] = [
+  "inventory_custodian",
+  "purchasing_staff",
+  "accounting_associate",
+];
+const PO_NOTE_ROLES: readonly AppRole[] = [
+  "purchasing_staff",
+  "accounting_associate",
+  "system_administrator",
+];
 
 /**
  * Cause before effect. Records written in one transaction share a timestamp,
@@ -44,6 +58,7 @@ const KIND_ORDER: readonly TimelineEventKind[] = [
   "po_partially_received",
   "po_closed",
   "sdr_opened",
+  "sdr_updated",
   "sdr_agreed",
   "sdr_resolved",
   "stock_arrived",
@@ -73,6 +88,7 @@ const PURCHASE_ORDER_EVENTS: Record<string, [TimelineEventKind, string]> = {
 
 const SDR_EVENTS: Record<string, [TimelineEventKind, string]> = {
   "supplier_discrepancy.create": ["sdr_opened", "Supplier discrepancy report opened"],
+  "supplier_discrepancy.update": ["sdr_updated", "Supplier discrepancy report corrected"],
   "supplier_discrepancy.agree": ["sdr_agreed", "Supplier action agreed"],
   "supplier_discrepancy.resolve": ["sdr_resolved", "Supplier discrepancy report resolved"],
 };
@@ -103,6 +119,15 @@ function text(value: unknown): string | null {
 
 function documentNumber(prefix: string, id: number): string {
   return `${prefix}-${String(id).padStart(4, "0")}`;
+}
+
+/** The reason typed for one rejected line, from a delivery.accept entry. */
+function rejectionProblem(lines: unknown, dispatchLineId: number | undefined): string | null {
+  const line = Array.isArray(lines)
+    ? lines.find((entry) => entry?.dispatchLineId === dispatchLineId)
+    : undefined;
+
+  return text(line?.problem);
 }
 
 /** A record with no page of its own: SDRs, RDRs, and returns have none yet. */
@@ -323,7 +348,15 @@ export async function getRequisitionTimeline(
         );
 
         for (const id of rejected) {
-          add("rdr_opened", "Requester discrepancy report opened", source, [unlinked("RDR", id)]);
+          const report = discrepancies.find((item) => item.internalDiscrepancyId === id);
+
+          add(
+            "rdr_opened",
+            "Requester discrepancy report opened",
+            source,
+            [unlinked("RDR", id)],
+            rejectionProblem(details.lines, report?.dispatchLineId),
+          );
         }
 
         return;
@@ -383,7 +416,7 @@ export async function getRequisitionTimeline(
         ...PURCHASE_ORDER_EVENTS[row.action],
         source,
         [purchaseOrderRecord(row.entityId)],
-        text(details.reason),
+        PO_NOTE_ROLES.includes(viewer.role) ? text(details.reason) : null,
       );
       return;
     }
@@ -400,7 +433,9 @@ export async function getRequisitionTimeline(
           unlinked("SDR", row.entityId),
           ...(report ? [purchaseOrderRecord(report.purchaseOrderId)] : []),
         ],
-        text(details.problem) ?? text(details.note),
+        SDR_NOTE_ROLES.includes(viewer.role)
+          ? (text(details.problem) ?? text(details.note))
+          : null,
       );
     }
   }

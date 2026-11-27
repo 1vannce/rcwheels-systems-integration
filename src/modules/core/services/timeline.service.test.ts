@@ -9,6 +9,7 @@ import {
   receiveReturn,
   receiveSupplierDelivery,
   resolveDiscrepancy,
+  updateSupplierDiscrepancy,
 } from "@/modules/delivery";
 import { todayInManila } from "@/modules/inventory";
 import {
@@ -199,6 +200,11 @@ describeWithDatabase("requisition timeline", () => {
       });
 
     await receive("6", "DR-1");
+    await updateSupplierDiscrepancy(people.inventory_custodian, {
+      supplierDiscrepancyId: 1,
+      problem: "4 pieces did not arrive",
+      affectedQty: "4",
+    });
     const first = await issue(request, "6");
 
     // An AR waiting for a signature links to the acceptance page.
@@ -261,6 +267,7 @@ describeWithDatabase("requisition timeline", () => {
       "po_partially_received",
       "sdr_opened",
       "stock_arrived",
+      "sdr_updated",
       "reserved",
       "ar_prepared",
       "dispatched",
@@ -294,6 +301,20 @@ describeWithDatabase("requisition timeline", () => {
     // A covered PR has left the queue, and a signed AR the acceptance page.
     expect(recordsOf(events, "pr_created")).toEqual([{ number: prNumber, href: null }]);
     expect(recordsOf(events, "dispatched")).toEqual([{ number: arNumber, href: null }]);
+
+    expect(events.find((event) => event.kind === "rdr_opened")?.note).toBe("Damaged");
+
+    // Supplier report text and PO reasons stay with the roles that can read them.
+    const noteOf = async (role: AppRole, kind: TimelineEvent["kind"]) =>
+      (await timeline(role)).find((event) => event.kind === kind)?.note;
+    expect(await noteOf("purchasing_staff", "sdr_updated")).toBe("4 pieces did not arrive");
+    expect(await noteOf("purchasing_staff", "po_approved")).toBe("Budget available");
+    for (const role of ["requester", "requisition_approver", "inventory_manager"] as const) {
+      expect(await noteOf(role, "sdr_opened")).toBeNull();
+      expect(await noteOf(role, "sdr_updated")).toBeNull();
+      expect(await noteOf(role, "po_approved")).toBeNull();
+    }
+    expect(await noteOf("inventory_custodian", "po_approved")).toBeNull();
 
     // Purchasing opens the PO editor; roles without a PO page get plain text.
     expect(recordsOf(await timeline("purchasing_staff"), "po_placed")).toEqual([

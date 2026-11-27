@@ -63,6 +63,7 @@ export function findTimelineDiscrepancies(tx: Tx, requisitionId: number) {
   return tx
     .select({
       internalDiscrepancyId: internalDiscrepancies.internalDiscrepancyId,
+      dispatchLineId: internalDiscrepancies.dispatchLineId,
       returnId: returns.returnId,
       returnLineId: returnLines.returnLineId,
     })
@@ -211,8 +212,11 @@ export function findTimelineStockArrivals(tx: Tx, requisitionId: number) {
     .leftJoin(users, eq(users.userId, auditLog.actorUserId))
     .innerJoin(supplierReceipts, eq(supplierReceipts.supplierReceiptId, auditLog.entityId))
     .where(
-      sql`case when ${auditLog.entityType} = 'supplier_receipts' and ${auditLog.action} = 'supplier_receipt.receive'
-        then coalesce(${auditLog.changeDetails}::jsonb -> 'flaggedRequisitionIds' @> to_jsonb(${requisitionId}::int), false)
-        else false end`,
+      and(
+        eq(auditLog.entityType, "supplier_receipts"),
+        sql`case when ${auditLog.action} = 'supplier_receipt.receive'
+          then coalesce(${auditLog.changeDetails}::jsonb -> 'flaggedRequisitionIds' @> to_jsonb(${requisitionId}::int), false)
+          else false end`,
+      ),
     );
 }
