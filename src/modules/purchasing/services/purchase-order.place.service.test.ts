@@ -146,6 +146,13 @@ describeWithDatabase("purchase order place service", () => {
         notificationType: "purchase_order_placed",
       }),
     );
+    expect(alerts).toContainEqual(
+      expect.objectContaining({
+        recipientUserId: people.inventory_custodian.userId,
+        notificationType: "purchase_order_ready_to_receive",
+        message: expect.stringContaining(`Purchase order #${source.purchaseOrderId} `),
+      }),
+    );
 
     const receiving = await listPurchaseOrdersForReceivingService(
       people.delivery_operations,
