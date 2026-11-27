@@ -25,6 +25,7 @@ export {
   notifyUsers,
 } from "./services/notification.service";
 export { getVisibleScreensForRole, roleCanAccessScreen } from "./services/role-access.service";
+export { getRequisitionTimeline } from "./services/timeline.service";
 export {
   getCurrentUser,
   requireRole,
@@ -39,4 +40,9 @@ export type { NavigationGroup, NavigationItem } from "./types/navigation.type";
 export type { AppNotification } from "./types/notification.type";
 export type { AppRole, AppScreen } from "./types/role.type";
 export { appRoles, appScreens } from "./types/role.type";
+export type {
+  TimelineEvent,
+  TimelineEventKind,
+  TimelineRecord,
+} from "./types/timeline.type";
 export type { AppUser } from "./types/user.type";

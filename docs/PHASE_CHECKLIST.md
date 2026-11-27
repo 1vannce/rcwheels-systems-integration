@@ -82,7 +82,7 @@ waits for a configured `TEST_DATABASE_URL`.
 
 - [x] Implement reorder alerts (2026-11-27, `feat/reorder-alert`: `checkReorder` runs after stock events that lower available stock and alerts the Custodian and Inventory Manager once per crossing, with open PO and PR coverage and no PR created; `reorder.service.test.ts` passes against local PostgreSQL 18, full suite 318 passed vs 308 on main)
 - [ ] Implement the dashboard
-- [ ] Implement the linked-record timeline for a requisition
+- [x] Implement the linked-record timeline for a requisition (2026-11-27, `feat/requisition-timeline`: the requisition detail page lists every linked event from the status history and audit log, with record links limited to pages the viewer can open; `timeline.service.test.ts` passes against local PostgreSQL 18; not yet clicked through in a browser)
 - [ ] Verify scenario 9 and end-to-end traceability
 
 ## Phase 8 - Finish
