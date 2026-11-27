@@ -109,6 +109,9 @@ export function getNotificationHref(notification: NotificationLike): string | nu
       if (type === "purchase_order_pending_approval") {
         return poMatch ? `/purchasing/accounting-review/${poMatch[1]}` : "/purchasing/accounting-review";
       }
+      if (type === "purchase_order_ready_to_receive") {
+        return poMatch ? `/delivery/receiving/${poMatch[1]}` : "/delivery/receiving";
+      }
       return poMatch ? `/purchasing/orders/${poMatch[1]}` : "/purchasing/orders";
     }
 

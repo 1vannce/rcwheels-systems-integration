@@ -41,7 +41,7 @@ export function ReceiveDeliveryForm({
   const [invoiceNo, setInvoiceNo] = useState("");
   const [drafts, setDrafts] = useState<Record<number, ReceivingLineDraft>>({});
   // Entries are cleared only on success, so a refusal keeps what was typed.
-  const [result, formAction, isSaving] = useActionState(
+  const [result, formAction] = useActionState(
     async (previous: ActionResult | null, formData: FormData) => {
       const next = await receiveSupplierDeliveryAction(previous, formData);
 
@@ -172,9 +172,7 @@ export function ReceiveDeliveryForm({
         rejected items stay outstanding on the purchase order.
       </p>
       <div>
-        {/* `disabled` replaces SubmitButton's own pending check, so repeat it
-            here: a double click must not record the delivery twice. */}
-        <SubmitButton disabled={!valid || isSaving}>Record delivery</SubmitButton>
+        <SubmitButton disabled={!valid}>Record delivery</SubmitButton>
       </div>
     </form>
   );

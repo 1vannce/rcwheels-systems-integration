@@ -90,6 +90,17 @@ export async function placePurchaseOrderService(
       actor.userId,
     );
 
+    // Its own type: only the Custodian can open the receive page this one is about.
+    await notifyRoles(
+      tx,
+      ["inventory_custodian"],
+      {
+        type: "purchase_order_ready_to_receive",
+        message: `Purchase order #${dto.purchaseOrderId} was placed. Inspect and record the delivery when it arrives.`,
+      },
+      actor.userId,
+    );
+
     return { purchaseOrderId: dto.purchaseOrderId, status: "placed" };
   });
 }

@@ -76,7 +76,7 @@ flowchart TD
 | Approve or reject stock counts, maintain reorder points, set For Delivery, review exceptions | Inventory Control or Monitoring Manager |
 | Maintain and evaluate suppliers, prepare and place POs, follow up deliveries, record SDR resolutions | Purchasing Staff |
 | Approve or return POs with a budget yes or no, authorize PO balance cancellation, approve inventory value changes | Accounting Associate |
-| Assist receiving, deliver items, return rejected items | Delivery or Operations personnel |
+| View the receiving queue, deliver items, return rejected items | Delivery or Operations personnel |
 | Manage accounts and roles | System administrator |
 
 ---
@@ -167,7 +167,7 @@ flowchart TD
 | BR-IN-02 | Every stock event has a unique source reference (`event_key`), so the same event posts only once. A second attempt is refused as already posted. | PLAN section 7 | Built |
 | BR-IN-03 | Quantities are numbers above zero with up to 3 decimal places. They are handled as whole thousandths, with no floating-point arithmetic. | Technical approach | Built |
 | BR-IN-04 | Stock is deducted once, at dispatch. A requester's acceptance deducts nothing. | Plan rule 3 | Built |
-| BR-IN-05 | Accepted supplier receipts post usable stock once, in Supplier Receiving. Connector D only flags waiting requests for recheck and never posts stock. | Plan rule 3; connector D | Built (posting); Planned (flag) |
+| BR-IN-05 | Accepted supplier receipts post usable stock once, in Supplier Receiving. Connector D only flags waiting requests for recheck and never posts stock. | Plan rule 3; connector D | Built |
 | BR-IN-06 | A reservation cannot exceed available stock. | PLAN section 7 | Built |
 | BR-IN-07 | Stock reserved for one request cannot be dispatched to another request or sold. A dispatch line must use an active reservation for the same requisition line. | Plan rule 8 | Built |
 | BR-IN-08 | A dispatch cannot send more than the reserved quantity or more than the usable quantity on hand. If a reservation is larger than the sent quantity, the rest stays reserved. | PLAN section 7 | Built |
@@ -295,7 +295,7 @@ flowchart TD
 | BR-PU-07 | When Accounting returns a PO, it becomes For Revision. Purchasing Staff revise it and send it back to Accounting. | Test scenario 6 | Built |
 | BR-PU-08 | A PO cannot be placed until Accounting approves that exact version. A change to supplier, item, quantity, or price after approval needs reapproval. | Plan rule 2 | Built |
 | BR-PU-09 | Every PO version and its review are kept (`purchase_order_revisions`), including the earlier commitments. Nothing is overwritten. | ERD change 5 | Built |
-| BR-PU-10 | Placing a PO sends it to the Supplier Receiving queue with its expected quantities (connector E). | Proposal | Built as a service handoff; receiving screen planned |
+| BR-PU-10 | Placing a PO sends it to the Supplier Receiving queue with its expected quantities (connector E). | Proposal | Built |
 | BR-PU-11 | A PO balance is cancelled only with Accounting authorization. Cancelling a PO does not cancel a requisition. A cancelled balance creates a demand review in Purchasing (connector G). The requisition stays open until it is covered or separately cancelled. | Plan rules 6; test scenario 7 | Built |
 | BR-PU-12 | A user cannot approve a PO they prepared. | Plan rule 11 | Built |
 | BR-PU-13 | Purchasing Staff follow up open POs, and the Accounting Associate can see them. | Proposal | Built |
@@ -329,14 +329,14 @@ flowchart TD
 
 | ID | Rule | Basis | Status |
 | --- | --- | --- | --- |
-| BR-SR-01 | Goods are received only against a Placed or Partially Received PO. | Proposal | Built (service); receiving screen planned |
-| BR-SR-02 | A receipt records the delivery receipt number, invoice number, who received it, and the delivered quantity per line. Delivery or Operations personnel may assist. | Proposal | Built (service); receiving screen planned |
-| BR-SR-03 | The Custodian inspects each line and records accepted quantity, rejected quantity, and notes. Accepted plus rejected must equal the delivered quantity, and rejected items need a note. Partial acceptance is allowed. | Proposal | Built (service); receiving screen planned |
+| BR-SR-01 | Goods are received only against a Placed or Partially Received PO. | Proposal | Built |
+| BR-SR-02 | A receipt records the delivery receipt number, invoice number, who received it, and the delivered quantity per line. The Inventory Custodian records it. Delivery or Operations personnel may view the receiving queue but not record a receipt. | Proposal | Built |
+| BR-SR-03 | Only the Inventory Custodian inspects. The Custodian checks each line and records accepted quantity, rejected quantity, and notes. Accepted plus rejected must equal the delivered quantity, and rejected items need a note. Partial acceptance is allowed. | Proposal | Built |
 | BR-SR-04 | Each delivery is checked against the PO line's outstanding balance (ordered minus cancelled minus accepted), not the original ordered quantity. A PO of 10 with 6 accepted has 4 outstanding. Rejected quantity stays outstanding. | Test scenario 5 | Built |
-| BR-SR-05 | Accepted quantity posts to stock once per receipt line, at the PO line price. Rejected quantity never enters stock. | Plan rule 3 | Built (service); receiving screen planned |
-| BR-SR-06 | A quantity above the PO balance is held as disputed by the Custodian. A receipt never records more than the balance; the Custodian records the excess in an SDR, and Purchasing Staff record the resolution. | Decision 8 | Built (service); screen planned |
-| BR-SR-07 | A shortage, damage, wrong item, or excess is reported in a Supplier Discrepancy Report (SDR) with the problem, the affected quantity, and a resolution. A receipt opens one SDR for each line with rejected quantity, and one for each PO line that arrives short or not at all unless that line already has an unresolved SDR. Credited quantity is not reported short again. The Custodian records other problems by hand and can change an SDR while it is Open. Status moves only from Open to Agreed (Purchasing Staff) to Resolved (the Custodian or Purchasing Staff). | Proposal | Built (service); screen planned |
-| BR-SR-08 | The agreed action (replace with a follow-up delivery, credit, or cancel the balance) is stored as a commitment with a quantity, at most the affected quantity, and an expected date. Later deliveries are checked against the PO balance. A replacement resolves itself once enough is accepted after the agreement (oldest commitment first) or nothing is left on the line. A line with nothing outstanding takes a replacement only if goods arrived after the SDR was opened. A cancel commitment asks Accounting to cancel the whole remaining PO balance through connector G (BR-PU-11). A replacement or cancel SDR is resolved by hand only once nothing is left on the line. A credit changes no PO quantity and is resolved with a note. | Proposal | Built (service); screen planned |
+| BR-SR-05 | Accepted quantity posts to stock once per receipt line, at the PO line price. Rejected quantity never enters stock. | Plan rule 3 | Built |
+| BR-SR-06 | A quantity above the PO balance is held as disputed by the Custodian. A receipt never records more than the balance; the Custodian records the excess in an SDR, and Purchasing Staff record the resolution. | Decision 8 | Built (service); no SDR screen yet |
+| BR-SR-07 | A shortage, damage, wrong item, or excess is reported in a Supplier Discrepancy Report (SDR) with the problem, the affected quantity, and a resolution. A receipt opens one SDR for each line with rejected quantity, and one for each PO line that arrives short or not at all unless that line already has an unresolved SDR. Credited quantity is not reported short again. The Custodian records other problems by hand and can change an SDR while it is Open. Status moves only from Open to Agreed (Purchasing Staff) to Resolved (the Custodian or Purchasing Staff). | Proposal | Built (service); no SDR screen yet |
+| BR-SR-08 | The agreed action (replace with a follow-up delivery, credit, or cancel the balance) is stored as a commitment with a quantity, at most the affected quantity, and an expected date. Later deliveries are checked against the PO balance. A replacement resolves itself once enough is accepted after the agreement (oldest commitment first) or nothing is left on the line. A line with nothing outstanding takes a replacement only if goods arrived after the SDR was opened. A cancel commitment asks Accounting to cancel the whole remaining PO balance through connector G (BR-PU-11). A replacement or cancel SDR is resolved by hand only once nothing is left on the line. A credit changes no PO quantity and is resolved with a note. | Proposal | Built (service); no SDR screen yet |
 | BR-SR-09 | A PO is Partially Received until every line is fully received or cancelled, then Closed. A delivery with nothing accepted leaves the status unchanged. | PLAN section 7 | Built |
 | BR-SR-10 | An accepted receipt notifies the Custodian of each request in Awaiting Stock that can still reserve a received item (connector D). It changes no request and never posts stock a second time. | PLAN section 5 | Built |
 | BR-SR-11 | Supporting documents (delivery receipt, invoice, photos) are attached to the receipt or SDR. | Proposal | Planned |

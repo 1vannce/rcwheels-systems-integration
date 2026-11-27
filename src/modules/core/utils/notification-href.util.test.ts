@@ -61,6 +61,14 @@ describe("getNotificationHref", () => {
         message: "Purchase order #8 was approved.",
       }),
     ).toBe("/purchasing/orders/8");
+
+    expect(
+      getNotificationHref({
+        requisitionId: null,
+        notificationType: "purchase_order_ready_to_receive",
+        message: "Purchase order #9 was placed. Inspect and record the delivery when it arrives.",
+      }),
+    ).toBe("/delivery/receiving/9");
   });
 
   it("routes purchase requisition notifications to purchasing PRs and does not misroute as a requisition", () => {
