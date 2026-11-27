@@ -629,7 +629,8 @@ built yet.
 - [ ] **QA-SR-02** — Only the Custodian sees the **Receive** link. Delivery
       Operations can view the queue and nothing more.
 - [ ] **QA-SR-03** — Placing a Purchase Order adds it to the queue, notifies
-      Delivery Operations, and posts no stock.
+      Delivery Operations, and posts no stock. The Custodian also gets one
+      notification that opens `/delivery/receiving/<id>`.
 - [ ] **QA-SR-04** — With nothing to receive, the queue shows its empty message.
 
 ### 9.2 Receive page (Inventory Custodian only)
