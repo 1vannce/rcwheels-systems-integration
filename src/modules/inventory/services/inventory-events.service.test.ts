@@ -68,6 +68,8 @@ describeWithDatabase("inventory business events", () => {
     expect(await auditActions()).toEqual([
       "item.create",
       "item.update-reorder-point",
+      // Zero available is at or below the new point, and was never alerted.
+      "inventory.reorder-alert",
       "blocked:item.create",
     ]);
   });

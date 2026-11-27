@@ -257,8 +257,8 @@ flowchart TD
 | BR-IN-40 | Inventory value uses the moving weighted average cost, updated on accepted receipts. A return to a supplier takes the receipt cost back out. | Decision 4 | Built |
 | BR-IN-41 | A supplier return cannot exceed what that receipt line posted (minus earlier returns), or the available stock. | PLAN section 7 | Built |
 | BR-IN-42 | Each item has a reorder point, maintained by the Inventory Manager. Every change is audited with the old and new value. | Proposal | Built |
-| BR-IN-43 | When available stock is at or below the reorder point, the Custodian and Inventory Manager are alerted in the system. | Proposal | Planned |
-| BR-IN-44 | The reorder point triggers a review. It is not the order quantity and never authorizes spending. The Custodian enters the quantity after checking open PRs and open POs. | Plan rule 1; PLAN section 7 | Planned |
+| BR-IN-43 | When available stock is at or below the reorder point, the Custodian and Inventory Manager are alerted in the system. The alert fires when available crosses from above the point to at or below it, after a reservation, sales deduction, approved downward adjustment, or return to supplier, or when the point is raised past available. It stays unresolved, with no repeat alert, until available rises above the point again. An item already at or below its point that was never alerted alerts on its next lowering event or point change. Dispatch consumes its own reservation, so it does not change available. A reorder point of zero means none is set. | Proposal; PLAN section 7 | Built |
+| BR-IN-44 | The reorder point triggers a review. It is not the order quantity and never authorizes spending. The alert lists the open POs (outstanding quantity) and open PRs (quantity not yet on a PO) for the item and creates no PR. The Custodian enters the quantity after checking that coverage. | Plan rule 1; PLAN section 7 | Built for the alert and coverage; reorder PRs planned |
 | BR-IN-45 | Item codes are unique. A new item opens usable, damaged, and hold balances at zero. | ERD | Built |
 
 ---

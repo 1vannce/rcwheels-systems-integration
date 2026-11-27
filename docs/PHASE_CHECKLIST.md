@@ -79,7 +79,7 @@ waits for a configured `TEST_DATABASE_URL`.
 
 ## Phase 7 - Visibility
 
-- [ ] Implement reorder alerts
+- [x] Implement reorder alerts (2026-11-27, `feat/reorder-alert`: `checkReorder` runs after stock events that lower available stock and alerts the Custodian and Inventory Manager once per crossing, with open PO and PR coverage and no PR created; `reorder.service.test.ts` passes against local PostgreSQL 18, full suite 318 passed vs 308 on main)
 - [ ] Implement the dashboard
 - [ ] Implement the linked-record timeline for a requisition
 - [ ] Verify scenario 9 and end-to-end traceability
