@@ -377,12 +377,12 @@ describeWithDatabase("supplier receiving", () => {
     },
   );
 
-  it("blocks a role other than the Custodian or Delivery Operations in the service", async () => {
+  it.each(["delivery_operations", "purchasing_staff"] as const)("blocks the %s role in the service", async (role) => {
     const po = await createPurchaseOrder([{ itemCode: "SR-ROLE", orderedQty: "10", unitPrice: "100" }]);
 
     await expect(
       receiveSupplierDelivery(
-        people.purchasing_staff,
+        people[role],
         delivery(po.purchaseOrderId, [line(po.lines[0].purchaseOrderLineId, "10")]),
       ),
     ).rejects.toBeInstanceOf(BlockedActionError);
@@ -416,7 +416,7 @@ describeWithDatabase("supplier receiving", () => {
       return data;
     }
 
-    it.each(["requester", "requisition_approver", "purchasing_staff", "accounting_associate"] as const)(
+    it.each(["delivery_operations", "requester", "requisition_approver", "purchasing_staff", "accounting_associate"] as const)(
       "blocks and audits the %s role (scenario 12)",
       async (role) => {
         const po = await createPurchaseOrder([{ itemCode: `SR-A-${role}`, orderedQty: "10", unitPrice: "100" }]);
@@ -463,11 +463,9 @@ describeWithDatabase("supplier receiving", () => {
       expect(await db.select().from(stockMovements)).toHaveLength(0);
     });
 
-    it.each(["inventory_custodian", "delivery_operations"] as const)(
-      "lets the %s receive a delivery",
-      async (role) => {
-        const po = await createPurchaseOrder([{ itemCode: `SR-OK-${role}`, orderedQty: "10", unitPrice: "100" }]);
-        await signInAs(people[role]);
+    it("lets the inventory_custodian receive a delivery", async () => {
+        const po = await createPurchaseOrder([{ itemCode: "SR-OK", orderedQty: "10", unitPrice: "100" }]);
+        await signInAs(people.inventory_custodian);
 
         const result = await receiveSupplierDeliveryAction(
           null,
@@ -479,9 +477,8 @@ describeWithDatabase("supplier receiving", () => {
         expect(await onHand(po.lines[0].itemId)).toBe("10.000");
 
         const [receipt] = await db.select().from(supplierReceipts);
-        expect(receipt.receivedBy).toBe(people[role].userId);
+        expect(receipt.receivedBy).toBe(people.inventory_custodian.userId);
         expect(receipt.invoiceNo).toBeNull();
-      },
-    );
+    });
   });
 });

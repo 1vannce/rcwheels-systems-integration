@@ -29,8 +29,8 @@ import { followUpSupplierReceipt } from "./supplier-receipt-follow-up.service";
 
 const ACTION = "supplier_receipt.receive";
 
-/** Delivery Operations assist receiving; the Custodian inspects (BR-SR-02, BR-SR-03). */
-const RECEIVING_ROLES: readonly AppRole[] = ["inventory_custodian", "delivery_operations"];
+/** Recording accept or reject is the inspection, which is the Custodian's alone (BR-SR-03). */
+const RECEIVING_ROLES: readonly AppRole[] = ["inventory_custodian"];
 
 /** Goods are received only against these PO states (BR-SR-01). */
 const RECEIVABLE_STATUSES: readonly PurchaseOrderStatus[] = ["placed", "partially_received"];
@@ -74,7 +74,7 @@ export async function receiveSupplierDelivery(
     if (!RECEIVING_ROLES.includes(actor.role)) {
       throw blocked(
         purchaseOrderId,
-        "Only the Inventory Custodian or Delivery Operations can receive supplier deliveries.",
+        "Only the Inventory Custodian can receive supplier deliveries.",
         { purchaseOrderId, role: actor.role },
       );
     }

@@ -72,6 +72,7 @@ waits for a configured `TEST_DATABASE_URL`.
 
 - [x] Implement inspection against PO balances
 - [x] Implement partial acceptance and single stock posting
+- [x] Build the Supplier Receiving queue and receive screen (inspection is Inventory Custodian only; Delivery Operations views the queue)
 - [x] Implement Connector D and SDR
 - [x] Implement follow-up deliveries and cancellation
 - [ ] Implement Connector G

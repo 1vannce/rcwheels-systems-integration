@@ -36,6 +36,7 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
     "inventory-adjustments",
     "inventory-sales-deductions",
     "inventory-low-stock-review",
+    "delivery-receiving-queue",
     "delivery-receipt-inspection",
     "delivery-sdr",
     "delivery-return-inspection",
@@ -63,7 +64,6 @@ const roleScreenMap: Record<AppRole, readonly AppScreen[]> = {
   delivery_operations: [
     ...sharedScreens,
     "delivery-receiving-queue",
-    "delivery-receipt-inspection",
     "delivery-internal-delivery-queue",
     "delivery-acceptance-and-ar-signing",
     "delivery-return-inspection",

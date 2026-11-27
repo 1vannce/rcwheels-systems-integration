@@ -94,6 +94,7 @@ export async function listPurchaseOrdersForReceivingService(
   actor: AppUser,
 ): Promise<PurchaseOrderDto[]> {
   if (
+    actor.role !== "inventory_custodian" &&
     actor.role !== "delivery_operations" &&
     actor.role !== "system_administrator"
   ) {
