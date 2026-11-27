@@ -37,6 +37,7 @@ import {
   negateQuantity,
   subtractQuantities,
 } from "./quantity.service";
+import { checkReorder } from "./reorder.service";
 
 // The only code that changes stock balances (PLAN section 7, "Stock events").
 //
@@ -47,6 +48,9 @@ import {
 // - writes one stock_movements row whose event key comes from a unique source
 //   reference, so the same event can post only once;
 // - throws BlockedActionError when a rule refuses the event.
+// - runs the reorder check after an event that lowers available stock
+//   (reserve, sales deduction, downward adjustment, return to supplier).
+//   Dispatch consumes its own reservation, so it leaves available unchanged.
 //
 // Reserved and in-transit quantities are not stored on stock_balances. Reserved
 // is the sum of active stock_reservations. In transit is sent minus accepted
@@ -230,6 +234,12 @@ export async function reserveStock(
     requisitionLineId: input.requisitionLineId,
     stockBalanceId: usable.stockBalanceId,
     reservedQty: input.quantity,
+  });
+
+  await checkReorder(tx, {
+    itemId,
+    availableBefore: available,
+    availableAfter: subtractQuantities(available, input.quantity),
   });
 
   return { reservationId };
@@ -619,6 +629,12 @@ export async function deductSales(
     await setBalanceIncomplete(tx, usable.stockBalanceId, true);
   }
 
+  await checkReorder(tx, {
+    itemId: input.itemId,
+    availableBefore: available,
+    availableAfter: subtractQuantities(available, input.quantity),
+  });
+
   return { movementId, isLate };
 }
 
@@ -703,6 +719,14 @@ export async function applyApprovedAdjustment(
   await addToBalance(tx, balance.stockBalanceId, quantityDelta);
   await setBalanceIncomplete(tx, balance.stockBalanceId, false);
 
+  if (balance.condition === "usable" && compareQuantities(quantityDelta, ZERO) < 0) {
+    await checkReorder(tx, {
+      itemId: balance.itemId,
+      availableBefore: subtractQuantities(balance.quantityOnHand, reserved),
+      availableAfter: subtractQuantities(newQuantity, reserved),
+    });
+  }
+
   return { movementId, quantityDelta };
 }
 
@@ -760,6 +784,12 @@ export async function returnToSupplier(
 
   await averageCostOut(tx, line.itemId, usable.quantityOnHand, input.quantity, line.unitPrice);
   await addToBalance(tx, usable.stockBalanceId, negateQuantity(input.quantity));
+
+  await checkReorder(tx, {
+    itemId: line.itemId,
+    availableBefore: available,
+    availableAfter: subtractQuantities(available, input.quantity),
+  });
 
   return { movementId };
 }

@@ -23,6 +23,7 @@ import type {
   StockMovement,
 } from "../types/stock.type";
 import { addQuantities, subtractQuantities } from "./quantity.service";
+import { checkReorderAfterPointChange, lockForReorderPointChange } from "./reorder.service";
 import { openItemBalances } from "./stock.service";
 
 const MOVEMENT_LIST_LIMIT = 200;
@@ -128,6 +129,8 @@ export async function updateReorderPoint(
   input: { itemId: number; reorderPoint: string },
 ): Promise<void> {
   await runBusinessEvent(actor.userId, async (tx) => {
+    await lockForReorderPointChange(tx, input.itemId);
+
     const previous = await updateItemReorderPoint(tx, input.itemId, input.reorderPoint);
 
     if (previous === null) {
@@ -144,6 +147,11 @@ export async function updateReorderPoint(
       entityId: input.itemId,
       action: "item.update-reorder-point",
       details: { from: previous, to: input.reorderPoint },
+    });
+
+    await checkReorderAfterPointChange(tx, {
+      itemId: input.itemId,
+      previousReorderPoint: previous,
     });
   });
 }
